@@ -1,4 +1,10 @@
 import { createApp } from 'vue'
-import App from './App.vue'
+import { store, key } from './components/store'
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
+import QueryBuilder from './QueryBuilder.vue'
 
-createApp(App).mount('#app')
+const app = createApp(QueryBuilder)
+app.use(store, key)
+app.use(ElementPlus)
+app.mount('#app')
