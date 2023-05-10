@@ -1,16 +1,16 @@
 <template>
   <div class="app_box">
     <ControlBar/>
-    <Splitpanes horizontal style="width: 100vw;">
+    <Splitpanes horizontal style="width: 100vw;" class="default-theme">
       <Pane min-size="15" max-size="50">
         <CsvViewer :csv="CsvDocument"></CsvViewer>
       </Pane>
       <Pane>
-        <Splitpanes style="height: 100%;">
+        <Splitpanes style="height: 100%;" class="default-theme">
           <Pane>
             <CaseViewer :json="JsonDocument"></CaseViewer>
           </Pane>
-          <Pane>
+          <Pane style="width: 40rem;">
             <LogicSection></LogicSection>
           </Pane>
         </Splitpanes>
@@ -48,4 +48,7 @@ div.app_box {
   flex-direction: column;
 }
 
+.clickable :hover {
+  cursor: pointer;
+}
 </style>

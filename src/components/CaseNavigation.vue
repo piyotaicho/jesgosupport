@@ -4,7 +4,7 @@
       前のレコード
     </el-button>
     <span class="navigation_number">
-      {{$props.index}} / {{ $props.length }}
+      {{ props.index + 1 }} / {{ props.length }}
     </span>
     <el-button @click="next()">
       次のレコード<el-icon class="el-icon--right"><caret-right /></el-icon>
@@ -22,7 +22,7 @@ const props = withDefaults(
     length?: number
   }>(),
   {
-    index: 0,
+    index: -1,
     length: 0
   }
 )
@@ -30,21 +30,35 @@ const emits = defineEmits<{(e: 'update:index', value: number): void
 }>()
 // const caseNumber = ref(0)
 
+/**
+ * prev() イベントハンドラ indexをひとつ前に移動
+ */
 function prev () {
-  emits('update:index', props.index > 0 ? props.index - 1 : 0)
-  // caseNumber.value = caseNumber.value > 0 ? caseNumber.value - 1 : 0
+  if (props.length === 0) {
+    emits('update:index', -1)
+  } else {
+    emits('update:index', props.index > 0 ? props.index - 1 : 0)
+  }
 }
 
+/**
+ * next() イベントハンドラ indexを1つ後ろに移動
+ */
 function next () {
-  emits('update:index', props.index <= (props.length - 1) ? props.index + 1 : props.length)
-  // caseNumber.value++
+  if (props.length === 0) {
+    emits('update:index', -1)
+  } else {
+    emits('update:index', props.index < (props.length - 1) ? props.index + 1 : props.length - 1)
+  }
 }
 </script>
 
 <style>
 div.case_navigation {
   display: flex;
+  flex-direction: row;
   align-content: space-around;
+  min-width: 40rem;
 }
 
 span.navigation_number {

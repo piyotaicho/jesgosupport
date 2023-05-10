@@ -51,7 +51,7 @@ async function loadJsonFile (event: Event): Promise<void> {
       }
     }).then(async content => {
       if (content) {
-        store.state.JsonDocument = JSON.parse(content as string) as JsonObject
+        store.commit('setJsonDocument', JSON.parse(content as string) as JsonObject)
       }
     })
   }
@@ -82,12 +82,12 @@ async function loadCsvFile (event: Event): Promise<void> {
         reject(e)
       }
     }).then(async content => {
-      store.state.CsvDocument = parseCSV(content as string)
+      store.commit('setCsvDocument', parseCSV(content as string))
     })
   }
 }
 
-function parseCSV (content: string): CsvObject {
+function parseCSV (content: string): CsvObject|undefined {
   if (!content) return undefined
 
   // 改行コードを確認して切り出し

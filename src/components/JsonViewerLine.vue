@@ -5,7 +5,7 @@
       :style="paddingLeft"
       :class="[
         props?.pointer ? 'haspoint' : '',
-        props?.highlight ? 'highlighted' : ''
+        highlight ? 'highlight' : ''
       ]"
       @click="onclick()"
       >{{props.line.trimStart()}}</span></pre>
@@ -19,7 +19,7 @@ const props = defineProps<{
   line: string,
   lineNumber?: number,
   pointer?:string,
-  highlight?:boolean
+  highlights?:string[]
 }>()
 
 const emits = defineEmits<{
@@ -38,6 +38,17 @@ const paddingLeft = computed((): string => {
   return `padding-left: ${i}rem;`
 })
 
+/**
+ * highlight prop.highlightsにポインタが含まれる
+ * @returns {boolean}
+ */
+const highlight = computed((): boolean => {
+  if (props.highlights && props.pointer) {
+    return props.highlights.find(element => props.pointer?.indexOf(element) === 0) !== undefined
+  } else {
+    return false
+  }
+})
 /**
  * onclick クリックイベントを親に発行する
  */

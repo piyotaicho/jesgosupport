@@ -5,7 +5,7 @@
         :lineNumber="index + 1"
         :line="item.text"
         :pointer="item.pointer"
-        :highlight="highlight(item.pointer)">
+        :highlights="jsonPointers">
       </JsonViewerLineVue>
     </ul>
   </div>
@@ -16,17 +16,18 @@ import { JsonObject } from './types'
 import { computed, ComputedRef } from 'vue'
 import JsonViewerLineVue from './JsonViewerLine.vue'
 import { JSONPath } from 'jsonpath-plus'
+import { useStore } from './store'
+
+const store = useStore()
 
 interface jsonViewerProps {
-  json?: JsonObject,
-  jsonpath?: string
+  json?: JsonObject
 }
 
 const props = withDefaults(
   defineProps<jsonViewerProps>(),
   {
-    json: () => { return [] },
-    jsonpath: () => ''
+    json: () => { return [] }
   }
 )
 
@@ -40,13 +41,25 @@ const jsonLines: ComputedRef<jsonComplex[]> = computed(() => {
 })
 
 const jsonPointers: ComputedRef<string[]> = computed(() => {
-  if (props.json && props.jsonpath) {
-    const pointers = JSONPath({ path: props.jsonpath, json: props.json, resultType: 'pointer' })
+  if (props.json && store.state.HighlightedPath !== '') {
+    const pointers = JSONPath({ path: store.state.HighlightedPath, json: props.json, resultType: 'pointer' })
     return pointers
   } else {
     return []
   }
 })
+
+// /**
+//  * highlight JSONpathで指定されたポインタに該当するか確認する
+//  * @param {string} 行に保持されたポインタ
+//  */
+// function highlight (pointer: string|undefined): boolean {
+//   if (pointer && jsonPointers.value.length > 0) {
+//     return (jsonPointers.value.indexOf(pointer) === 0)
+//   } else {
+//     return false
+//   }
+// }
 
 /**
  * toJsonComplex オブジェクトをjsonComplexアレイに変換する
@@ -139,15 +152,24 @@ function toJsonComplex (obj: JsonObject, indent = '', basePath = '', arrayItem =
 }
 
 /**
- * highlight JSONpathで指定されたポインタに該当するか確認する
- * @param {string} 行に保持されたポインタ
+ * pointerToPath jsonポインタを簡易的にjsonPathに変換する
+ * @param {string} jsonPointer
  */
-function highlight (pointer: string|undefined): boolean {
-  if (pointer && jsonPointers.value.length > 0) {
-    return (jsonPointers.value.indexOf(pointer) >= 0)
-  } else {
-    return false
-  }
+function pointerToPath (jsonPointer: string) {
+  // 先頭のスラッシュを削除する
+  jsonPointer = jsonPointer.replace(/^\//, '')
+
+  // JSON PointerをJSONPathに変換する
+  const jsonPath = jsonPointer
+    .replace(/\//g, '.') // スラッシュをドットに置換
+    .split('.')
+    .map(segment => segment
+      .replace(/~/g, '~0')
+      .replace(/!/g, '~1'))
+    .map(segment => /^\d+$/.test(segment) ? `[${segment}]` : segment)
+    .join('.')
+
+  return '$.' + jsonPath
 }
 </script>
 
@@ -165,27 +187,38 @@ div .json-viewer {
   box-sizing: content-box;
   width: 100%;
   margin: 0;
-  padding: 0;
-  padding-top: 0.4rem;
-  display: inline-flexbox;
+  padding: 0.16rem 0;
+  display: flexbox;
   flex-direction: row;
   justify-content: flex-start;
+  white-space: nowrap;
+}
+
+.json-viewer li span {
+  display: inline-flex;
+  margin: 0;
+  margin-top: auto;
+  margin-bottom: auto;
+  padding: 0;
 }
 
 .json-viewer li pre {
   display: inline-flex;
   margin: 0;
+  margin-top: auto;
+  margin-bottom: auto;
+  padding: 0;
 }
 
 .json-viewer li:nth-child(even) {
-  background-color: #f2f2f2;
+  background-color: #e2e2e2;
 }
 
 .json-viewer li .haspoint {
   cursor: pointer;
 }
 
-.json-viewer li .highlight {
+.json-viewer li pre .highlight {
   font-weight: bold;
 }
 

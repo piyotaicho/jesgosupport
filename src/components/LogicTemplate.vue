@@ -1,0 +1,290 @@
+<template>
+  <div class="Logic-block" :style="{ backgroundColor: blockColor }">
+    <div class="Logic-block-linenumber">
+      <el-icon @click="reorderBlock(-1)" class="clickable"><ArrowUpBold /></el-icon>
+      {{ props.index + 1 }}
+      <el-icon @click="deleteBlock()" class="clickable"><CloseBold /></el-icon>
+      <el-icon @click="reorderBlock(+1)" class="clickable"><ArrowDownBold /></el-icon>
+    </div>
+    <div class="Logic-block-content">
+      <div class="Logic-block-logic">
+        <template v-if="props.block.type == 'Operators'">
+        <!-- 条件分岐の操作 -->
+          <div>
+            条件を設定します：
+          </div>
+          <div>
+            <el-select v-model="argument1st">
+              <el-option v-for="(element, index) in optionsLabelValue" :key="index" :label="element.label" :value="element.value" />
+            </el-select>
+            の
+            <el-select v-model="argument2nd">
+              <el-option label="値" value="value" />
+              <el-option label="数" value="length"/>
+            </el-select>
+            が
+          </div>
+          <div>
+            <el-select filterable allow-create placeholder="比較対象を入力もしくは選択"
+              v-model="argument3rd"
+            >
+              <el-option v-for="(element, index) in optionsLabelValue" :key="index" :label="element.label + 'の値'" :value="element.value" />
+            </el-select>
+            <el-select v-model="argument4th">
+              <el-option label="と同じ" value="eq"/>
+              <el-option label="より大きい" value="gt"/>
+              <el-option label="以上" value="ge"/>
+              <el-option label="より小さい" value="lt"/>
+              <el-option label="以下" value="le"/>
+              <el-option label="に含まれる" value="in"/>
+              <el-option label="を含む" value="incl"/>
+              <el-option label="にマッチする(正規表現)" value="regexp"/>
+            </el-select>
+          </div>
+        </template>
+
+        <template v-if="props.block.type == 'Variables'">
+        <!-- 変数の割り当て -->
+          <div>
+            変数に値を割り当てます
+          </div>
+          <div>
+            <el-select filterable allow-create placeholder="値を入力もしくは選択"
+              v-model="argument1st">
+              <el-option v-for="(element, index) in optionsLabelValue" :key="index" :label="element.label + 'の値'" :value="element.value" />
+            </el-select>
+            を
+          </div>
+          <div>
+            <el-select v-model="argument2nd">
+              <el-option v-for="number in ['1','2','3','4','5','6','7','8','9','0']" :key="number" :label="'変数' + number" :value="'$' + number" />
+            </el-select>
+            に代入する
+          </div>
+        </template>
+
+        <template v-if="props.block.type == 'Translation'">
+        <!-- 値の置換 -->
+          <div>
+            値をテーブルで変換します
+          </div>
+          <div>
+            <el-select placeholder="対象を選択" v-model="argument1st">
+              <el-option v-for="(element, index) in optionsLabelValue" :key="index" :label="element.label + 'の値'" :value="element.value" />
+            </el-select>
+            を以下のテーブルに従って変換します。
+          </div>
+          <div>
+            <table>
+              <tr>
+                <th class="table-hedding"></th>
+                <th class="table-">元の値</th><th>変換後の値</th>
+              </tr>
+              <tr>
+                <th><el-icon><CloseBold /></el-icon></th>
+                <td><el-input /></td><td><el-input /></td>
+              </tr>
+            </table>
+          </div>
+        </template>
+
+        <template v-if="props.block.type == 'Store'">
+        <!-- 出力 -->
+          <div>
+            値をCSVのフィールドもしくは症例エラー出力に割り当てます
+          </div>
+          <div>
+            <el-select filterable allow-create placeholder="値を入力もしくは選択"
+              v-model="argument1st">
+              <el-option v-for="(element, index) in optionsLabelValue" :key="index" :label="element.label + 'の値'" :value="element.value" />
+            </el-select>
+            を
+          </div>
+          <div>
+            <el-select filterable allow-create placeholder="CSVの桁表記を入力もしくは選択"
+              v-model.trim="argument2nd">
+              <el-option label="エラー出力" value="$error"/>
+            </el-select>
+            に出力
+          </div>
+        </template>
+      </div>
+      <div class="Logic-block-behaivior">
+        <!-- 成功もしくは条件を満たした場合の動作を選択 -->
+        上記が成立した場合: <el-select v-model="trueBehaivior">
+          <el-option label="次のブロックへ" :value="1"/>
+          <el-option v-for="number in [2,3,4,5,6,7,8,9]" :key="number" :label="number + 'つ先のブロックへ'" :value="number" />
+          <el-option label="10先のブロックへ" :value="10"/>
+          <el-option label="値の処理を中断" value="Abort"/>
+        </el-select>
+      </div>
+      <div class="Logic-block-behaivior" v-if="isFalseBehavior">
+        <!-- 不成功もしくは条件を満たさない場合の動作を選択 -->
+        上記が成立しなかった場合: <el-select v-model="falseBehavior">
+          <el-option label="次のブロックへ" :value="1"/>
+          <el-option v-for="number in [2,3,4,5,6,7,8,9]" :key="number" :label="number + 'つ先のブロックへ'" :value="number" />
+          <el-option label="10先のブロックへ" :value="10"/>
+          <el-option label="値の処理を中断" value="Abort"/>
+          <el-option label="症例に対する全ての処理を終了" value="Exit"/>
+        </el-select>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed, WritableComputedRef } from 'vue'
+import { LogicBlock } from './types'
+import { ArrowUpBold, ArrowDownBold, CloseBold } from '@element-plus/icons-vue'
+
+const optionsLabelValue = [
+  { label: 'ソース1', value: '@1' },
+  { label: 'ソース2', value: '@2' },
+  { label: 'ソース3', value: '@3' },
+  { label: 'ソース4', value: '@4' },
+  { label: 'ハッシュ値', value: '$hash' },
+  { label: '変数1', value: '$1' },
+  { label: '変数2', value: '$2' },
+  { label: '変数3', value: '$3' },
+  { label: '変数4', value: '$4' },
+  { label: '変数5', value: '$5' },
+  { label: '変数6', value: '$6' },
+  { label: '変数7', value: '$7' },
+  { label: '変数8', value: '$8' },
+  { label: '変数9', value: '$9' },
+  { label: '変数0', value: '$0' }
+]
+
+const props = defineProps<{
+  index: number,
+  block: LogicBlock
+}>()
+
+const emits = defineEmits<{
+  (e: 'update:block', value: LogicBlock): void,
+  (e: 'delete', index: number): void,
+  (e: 'reorder', index: number, offset: number): void
+}>()
+
+const blockColor = computed(() => {
+  const colorTable = {
+    Operators: '#59c059',
+    Variables: '#ff8c1a',
+    Translation: '#ffab19',
+    Store: '#4c97ff'
+  }
+
+  if (props.block) {
+    return colorTable[props.block.type]
+  } else {
+    return '#cecdce'
+  }
+})
+
+const argument1st: WritableComputedRef<string> = computed({
+  get: () => props.block.arguments[0] || '',
+  set: (value) => setArguments(0, value)
+})
+
+const argument2nd: WritableComputedRef<string> = computed({
+  get: () => props.block.arguments[1] || '',
+  set: (value) => setArguments(1, value)
+})
+
+const argument3rd: WritableComputedRef<string> = computed({
+  get: () => props.block.arguments[2] || '',
+  set: (value) => setArguments(2, value)
+})
+
+const argument4th: WritableComputedRef<string> = computed({
+  get: () => props.block.arguments[3] || '',
+  set: (value) => setArguments(3, value)
+})
+
+const isFalseBehavior = computed(() => {
+  if (props.block) {
+    if (props.block.type === 'Operators' || props.block.type === 'Translation') {
+      return true
+    }
+  }
+  return false
+})
+
+const trueBehaivior = computed({
+  get: () => props.block.trueBehaivior || 1,
+  set: (value) => {
+    if (typeof value === 'number' || value === 'Abort') {
+      const newBlock = Object.assign(props.block, { trueBehaivior: value })
+      emits('update:block', newBlock)
+    }
+  }
+})
+
+const falseBehavior = computed({
+  get: () => props.block?.falseBehaivior || 'Abort',
+  set: (value) => {
+    if (typeof value === 'number' || value === 'Abort' || value === 'Exit') {
+      const newBlock = Object.assign(props.block, { falseBehaivior: value })
+      emits('update:block', newBlock)
+    }
+  }
+})
+
+/**
+ * setArguments 引数配列を更新する
+ * @param {number} index
+ * @param {string} value
+ */
+function setArguments (index: number, value: string) {
+  const args = (props.block.arguments || []) as string[]
+  args[index] = value
+  const newBlock = Object.assign(props.block, { arguments: [...args] })
+  emits('update:block', newBlock)
+}
+
+function deleteBlock () {
+  emits('delete', props.index)
+}
+
+function reorderBlock (offset: number) {
+  emits('reorder', props.index, offset)
+}
+</script>
+
+<style>
+div.Logic-block {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0.3rem;
+  border: #444444 solid 0.08rem;
+  border-radius: 0.4rem;
+  display: flex;
+  flex-direction: row;
+}
+
+div.Logic-block-linenumber {
+  display: flexbox;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  width: 1.8rem;
+  border-right: 1px solid white;
+  margin: 1rem 0;
+}
+
+div.Logic-block-content {
+  display: flex;
+  flex-direction: column;
+}
+
+div.Logic-block-logic {
+  display: flexbox;
+  margin: 0.5rem 1rem;
+}
+
+div.Logic-block-behaivior {
+  display: flexbox;
+  margin: 0.5rem 1rem;
+}
+</style>
