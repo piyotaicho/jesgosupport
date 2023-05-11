@@ -1,14 +1,20 @@
 <template>
   <div class="case_navigation">
-    <el-button :icon="CaretLeft" @click="prev()">
-      前のレコード
-    </el-button>
-    <span class="navigation_number">
-      {{ props.index + 1 }} / {{ props.length }}
-    </span>
-    <el-button @click="next()">
-      次のレコード<el-icon class="el-icon--right"><caret-right /></el-icon>
-    </el-button>
+    <div>
+      <el-button :icon="CaretLeft" @click="prev()">
+        前のレコード
+      </el-button>
+    </div>
+    <div>
+      <span class="navigation_number">
+        {{ props.index + 1 }} / {{ props.length }}
+      </span>
+    </div>
+    <div>
+      <el-button @click="next()">
+        次のレコード<el-icon class="el-icon--right"><caret-right /></el-icon>
+      </el-button>
+    </div>
   </div>
 </template>
 
@@ -57,8 +63,13 @@ function next () {
 div.case_navigation {
   display: flex;
   flex-direction: row;
-  align-content: space-around;
+  align-content: center;
   min-width: 40rem;
+  margin: 0 auto;
+}
+
+div.case_navigation + div {
+  flex: auto;
 }
 
 span.navigation_number {

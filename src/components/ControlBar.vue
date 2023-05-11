@@ -176,8 +176,9 @@ function processDocument (index:number) {
           }
         }
 
+        // カンマ区切りでの切り出し
         const regex = /("[^"\\]*(?:\\.[^"\\]*)*"|\/(?:[^/\\]+|\\.)*\/[gimy]{0,4}|[^,\s]+)/g
-        return arg.match(regex) || []
+        return (arg.match(regex) || []).map(item => item.replace(/^"((?:\\"|[^"])*)"$/, '$1'))
       } else {
         return ['']
       }
@@ -227,6 +228,7 @@ function processDocument (index:number) {
         case 'incl':
           return op2.some(item => op1typed.includes(item))
         case 'regexp':
+          console.log(`Regexpression ${op2[0]}`)
           return op1typed.some(item => RegExp(op2[0]).test(item))
         default:
           console.log(`Illegal operator "${oper}"`)
@@ -355,11 +357,11 @@ function processDocument (index:number) {
       // 命令分岐
       if (result) {
         // 正常終了
-        console.log()
         if (procedure.trueBehaivior === 'Abort') {
           step = (rule.procedure || []).length // 処理ループから抜ける
         } else {
           if (typeof procedure.trueBehaivior === 'number') {
+            console.log(`Proceed next ${procedure.trueBehaivior} steps.`)
             // move steps forward
             step += procedure.trueBehaivior
           }

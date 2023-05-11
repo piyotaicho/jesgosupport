@@ -102,7 +102,7 @@ function previewSource (): void {
         result = JSON.stringify(store.getters.documentRef()?.name || 'N/A')
         break
       default:
-        result = JSON.stringify(store.getters.parseJesgoDocument(sourcePath.value))
+        result = JSON.stringify(store.getters.parseJesgoDocument([sourcePath.value, sourceSubPath.value]))
     }
 
     ElMessageBox({

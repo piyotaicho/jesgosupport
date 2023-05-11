@@ -157,7 +157,7 @@ async function createNewRule (): Promise<void> {
       const newSetName = (await ElMessageBox.prompt('新しいルールセットの名称を入力してください.', '', {
         confirmButtonText: '作成',
         cancelButtonText: 'キャンセル',
-        inputPattern: /^[^\s]+.*[^\s]+$/,
+        inputPattern: /\S/,
         inputErrorMessage: '正しく名称を入力してください'
       })).value.trim()
       if (newSetName !== undefined) {

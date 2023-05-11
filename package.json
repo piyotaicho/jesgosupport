@@ -2,7 +2,7 @@
   "name": "jesgosupport",
   "version": "0.1.0",
   "private": true,
-  "description": "JSONからCSVへの変換ルール設計ユーティリティ",
+  "description": "JESGO向けJSONからCSVへの変換ルール設計ユーティリティ",
   "author": {
     "name": "Yasuhiro Yamamoto",
     "email": "mohyama@mohnet.com"
