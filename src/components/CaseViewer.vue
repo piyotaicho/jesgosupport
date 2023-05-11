@@ -1,7 +1,7 @@
 <template>
   <div class="case-viewer">
     <CaseNavigation
-      :index="documentState.index"
+      :index="index"
       :length="maxIndex"
       @update:index="updateIndex($event)">
     </CaseNavigation>
@@ -12,6 +12,14 @@
       <div>
         $his_id: {{ caseId }}
       </div>
+      <div>
+        $name: {{ caseName }}
+      </div>
+      <div class="clickable" @click="copytoClipboard">
+        <el-tooltip placement="top-start" content="クリックでJSONパスをクリップボードにコピー">
+          強調表示パス: {{ store.state.HighlightedPath }}
+        </el-tooltip>
+      </div>
     </div>
     <JsonViewer :json="caseDocumentList"></JsonViewer>
   </div>
@@ -21,7 +29,10 @@
 import { JsonObject } from './types'
 import CaseNavigation from './CaseNavigation.vue'
 import JsonViewer from './JsonViewer.vue'
-import { reactive, computed, ComputedRef } from 'vue'
+import { computed, ComputedRef, watchEffect } from 'vue'
+import { useStore } from './store'
+
+const store = useStore()
 
 interface jesgoOutput {
   hash: string,
@@ -33,10 +44,28 @@ interface jesgoOutput {
   name?: string,
   documentList: JsonObject
 }
+
 const props = defineProps<{
   json: JsonObject|undefined
 }>()
 
+const index = computed({
+  get: () => store.state.currentIndex,
+  set: (value) => store.commit('setIndex', value)
+})
+
+watchEffect(() => {
+  // JSONドキュメントが更新されたら表示を最初のレコードに移動する
+  if (props.json !== undefined && Array.isArray(props.json)) {
+    index.value = props.json.length === 0 ? -1 : 0
+  } else {
+    index.value = -1
+  }
+})
+
+/**
+ * maxIndex JSONドキュメント配列の症例数
+ */
 const maxIndex = computed(() => {
   if (Array.isArray(props.json)) {
     return props.json.length
@@ -45,44 +74,60 @@ const maxIndex = computed(() => {
   }
 })
 
-const caseDocument: ComputedRef<JsonObject> = computed(() => {
-  if (props.json && maxIndex.value > 0 && documentState.index >= 0) {
-    return (props.json as object[])[documentState.index]
-  } else {
-    return {}
-  }
-})
+/**
+ * indexで指定されたレコードドキュメント
+ * @returns {JsonObject} ドキュメントが空白の場合は空オブジェクトを返す
+ */
+const caseDocument: ComputedRef<JsonObject> = computed(() => store.getters.documentRef(index.value))
 
+/**
+ * @returns {string} 症例レコードのハッシュ
+ */
 const caseHash: ComputedRef<string> = computed(() => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (caseDocument.value as jesgoOutput)?.hash || 'N.A.'
 })
 
+/**
+ * @returns {string} 症例レコードにある患者ID
+ */
 const caseId: ComputedRef<string> = computed(() => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (caseDocument.value as jesgoOutput)?.his_id || 'N.A.'
 })
 
-const caseDocumentList: ComputedRef<JsonObject> = computed(() => {
+/**
+ * @returns {string} 症例レコードにある患者名
+ */
+const caseName: ComputedRef<string> = computed(() => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const documentLists = (caseDocument.value as any)?.documentList as JsonObject[] || []
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return documentLists.filter(element => (element as any)?.患者台帳)
+  return (caseDocument.value as jesgoOutput)?.name || 'N.A.'
 })
 
-const documentState = reactive({
-  // ドキュメントのJSONpathにおいて症例区切りとなるarrayへのポインタ
-  basePath: '/',
-  // ナビゲーション
-  index: -1
-})
+/**
+ * @returns {string} 症例レコードが保持するJSEGOドキュメント本体部分
+ */
+const caseDocumentList: ComputedRef<JsonObject> = computed(() => store.getters.jesgoDocumentRef(index.value))
 
+/**
+ * イベントハンドラ index の値を更新しハイライトを解除する
+ * @param {number}
+ */
 function updateIndex (value: number) :void {
   if (value >= 0 || value < maxIndex.value) {
-    documentState.index = value
+    index.value = value
+    store.commit('setHighlight')
   }
 }
 
+/**
+ * イベントハンドラ クリップボードにハイライトされたjsonpathをコピーする
+ */
+async function copytoClipboard (): Promise<void> {
+  if (store.state.HighlightedPath !== '') {
+    await navigator.clipboard.writeText(store.state.HighlightedPath)
+  }
+}
 </script>
 
 <style>
@@ -91,6 +136,7 @@ div.case-viewer {
   display: flex;
   flex-direction: column;
   height: 90%;
+  overflow-y: auto;
 }
 
 div.case-viewer-identifiers {

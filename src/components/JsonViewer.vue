@@ -5,7 +5,8 @@
         :lineNumber="index + 1"
         :line="item.text"
         :pointer="item.pointer"
-        :highlights="jsonPointers">
+        :highlights="jsonPointers"
+        @click="setHighlight">
       </JsonViewerLineVue>
     </ul>
   </div>
@@ -48,18 +49,6 @@ const jsonPointers: ComputedRef<string[]> = computed(() => {
     return []
   }
 })
-
-// /**
-//  * highlight JSONpathで指定されたポインタに該当するか確認する
-//  * @param {string} 行に保持されたポインタ
-//  */
-// function highlight (pointer: string|undefined): boolean {
-//   if (pointer && jsonPointers.value.length > 0) {
-//     return (jsonPointers.value.indexOf(pointer) === 0)
-//   } else {
-//     return false
-//   }
-// }
 
 /**
  * toJsonComplex オブジェクトをjsonComplexアレイに変換する
@@ -152,10 +141,22 @@ function toJsonComplex (obj: JsonObject, indent = '', basePath = '', arrayItem =
 }
 
 /**
- * pointerToPath jsonポインタを簡易的にjsonPathに変換する
- * @param {string} jsonPointer
+ * setHighlight イベントハンドラ クリックされた行のポインタに基づきハイライトを設定する
+ * @param {string} jsonpointer文字列
  */
-function pointerToPath (jsonPointer: string) {
+function setHighlight (jsonpointer = ''):void {
+  if (jsonpointer !== '') {
+    const jsonPath = pointerToPath(jsonpointer)
+    store.commit('setHighlight', jsonPath)
+  }
+}
+
+/**
+ * pointerToPath jsonポインタを簡易的にjsonPathに変換する
+ * @param {string} jsonPointer文字列
+ * @returns {string} jsonPath文字列
+ */
+function pointerToPath (jsonPointer: string): string {
   // 先頭のスラッシュを削除する
   jsonPointer = jsonPointer.replace(/^\//, '')
 
@@ -175,7 +176,9 @@ function pointerToPath (jsonPointer: string) {
 
 <style>
 div .json-viewer {
+  position: relative;
   overflow: auto;
+  height: 100%;
 }
 
 .json-viewer ul {
@@ -218,8 +221,12 @@ div .json-viewer {
   cursor: pointer;
 }
 
-.json-viewer li pre .highlight {
-  font-weight: bold;
+.json-viewer li.highlight {
+  background-color: #b89bf3;
+}
+
+.json-viewer li:nth-child(even).highlight {
+  background-color: #a588da;
 }
 
 .json-viewer li .haspoint:hover {

@@ -1,14 +1,15 @@
 import { InjectionKey } from 'vue'
 import { createStore, useStore as vuexUseStore, Store } from 'vuex'
-
-import { JsonObject, CsvObject, LogicRule } from './types'
+import { ErrorObject, JsonObject, CsvObject, LogicRule } from './types'
+import { JSONPath } from 'jsonpath-plus'
 
 export interface State {
   JsonDocument: JsonObject,
   CsvDocument: CsvObject,
+  ErrorDocument: ErrorObject[],
   RuleSet: LogicRule[],
-  SelectedPointer: string,
-  HighlightedPath: string
+  HighlightedPath: string,
+  currentIndex: number
 }
 
 // eslint-disable-next-line symbol-description
@@ -18,16 +19,60 @@ export const store = createStore<State>({
   state: {
     JsonDocument: [],
     CsvDocument: [],
+    ErrorDocument: [],
     RuleSet: [],
-    SelectedPointer: '',
-    HighlightedPath: ''
+    HighlightedPath: '',
+    currentIndex: -1
+  },
+  getters: {
+    documentLength: (state) => Array.isArray(state.JsonDocument) ? state.JsonDocument.length : 0,
+    documentRef: (state, getters) => (index:number|undefined) => {
+      const cursor = index === undefined ? state.currentIndex : index
+      if (getters.documentLength > 0) {
+        if (cursor >= 0 && cursor < getters.documentLength) {
+          return (state.JsonDocument as JsonObject[])[cursor]
+        }
+      }
+      return {}
+    },
+    jesgoDocumentRef: (_, getters) => (index:number|undefined) => {
+      if (getters.documentRef(index)?.documentList) {
+        const documentLists = getters.documentRef(index)?.documentList as JsonObject[]
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return documentLists.filter(element => (element as any)?.患者台帳)
+      } else {
+        return []
+      }
+    },
+    parseJesgoDocument: (_, getters) => (jsonpath:string, index:number|undefined, resultType:'value'|'pointer' = 'value') =>
+      JSONPath({
+        path: jsonpath,
+        json: getters.jesgoDocumentRef(index),
+        resultType: resultType
+      }),
+    getRuleSetJson: (state) => JSON.stringify(state.RuleSet, null, 2)
   },
   mutations: {
+    setIndex (state, newValue) {
+      state.currentIndex = newValue
+    },
     setJsonDocument (state, newValue) {
       state.JsonDocument = newValue
     },
     setCsvDocument (state, newValue) {
       state.CsvDocument = newValue
+    },
+    clearCsvDocument (state) {
+      state.CsvDocument.splice(0, state.CsvDocument.length)
+    },
+    addCsvDocument (state, csvRow) {
+      state.CsvDocument.push(csvRow)
+    },
+    clearErrorDocument (state) {
+      state.ErrorDocument.splice(0, state.ErrorDocument.length)
+    },
+    addErrorDocument (state, errorObj:ErrorObject) {
+      state.ErrorDocument.push(errorObj)
     },
     addNewRuleSet (state, newValue) {
       state.RuleSet.push(newValue)
@@ -44,8 +89,17 @@ export const store = createStore<State>({
         state.RuleSet.splice(index, 1, newValue)
       }
     },
-    setPointer (state, pointer = '') {
-      state.SelectedPointer = pointer
+    setRuleSetFromJson (state, jsonString: string) {
+      try {
+        const newObject = JSON.parse(jsonString)
+        if (Array.isArray(newObject)) {
+          state.RuleSet.splice(0, state.RuleSet.length, ...newObject)
+        } else {
+          throw new Error('ルールセットは配列である必要があります.')
+        }
+      } catch (e) {
+        console.error(e)
+      }
     },
     setHighlight (state, path = '') {
       state.HighlightedPath = path

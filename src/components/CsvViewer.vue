@@ -3,7 +3,7 @@
     <table class="csvViewer">
       <tr v-for="(line, lineIndex) in csvData" :key="lineIndex">
         <template v-if="lineIndex === 0">
-          <th><el-icon><Setting /></el-icon></th>
+          <th><el-icon><Delete/></el-icon></th>
           <th v-for="(cell, columnIndex) in line" :key="columnIndex" @click="columnClick(columnIndex)">
             {{ cell }}
           </th>
@@ -22,7 +22,7 @@
 <script setup lang="ts">
 import { CsvObject } from './types'
 import { computed } from 'vue'
-import { Setting } from '@element-plus/icons-vue'
+import { Delete } from '@element-plus/icons-vue'
 
 const props = defineProps<{
   csv: CsvObject

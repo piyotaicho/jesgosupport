@@ -14,13 +14,13 @@
             条件を設定します：
           </div>
           <div>
-            <el-select v-model="argument1st">
+            <el-select v-model="argument1st" placeholder="変数を選択">
               <el-option v-for="(element, index) in optionsLabelValue" :key="index" :label="element.label" :value="element.value" />
             </el-select>
             の
-            <el-select v-model="argument2nd">
+            <el-select v-model="argument2nd" placeholder="情報の種類を選択">
               <el-option label="値" value="value" />
-              <el-option label="数" value="length"/>
+              <el-option label="数" value="count"/>
             </el-select>
             が
           </div>
@@ -30,7 +30,7 @@
             >
               <el-option v-for="(element, index) in optionsLabelValue" :key="index" :label="element.label + 'の値'" :value="element.value" />
             </el-select>
-            <el-select v-model="argument4th">
+            <el-select v-model="argument4th" placeholder="条件を選択">
               <el-option label="と同じ" value="eq"/>
               <el-option label="より大きい" value="gt"/>
               <el-option label="以上" value="ge"/>
@@ -69,20 +69,21 @@
             値をテーブルで変換します
           </div>
           <div>
-            <el-select placeholder="対象を選択" v-model="argument1st">
+            <el-select placeholder="値の元を選択" v-model="argument1st">
               <el-option v-for="(element, index) in optionsLabelValue" :key="index" :label="element.label + 'の値'" :value="element.value" />
             </el-select>
             を以下のテーブルに従って変換します。
           </div>
           <div>
-            <table>
+            <table class="translation-table">
               <tr>
-                <th class="table-hedding"></th>
-                <th class="table-">元の値</th><th>変換後の値</th>
+                <th></th>
+                <th>元の値</th><th>変換後の値</th>
               </tr>
-              <tr>
-                <th><el-icon><CloseBold /></el-icon></th>
-                <td><el-input /></td><td><el-input /></td>
+              <tr v-for="(element, index) of translationTable" :key="index">
+                <th><el-icon class="clickable" @click="deleteTranslation(index)"><CloseBold /></el-icon></th>
+                <td><el-input v-model.lazy="element[0]" @update:model-value="setTranslation(index, element[0], element[1])"/></td>
+                <td><el-input v-model.lazy="element[1]" @update:model-value="setTranslation(index, element[0], element[1])"/></td>
               </tr>
             </table>
           </div>
@@ -115,7 +116,7 @@
           <el-option label="次のブロックへ" :value="1"/>
           <el-option v-for="number in [2,3,4,5,6,7,8,9]" :key="number" :label="number + 'つ先のブロックへ'" :value="number" />
           <el-option label="10先のブロックへ" :value="10"/>
-          <el-option label="値の処理を中断" value="Abort"/>
+          <el-option label="ルールの処理を終了" value="Abort"/>
         </el-select>
       </div>
       <div class="Logic-block-behaivior" v-if="isFalseBehavior">
@@ -124,7 +125,7 @@
           <el-option label="次のブロックへ" :value="1"/>
           <el-option v-for="number in [2,3,4,5,6,7,8,9]" :key="number" :label="number + 'つ先のブロックへ'" :value="number" />
           <el-option label="10先のブロックへ" :value="10"/>
-          <el-option label="値の処理を中断" value="Abort"/>
+          <el-option label="ルールの処理を終了" value="Abort"/>
           <el-option label="症例に対する全ての処理を終了" value="Exit"/>
         </el-select>
       </div>
@@ -133,7 +134,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, WritableComputedRef } from 'vue'
+import { computed, WritableComputedRef, ComputedRef } from 'vue'
 import { LogicBlock } from './types'
 import { ArrowUpBold, ArrowDownBold, CloseBold } from '@element-plus/icons-vue'
 
@@ -165,6 +166,8 @@ const emits = defineEmits<{
   (e: 'delete', index: number): void,
   (e: 'reorder', index: number, offset: number): void
 }>()
+
+// const translationTable:Ref<string[][]> = ref([['', '']])
 
 const blockColor = computed(() => {
   const colorTable = {
@@ -199,6 +202,14 @@ const argument3rd: WritableComputedRef<string> = computed({
 const argument4th: WritableComputedRef<string> = computed({
   get: () => props.block.arguments[3] || '',
   set: (value) => setArguments(3, value)
+})
+
+const translationTable:ComputedRef<string[][]> = computed(() => {
+  if (props.block?.lookup === undefined) {
+    return [['', '']]
+  } else {
+    return props.block.lookup
+  }
 })
 
 const isFalseBehavior = computed(() => {
@@ -242,13 +253,53 @@ function setArguments (index: number, value: string) {
   emits('update:block', newBlock)
 }
 
+/**
+ * deleteTranslation 変換テーブルの行を削除
+ * @param {number} index
+ */
+function deleteTranslation (index:number) {
+  const newTable = [...translationTable.value]
+  if (newTable.length === 1) {
+    newTable.splice(index, 1, ['', ''])
+  } else {
+    newTable.splice(index, 1)
+  }
+  const newBlock = Object.assign(props.block, { lookup: newTable })
+  emits('update:block', newBlock)
+}
+
+/**
+ * setTranslation 変換テーブルの行を設定、行を増やす
+ * @param {number} index
+ * @param {string} op1
+ * @param {string} op2
+ */
+function setTranslation (index:number, op1:string, op2:string) {
+  const newTable = [...translationTable.value]
+  if (index !== newTable.length - 1) {
+    newTable.splice(index, 1, [op1.trim(), op2.trim()])
+  } else {
+    newTable.splice(index, 1, [op1.trim(), op2.trim()], ['', ''])
+  }
+  const newBlock = Object.assign(props.block, { lookup: newTable })
+  emits('update:block', newBlock)
+}
+
+/**
+ * deleteBlock ブロック削除のイベントを発火
+ */
 function deleteBlock () {
   emits('delete', props.index)
 }
 
+/**
+ * reorderBlock ブロック移動のイベントを発火
+ * @param offset
+ */
 function reorderBlock (offset: number) {
   emits('reorder', props.index, offset)
 }
+
 </script>
 
 <style>
@@ -286,5 +337,23 @@ div.Logic-block-logic {
 div.Logic-block-behaivior {
   display: flexbox;
   margin: 0.5rem 1rem;
+}
+
+table.translation-table {
+  display: block;
+  padding: 1rem 0;
+  width: 100%;
+}
+
+table.translation-table tr {
+  height: 1.3rem;
+}
+
+table.translation-table tr th:first {
+  width: 3rem;
+}
+
+table.translation-table tr td {
+  width: 50%;
 }
 </style>

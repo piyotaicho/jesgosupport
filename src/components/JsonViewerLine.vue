@@ -1,11 +1,10 @@
 <template>
-  <li>
+  <li :class="[highlight ? 'highlight' : '']">
     <span class="json-viewer-index" v-if="props.lineNumber !== undefined">{{ props.lineNumber }}</span>
     <pre><span
       :style="paddingLeft"
       :class="[
-        props?.pointer ? 'haspoint' : '',
-        highlight ? 'highlight' : ''
+        props?.pointer ? 'haspoint' : ''
       ]"
       @click="onclick()"
       >{{props.line.trimStart()}}</span></pre>
@@ -35,7 +34,7 @@ const paddingLeft = computed((): string => {
   for (; props.line.charAt(i) === ' '; i++) {
     // NOP
   }
-  return `padding-left: ${i}rem;`
+  return `padding-left: ${i * 0.7}rem;`
 })
 
 /**
@@ -49,6 +48,7 @@ const highlight = computed((): boolean => {
     return false
   }
 })
+
 /**
  * onclick クリックイベントを親に発行する
  */

@@ -1,5 +1,9 @@
 export type JsonObject = number|string|number[]|string[]|object|object[]
 export type CsvObject = string[][]
+export type ErrorObject = {
+  hash: string,
+  errors: string[]
+}
 
 export type SourceBlock = {
   path: string,

@@ -19,8 +19,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { Plus, Delete } from '@element-plus/icons-vue'
+// import { ref } from 'vue'
+import { Plus } from '@element-plus/icons-vue'
 import { LogicBlock, BlockType } from './types'
 import LogicTemplate from './LogicTemplate.vue'
 
@@ -33,10 +33,10 @@ const emits = defineEmits<{
 }>()
 
 function addBlock (blockType: BlockType) {
-  const newBlock = {
+  const newBlock: LogicBlock = {
     type: blockType,
     arguments: [],
-    trueBehaivior: ''
+    trueBehaivior: 1
   }
   emits('update:blocks', [...props.blocks, newBlock])
 }

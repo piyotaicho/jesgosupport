@@ -2,24 +2,28 @@
   <div class="logic-section">
     <div class="logic-section-ruleset">
       <div class="logic-section-ruleset-selector">
-        フィールドタイトル :
-        <el-select v-model="currentRulesetTitle">
+        ルールの名称 :
+        <el-select v-model="currentRulesetTitle" placeholder="ルールを選択">
           <el-option v-for="(title, index) in ruleTitles" :key="index"
             :value="title"
             :label="title" />
         </el-select>
       </div>
       <div class="logic-section-ruleset-controller">
-        <el-button type="primary" :icon="Plus" circle @click="createNewRule()"/>
-        <el-button type="primary" :icon="Delete" circle @click="deleteRule()"/>
+        <el-button-group>
+          <el-button type="primary" :icon="Plus" circle @click="createNewRule()"/>
+          <el-button type="primary" :icon="Delete" circle @click="deleteRule()"/>
+        </el-button-group>
       </div>
     </div>
     <div class="logic-section-ruleset">
-      <el-input v-model="description" placeholder="ロジックの説明" type="textarea" />
+      <el-input v-model="description" placeholder="ルールの説明" type="textarea" />
     </div>
 
     <div class="logic-section-ruleset">
-      <LogicSource v-for="(block, index) in sources" :key="index" :index="index" :block="block"/>
+      <div style="width: 100%;">
+        <LogicSource v-for="(block, index) in sources" :key="index" :index="index" :block="block" @updateblock="updateSource"/>
+      </div>
     </div>
     <div class="logic-section-ruleset">
       <!-- ロジックエディタ -->
@@ -123,6 +127,12 @@ const sources: WritableComputedRef<SourceBlock[]> = computed({
   }
 })
 
+function updateSource (index: number, value:SourceBlock) {
+  const newBlock = [...sources.value]
+  newBlock.splice(index, 1, value)
+  sources.value = newBlock
+}
+
 /**
  * procedures ルールセットのコード配列
  */
@@ -191,6 +201,14 @@ div.logic-section {
 div.logic-section-ruleset {
   display: flex;
   flex-direction: row;
-  padding: 0.8rem 0;
+  padding: 0.8rem 0.5rem;
+}
+
+div.logic-section-ruleset-controller {
+  padding-left: 1rem;
+}
+
+.logic-section-ruleset-selector .el-select {
+  width: 25rem;
 }
 </style>
