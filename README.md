@@ -7,3 +7,6 @@ JSONファイルの出力には /jesgo-plugin/jesgo-json.js をJESGOにプラグ
 ## 本ユーティリティの機能
 JSONドキュメントをJSONpathでクロールして値を取得します。順方向性に相対ジャンプで処理の分岐ができます。
 基本的に複数の値が取得されることを前提に設計していますが、最終的にはカンマで連結されてセルに保存されます。
+
+## デモ
+できあがったところで適宜 https://www.mohnet.com/products/JESGOsupport/ も更新します。
