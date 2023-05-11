@@ -1,24 +1,9 @@
-# jesgosupport
+# JESGOサポートツール
+JESGOからプラグイン経由で出力されたJSONファイルをCSVに加工するツールです。
 
-## Project setup
-```
-npm install
-```
+## プラグインの登録
+JSONファイルの出力には /jesgo-plugin/jesgo-json.js をJESGOにプラグインとして登録してご利用下さい。
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
-
-### Compiles and minifies for production
-```
-npm run build
-```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+## 本ユーティリティの機能
+JSONドキュメントをJSONpathでクロールして値を取得します。順方向性に相対ジャンプで処理の分岐ができます。
+基本的に複数の値が取得されることを前提に設計していますが、最終的にはカンマで連結されてセルに保存されます。
