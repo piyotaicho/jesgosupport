@@ -128,89 +128,8 @@ function userDownload (data: string, filename: string): void {
   a.setAttribute('href', url)
   a.click()
   a.remove()
+  URL.revokeObjectURL(url)
 }
-// /**
-//  * loadCsv inputFileCsvへのclickイベント発火
-//  */
-// function loadCsv ():void {
-//   inputFileCsv.value.click()
-// }
-
-// /**
-//  * loadCsvFile FILE APIで読み込まれたCSVファイルをパース
-//  * @param {Event} HTMLイベントオブジェクト
-//  */
-// async function loadCsvFile (event: Event): Promise<void> {
-//   const target = event.target as HTMLInputElement
-//   const files = target.files as FileList
-//   if (files.length > 0) {
-//     const reader = new FileReader()
-//     await new Promise((resolve, reject) => {
-//       try {
-//         reader.onload = () => resolve(reader.result)
-//         reader.readAsText(files[0])
-//       } catch (e) {
-//         window.alert('指定されたファイルにアクセスできません.')
-//         reject(e)
-//       }
-//     }).then(async content => {
-//       store.commit('setCsvDocument', parseCSV(content as string))
-//     })
-//   }
-// }
-
-// function parseCSV (content: string): CsvObject|undefined {
-//   if (!content) return undefined
-
-//   // 改行コードを確認して切り出し
-//   const newline:string = (content.indexOf('\r\n') < 0) ? (content.indexOf('\r') < 0 ? '\n' : '\r') : '\r\n'
-//   const lines:string[] = content.split(newline)
-
-//   // CSVのパース
-//   const rows:string[][] = []
-//   const columncounts: object = {}
-//   for (const line of lines) {
-//     const row:string[] = []
-//     if (line.length === 0) {
-//       // 空白行はスキップ
-//       continue
-//     }
-
-//     for (let start = 0; start < line.length; start++) {
-//       let end:number
-//       if (line.charAt(start) === '"') {
-//         // ダブルクォートでのクオートあり：閉じを検索
-//         for (end = start + 1; end < line.length; end++) {
-//           end = ((end = line.indexOf('"', end)) < 0) ? line.length : end
-//           if (line.charAt(++end) !== '"') {
-//             // CSVでは " は "" にエスケープされる、クオートのエスケープでなければ切り出し
-//             break
-//           }
-//         }
-//         row.push(line.substring(start + 1, end - 1).replace(/""/g, '"').trim())
-//       } else {
-//         // クオート無し カンマを探す
-//         end = (end = line.indexOf(',', start)) < 0 ? line.length : end
-//         row.push(line.substring(start, end).trim())
-//       }
-//       start = end
-//     }
-
-//     if (line.charAt(line.length - 1) === ',') {
-//       // 最終フィールドに割り当てがないにもかかわらず , が入力されるExcelのBroken CSVに対応
-//       row.push('')
-//     }
-//     rows.push(row)
-
-//     // コラム数をdictionaryに収納
-//     Object.assign(columncounts, { [row.length]: null })
-//   }
-//   if (Object.keys(columncounts).length > 1) {
-//     // コラム数が複数存在する場合エラーとして扱う
-//     throw new Error('ファイルのレコード中のフィールド数が一定ではありません.不正なCSVファイルです.')
-//   }
-//   return (rows)
-// }
 
 function performProcessing (): void {
   if (store.getters.documentLength > 0 && store.state.RuleSet.length > 0) {
@@ -394,14 +313,17 @@ function processDocument (index:number) {
         return num - 1
       }
 
+      const value = op1.join(',')
       if (dst === '$error') {
         // エラーメッセージとして出力
-        errorMessages.push(op1.join(','))
+        console.log(`Assign an error message: ${value}.`)
+        errorMessages.push(value)
       } else {
         if (/^[A-Z]+$/.test(dst)) {
           // Excel風の列番号で指定
+          console.log(`Assign a value ${value} into column ${dst}.`)
           const colindex = xlcolToNum(dst)
-          csvRow[colindex] = op1.join(',')
+          csvRow[colindex] = value
         } else {
           // 不正な指定
           console.log(`Assign failed: illegal column name "${dst}".`)
@@ -435,7 +357,6 @@ function processDocument (index:number) {
         // 正常終了
         console.log()
         if (procedure.trueBehaivior === 'Abort') {
-          breakOut = true
           step = (rule.procedure || []).length // 処理ループから抜ける
         } else {
           if (typeof procedure.trueBehaivior === 'number') {
@@ -451,7 +372,6 @@ function processDocument (index:number) {
             ruleIndex = store.state.RuleSet.length // ルールセットループから抜ける
           }
           if (procedure.falseBehaivior === 'Abort') {
-            breakOut = true
             step = (rule.procedure || []).length // 処理ループから抜ける
           }
           if (typeof procedure.falseBehaivior === 'number') {
@@ -468,7 +388,7 @@ function processDocument (index:number) {
     store.commit('addCsvDocument', csvRow)
     store.commit('addErrorDocument', {
       hash,
-      errors: errorMessages
+      errors: [...errorMessages]
     })
   }
 }
@@ -476,7 +396,7 @@ function processDocument (index:number) {
 
 <style>
 div.control-bar {
-  border: 1px solid cyan;
+  /* border: 1px solid cyan; */
   display: flex;
   justify-content: space-around;
 }

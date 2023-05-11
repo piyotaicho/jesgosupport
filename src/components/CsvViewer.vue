@@ -1,16 +1,16 @@
 <template>
-  <div>
-    <table class="csvViewer">
+  <div class="csvViewer">
+    <table>
       <tr v-for="(line, lineIndex) in csvData" :key="lineIndex">
         <template v-if="lineIndex === 0">
-          <th><el-icon><Delete/></el-icon></th>
-          <th v-for="(cell, columnIndex) in line" :key="columnIndex" @click="columnClick(columnIndex)">
+          <th><el-icon @click="clearCsv"><Delete/></el-icon></th>
+          <th v-for="(cell, columnIndex) in line" :key="columnIndex">
             {{ cell }}
           </th>
         </template>
         <template v-else>
           <th>{{ lineIndex }}</th>
-          <td v-for="(cell, columnIndex) in line" :key="columnIndex" @click="columnClick(columnIndex)">
+          <td v-for="(cell, columnIndex) in line" :key="columnIndex">
             {{ cell }}
           </td>
         </template>
@@ -23,29 +23,26 @@
 import { CsvObject } from './types'
 import { computed } from 'vue'
 import { Delete } from '@element-plus/icons-vue'
+import { store } from './store'
 
 const props = defineProps<{
   csv: CsvObject
 }>()
 
-const emits = defineEmits<{
-  (e: 'click', value: number): void
-}>()
-
 const csvData = computed(() => {
   if (props.csv && props.csv.length > 0 && props.csv[0].length > 0) {
-    const header: string[] = props.csv[0].map((_, index) => base26(index + 1))
+    const header: string[] = []
+    for (let index = 0; index < props.csv[0].length; index++) {
+      header.push(base26(index + 1))
+    }
     return [header, ...props.csv]
   } else {
     return [[]]
   }
 })
-/**
- * columnClick カラム値のクリックを親に発火する
- * @param {number} カラムのインデックス値
- */
-function columnClick (columnIndex: number) {
-  emits('click', columnIndex)
+
+function clearCsv () {
+  store.commit('clearCsvDocument')
 }
 
 function base26 (value: number): string {
@@ -60,7 +57,13 @@ function base26 (value: number): string {
 </script>
 
 <style>
-table.csvViewer {
+div.csvViewer {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}
+
+.csvViewer table{
   font-size: 0.9rem;
   border-collapse: collapse;
   overflow: auto;

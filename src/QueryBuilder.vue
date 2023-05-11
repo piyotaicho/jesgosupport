@@ -1,16 +1,19 @@
 <template>
   <div class="app_box">
     <ControlBar/>
-    <Splitpanes horizontal style="width: 100vw;" class="default-theme">
-      <Pane min-size="15" max-size="50">
+    <Splitpanes horizontal :class="['default-theme', 'pane-root']">
+      <Pane size="10">
         <CsvViewer :csv="CsvDocument"></CsvViewer>
       </Pane>
-      <Pane>
+      <Pane size="10">
+        <ErrorViewer />
+      </Pane>
+      <Pane size="80">
         <Splitpanes style="height: 100%;" class="default-theme">
-          <Pane>
+          <Pane size="50">
             <CaseViewer :json="JsonDocument"></CaseViewer>
           </Pane>
-          <Pane style="width: 40rem;">
+          <Pane size="50">
             <LogicSection></LogicSection>
           </Pane>
         </Splitpanes>
@@ -29,6 +32,7 @@ import 'splitpanes/dist/splitpanes.css'
 import ControlBar from './components/ControlBar.vue'
 import CaseViewer from './components/CaseViewer.vue'
 import CsvViewer from './components/CsvViewer.vue'
+import ErrorViewer from './components/ErrorViewer.vue'
 import LogicSection from './components/LogicSection.vue'
 
 const store = useStore()
@@ -44,11 +48,16 @@ const CsvDocument = computed(() => {
 
 <style>
 div.app_box {
+  margin: auto 0;
   display: flex;
   flex-direction: column;
 }
 
 .clickable :hover {
   cursor: pointer;
+}
+
+.pane-root {
+  width: 98vw; height: 94vh; margin-left: auto; margin-right: auto;
 }
 </style>

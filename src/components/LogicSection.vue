@@ -195,7 +195,13 @@ async function deleteRule (): Promise<void> {
 
 <style>
 div.logic-section {
-  border: 1px solid cyan;
+  min-width: 47rem;
+  max-width: 47rem;
+  /* border: 1px solid cyan; */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
 }
 
 div.logic-section-ruleset {

@@ -132,10 +132,10 @@ async function copytoClipboard (): Promise<void> {
 
 <style>
 div.case-viewer {
-  border: 1px solid cyan;
+  /* border: 1px solid cyan; */
   display: flex;
   flex-direction: column;
-  height: 90%;
+  height: 100%;
   overflow-y: auto;
 }
 
