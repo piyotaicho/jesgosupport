@@ -1,0 +1,169 @@
+[
+  {
+    "title": "ハッシュ値",
+    "procedure": [
+      {
+        "type": "Store",
+        "arguments": [
+          "$hash",
+          "A"
+        ],
+        "trueBehaivior": 1
+      }
+    ]
+  },
+  {
+    "title": "がん種",
+    "source": [
+      {
+        "path": "$.[0].患者台帳.がん種",
+        "subpath": ""
+      },
+      {
+        "path": ""
+      },
+      {
+        "path": ""
+      },
+      {
+        "path": ""
+      }
+    ],
+    "procedure": [
+      {
+        "type": "Store",
+        "arguments": [
+          "@1",
+          "B"
+        ],
+        "trueBehaivior": 1
+      }
+    ]
+  },
+  {
+    "title": "FIGO",
+    "source": [
+      {
+        "path": "$.[0].患者台帳.病期診断.FIGO"
+      },
+      {
+        "path": ""
+      },
+      {
+        "path": ""
+      },
+      {
+        "path": ""
+      }
+    ],
+    "procedure": [
+      {
+        "type": "Store",
+        "arguments": [
+          "@1",
+          "C"
+        ],
+        "trueBehaivior": 1
+      }
+    ]
+  },
+  {
+    "title": "初回治療開始日",
+    "source": [
+      {
+        "path": "$.[0].患者台帳.初回治療開始日"
+      },
+      {
+        "path": ""
+      },
+      {
+        "path": ""
+      },
+      {
+        "path": ""
+      }
+    ],
+    "procedure": [
+      {
+        "type": "Store",
+        "arguments": [
+          "@1",
+          "D"
+        ],
+        "trueBehaivior": 1
+      }
+    ]
+  },
+  {
+    "title": "手術内容",
+    "source": [
+      {
+        "path": "$.[0].患者台帳.初回治療.手術療法.[0].実施手術.[*].術式"
+      },
+      {
+        "path": ""
+      },
+      {
+        "path": ""
+      },
+      {
+        "path": ""
+      }
+    ],
+    "procedure": [
+      {
+        "type": "Operators",
+        "arguments": [
+          "@1",
+          "value",
+          "^腹腔鏡",
+          "regexp"
+        ],
+        "trueBehaivior": 1,
+        "falseBehaivior": 2
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "腹腔鏡手術",
+          "$1"
+        ],
+        "trueBehaivior": 4
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "@1",
+          null,
+          "^ロボット"
+        ],
+        "trueBehaivior": 1,
+        "falseBehaivior": 2
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "ロボット支援下手術",
+          "$1"
+        ],
+        "trueBehaivior": 2
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "開腹手術",
+          "$1"
+        ],
+        "trueBehaivior": 1
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$1",
+          "E"
+        ],
+        "trueBehaivior": 1
+      }
+    ]
+  }
+]
