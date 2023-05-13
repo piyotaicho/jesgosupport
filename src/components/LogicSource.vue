@@ -3,6 +3,7 @@
     <div class="source-block-index clickable" @click="previewSource">
       <el-tooltip placement="top-start" content="クリックでソースをプレビューします.">
         ソース {{ props.index + 1 }}
+        <el-icon><View /></el-icon>
       </el-tooltip>
     </div>
     <div class="source-block-content">
@@ -11,11 +12,15 @@
           パス:
         </div>
         <div>
-          <el-select v-model.trim="sourcePath" clearable allow-create filterable placeholder="JSONpathを入力もしくは予約語を選択">
-            <el-option value="$hash" label="ハッシュ値"/>
-            <el-option value="$his_id" label="カルテ番号"/>
-            <el-option value="$name" label="患者名"/>
-          </el-select>
+          <el-input v-model.lazy.trim="sourcePath" placeholder="JSONpathを入力もしくは予約語を選択" style="width: 90%; margin-right: 0.5rem;">
+            <template #append>
+              <el-select v-model="sourcePath" placeholder="" style="width: 2.75rem">
+                <el-option value="$hash" label="ハッシュ値"/>
+                <el-option value="$his_id" label="カルテ番号"/>
+                <el-option value="$name" label="患者名"/>
+              </el-select>
+            </template>
+          </el-input>
           <el-tooltip placement="top-end" content="入力されたJSONパスをハイライトします.">
             <el-button :icon="Aim" type="primary" circle @click="highlight()"/>
           </el-tooltip>
@@ -26,7 +31,7 @@
           サブパス:
         </div>
         <div>
-          <el-input v-model="sourceSubPath" :disabled="disableSubpath"/>
+          <el-input v-model.lazy.trim="sourceSubPath" placeholder="パスの結果に対するJSONpathを入力" :disabled="disableSubpath"/>
         </div>
       </div>
     </div>
@@ -35,7 +40,7 @@
 
 <script setup lang="ts">
 import { h, WritableComputedRef, computed } from 'vue'
-import { Aim } from '@element-plus/icons-vue'
+import { Aim, View } from '@element-plus/icons-vue'
 import { useStore } from './store'
 import { SourceBlock } from './types'
 import { ElMessageBox } from 'element-plus'
@@ -123,10 +128,13 @@ div.source-block {
   display: flex;
   flex-direction: row;
   width: 100%;
+  box-sizing: border-box;
   padding: 0.3rem 0;
   border: 1px #444444 solid;
   border-radius: 0.3rem;
   margin-bottom: 0.2rem;
+  padding-left: 0.6rem;
+  padding-right: 0.6rem;
 }
 
 div.source-block-index {
