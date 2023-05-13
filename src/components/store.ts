@@ -45,22 +45,27 @@ export const store = createStore<State>({
       }
     },
     parseJesgoDocument: (_, getters) => (jsonpath:string|string[], index:number|undefined, resultType:'value'|'pointer' = 'value') => {
-      // jsonpathが配列の場合は[0]がメイン
-      const primarypath:string = Array.isArray(jsonpath) ? jsonpath[0] : jsonpath
-      let result = JSONPath({
-        path: primarypath,
-        json: getters.jesgoDocumentRef(index),
-        resultType: resultType
-      })
-
-      // サブパスはvalueの時だけ有効
-      if (resultType === 'value' && Array.isArray(jsonpath) && (jsonpath[1] || '') !== '') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let result:any
+      try {
+        // jsonpathが配列の場合は[0]がメイン
+        const primarypath:string = Array.isArray(jsonpath) ? jsonpath[0] : jsonpath
         result = JSONPath({
-          path: jsonpath[1],
-          json: result
+          path: primarypath,
+          json: getters.jesgoDocumentRef(index),
+          resultType: resultType
         })
-      }
 
+        // サブパスはvalueの時だけ有効
+        if (resultType === 'value' && Array.isArray(jsonpath) && (jsonpath[1] || '') !== '') {
+          result = JSONPath({
+            path: jsonpath[1],
+            json: result
+          })
+        }
+      } catch (e) {
+        console.error(e)
+      }
       return result
     },
     getRuleSetJson: (state) => JSON.stringify(state.RuleSet, null, 2)
