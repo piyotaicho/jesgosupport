@@ -2,7 +2,7 @@
   <div class="source-block">
     <div class="source-block-index clickable" @click="previewSource">
       <el-tooltip placement="top-start" content="クリックでソースをプレビューします.">
-        ソース {{ props.index + 1 }}
+        <span>ソース {{ props.index + 1 }}</span>
         <el-icon><View /></el-icon>
       </el-tooltip>
     </div>
@@ -12,21 +12,19 @@
           パス:
         </div>
         <div>
-          <el-input v-model.lazy.trim="sourcePath" placeholder="JSONpathを入力もしくは予約語を選択" style="width: 90%; margin-right: 0.5rem;">
-            <template #append>
-              <el-select v-model="sourcePath" placeholder="" style="width: 2.75rem">
-                <el-option value="$hash" label="ハッシュ値"/>
-                <el-option value="$his_id" label="カルテ番号"/>
-                <el-option value="$name" label="患者名"/>
-              </el-select>
-            </template>
-          </el-input>
+          <DropdownCombo v-model.lazy.trim="sourcePath" placeholder="JSONpathを入力もしくは予約語を選択" style="width: 90%; margin-right: 0.5rem;">
+            <el-option value="$hash" label="ハッシュ値"/>
+            <el-option value="$his_id" label="カルテ番号"/>
+            <el-option value="$name" label="患者名"/>
+          </DropdownCombo>
+        </div>
+        <div>
           <el-tooltip placement="top-end" content="入力されたJSONパスをハイライトします.">
             <el-button :icon="Aim" type="primary" circle @click="highlight()"/>
           </el-tooltip>
         </div>
       </div>
-      <div class="source-block-subpath">
+      <div class="source-block-path">
         <div>
           サブパス:
         </div>
@@ -44,6 +42,7 @@ import { Aim, View } from '@element-plus/icons-vue'
 import { useStore } from './store'
 import { SourceBlock } from './types'
 import { ElMessageBox } from 'element-plus'
+import DropdownCombo from './DropdownCombo.vue'
 
 const store = useStore()
 
@@ -143,6 +142,15 @@ div.source-block-index {
   align-items: center;
   width: 5.8rem;
   margin: auto;
+}
+
+div.source-block-path {
+  display: flex;
+  flex-direction: column;
+}
+
+div.source-block-path > div:first-child {
+  width: 7rem;
 }
 
 div.source-block-content {

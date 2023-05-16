@@ -8,7 +8,7 @@
       :clearable="props.clearable"
       >
       <template #append>
-        <el-select v-model="value" placeholder=""
+        <el-select v-model="value" placeholder=" "
           :disabled="props.disabled"
           :size="props.size"
           :effect="props.effect"
@@ -55,6 +55,14 @@ const value:WritableComputedRef<string> = computed({
 
 <style>
 div.dropdown-combo-input .el-select {
-  width: 2.7rem;
+  width: 2rem;
+}
+
+div.dropdown-combo-input .el-input-group__append {
+}
+
+div.dropdown-combo-input .el-select .el-input__wrapper {
+  max-width: 14px;
+  padding-left: 11px;
 }
 </style>
