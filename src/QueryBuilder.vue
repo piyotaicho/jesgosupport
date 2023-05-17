@@ -19,6 +19,7 @@
         </Splitpanes>
       </Pane>
     </Splitpanes>
+    <FooterCopyrights />
   </div>
 </template>
 
@@ -35,6 +36,8 @@ import CsvViewer from './components/CsvViewer.vue'
 import ErrorViewer from './components/ErrorViewer.vue'
 import LogicSection from './components/LogicSection.vue'
 
+import FooterCopyrights from './components/FooterCopyrights.vue'
+
 const store = useStore()
 
 const JsonDocument = computed(() => {
@@ -48,8 +51,8 @@ const CsvDocument = computed(() => {
 
 <style>
 div.app_box {
-  margin: auto 0;
   display: flex;
+  position: relative;
   flex-direction: column;
 }
 
