@@ -3,8 +3,8 @@
     <div class="source-block-index clickable" @click="previewSource">
       <el-tooltip placement="top-start" content="クリックでソースをプレビューします.">
         <span>ソース {{ props.index + 1 }}</span>
-        <el-icon><View /></el-icon>
       </el-tooltip>
+      <el-button :icon="View" type="primary" circle/>
     </div>
     <div class="source-block-content">
       <div class="source-block-path">
@@ -16,6 +16,7 @@
             <el-option value="$hash" label="ハッシュ値"/>
             <el-option value="$his_id" label="カルテ番号"/>
             <el-option value="$name" label="患者名"/>
+            <el-option value="$highlight" label="強調表示のパスを引用" />
           </DropdownCombo>
         </div>
         <div>
@@ -65,7 +66,13 @@ const disableSubpath = computed(() => reservedWords.indexOf(props.block.path) !=
 
 const sourcePath :WritableComputedRef<string> = computed({
   get: () => props.block.path || '',
-  set: (newPath: string) => emits('updateblock', props.index, Object.assign(props.block, { path: newPath }))
+  set: (newPath: string) => {
+    if (newPath !== '$highlight') {
+      emits('updateblock', props.index, Object.assign(props.block, { path: newPath }))
+    } else {
+      emits('updateblock', props.index, Object.assign(props.block, { path: store.state.HighlightedPath }))
+    }
+  }
 })
 
 const sourceSubPath :WritableComputedRef<string> = computed({
@@ -137,7 +144,8 @@ div.source-block {
 }
 
 div.source-block-index {
-  display: block;
+  display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   width: 5.8rem;
