@@ -20,11 +20,12 @@
 </template>
 
 <script setup lang="ts">
-import { JsonObject } from './types'
+import { JsonObject, LogicRule } from './types'
 import { CaretTop, CaretBottom, CaretRight } from '@element-plus/icons-vue'
 import { ref } from 'vue'
 import { useStore } from './store'
 import Papa from 'papaparse'
+import { ElMessageBox } from 'element-plus'
 
 const store = useStore()
 const inputFileJson = ref()
@@ -78,7 +79,16 @@ function saveError ():void {
 async function loadJsonDocument (event: Event) {
   const content = await loadJsonFile(event)
   if (content) {
-    store.commit('setJsonDocument', JSON.parse(content as string) as JsonObject)
+    try {
+      const loadedDocument = JSON.parse(content as string) as JsonObject
+      if (Array.isArray(loadedDocument) && loadedDocument[0]?.documentList) {
+        store.commit('setJsonDocument', loadedDocument)
+      } else {
+        throw new Error()
+      }
+    } catch {
+      ElMessageBox.alert('このファイルは有効なJESGOから出力されたJSONファイルではないようです.')
+    }
   }
 }
 
@@ -89,7 +99,16 @@ async function loadJsonDocument (event: Event) {
 async function loadRuleFile (event: Event) {
   const content = await loadJsonFile(event)
   if (content) {
-    store.commit('setRuleSetFromJson', content as string)
+    try {
+      const loadedRuleset = JSON.parse(content as string) as LogicRule[]
+      if (Array.isArray(loadedRuleset) && loadedRuleset[0]?.title) {
+        store.commit('setRuleSet', loadedRuleset)
+      } else {
+        throw new Error()
+      }
+    } catch {
+      ElMessageBox.alert('このファイルは有効なルールセットが記載されたJSONファイルではないようです.')
+    }
   }
 }
 
@@ -399,6 +418,7 @@ function processDocument (index:number) {
 <style>
 div.control-bar {
   /* border: 1px solid cyan; */
+  flex: initial;
   display: flex;
   justify-content: space-around;
 }

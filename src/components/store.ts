@@ -2,6 +2,7 @@ import { InjectionKey } from 'vue'
 import { createStore, useStore as vuexUseStore, Store } from 'vuex'
 import { ErrorObject, JsonObject, CsvObject, LogicRule } from './types'
 import { JSONPath } from 'jsonpath-plus'
+import { START_ALIGNMENT } from 'element-plus/es/components/virtual-list/src/defaults'
 
 export interface State {
   JsonDocument: JsonObject,
@@ -101,23 +102,16 @@ export const store = createStore<State>({
         state.RuleSet.splice(index, 1)
       }
     },
-    updateRuleSet (state, newValue: LogicRule) {
+    upsertRuleSet (state, newValue: LogicRule) {
       const index = state.RuleSet.findIndex(element => element.title === newValue.title)
       if (index >= 0) {
         state.RuleSet.splice(index, 1, newValue)
+      } else {
+        state.RuleSet.push(newValue)
       }
     },
-    setRuleSetFromJson (state, jsonString: string) {
-      try {
-        const newObject = JSON.parse(jsonString)
-        if (Array.isArray(newObject)) {
-          state.RuleSet.splice(0, state.RuleSet.length, ...newObject)
-        } else {
-          throw new Error('ルールセットは配列である必要があります.')
-        }
-      } catch (e) {
-        console.error(e)
-      }
+    setRuleSet (state, newRuleset: LogicRule[]) {
+      state.RuleSet.splice(0, state.RuleSet.length, ...newRuleset)
     },
     setHighlight (state, path = '') {
       state.HighlightedPath = path
