@@ -1,6 +1,6 @@
 <template>
   <div class="json-viewer">
-    <ul>
+    <div>
       <JsonViewerLineVue v-for="(item, index) in jsonLines" :key="index"
         :lineNumber="index + 1"
         :line="item.text"
@@ -8,7 +8,7 @@
         :highlights="jsonPointers"
         @click="setHighlight">
       </JsonViewerLineVue>
-    </ul>
+    </div>
   </div>
 </template>
 
@@ -175,67 +175,96 @@ function pointerToPath (jsonPointer: string): string {
 </script>
 
 <style>
-div .json-viewer {
+div.json-viewer {
+  flex-grow: 1;
+  box-sizing: border-box;
   position: relative;
-  overflow: auto;
   height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  padding-left: 0.2rem;
+  padding-right: 0.2rem;
+  margin-left: 0.1rem;
+  margin-right: 1rem;
+  border: 1px gray solid;
 }
 
-.json-viewer ul {
-  list-style: none;
+div.json-viewer > div {
+  display: flex;
+  flex-direction: column;
+  box-sizing: content-box;
+  height: 100%;
+  width: 100%;
+  overflow-x: visible;
+  overflow-y: scroll;
 }
 
-.json-viewer li {
-  height: 1.3rem;
+div.json-viewer-line {
   box-sizing: content-box;
   width: 100%;
+  list-style: none;
+  padding-left: 1rem;
+  display: flex;
+  flex-direction: row;
+  height: 1.3rem;
   margin: 0;
   padding: 0.16rem 0;
-  display: flexbox;
+  display: flex;
   flex-direction: row;
   justify-content: flex-start;
   white-space: nowrap;
 }
 
-.json-viewer li span {
-  display: inline-flex;
-  margin: 0;
-  margin-top: auto;
-  margin-bottom: auto;
-  padding: 0;
-}
-
-.json-viewer li pre {
-  display: inline-flex;
-  margin: 0;
-  margin-top: auto;
-  margin-bottom: auto;
-  padding: 0;
-}
-
-.json-viewer li:nth-child(even) {
+div.json-viewer-line:nth-child(even) {
   background-color: #e2e2e2;
 }
 
-.json-viewer li .haspoint {
+div.json-viewer-index {
+  box-sizing: border-box;
+  margin: 0.1rem 0.3rem;
+  min-width: 2rem;
+  max-width: 2rem;
+}
+
+div.json-viewer-content {
+  padding: 0.16rem 0;
+  overflow: visible;
+}
+
+.json-viewer span {
+  flex: initial;
+  display: block;
+  box-sizing: border-box;
+  margin: 0;
+  margin-top: auto;
+  margin-bottom: auto;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.json-viewer pre {
+  flex: initial;
+  display: block;
+  margin: 0;
+  margin-top: auto;
+  margin-bottom: auto;
+  padding: 0;
+}
+
+.json-viewer span.haspoint {
   cursor: pointer;
 }
 
-.json-viewer li.highlight {
-  background-color: #b89bf3;
-}
-
-.json-viewer li:nth-child(even).highlight {
-  background-color: #a588da;
-}
-
-.json-viewer li .haspoint:hover {
+.json-viewer span.haspoint:hover {
   text-decoration: underline;
 }
 
-span.json-viewer-index {
-  display: inline-flex;
-  padding: 0.1rem 0.3rem;
-  width: 2rem;
+div.json-viewer-line.highlight {
+  background-color: #b89bf3;
+}
+
+div.json-viewer-line:nth-child(even).highlight {
+  background-color: #a588da;
 }
 </style>

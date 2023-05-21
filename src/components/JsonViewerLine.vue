@@ -1,14 +1,16 @@
 <template>
-  <li :class="[highlight ? 'highlight' : '']">
-    <span class="json-viewer-index" v-if="props.lineNumber !== undefined">{{ props.lineNumber }}</span>
-    <pre><span
+  <div class="json-viewer-line" :class="[highlight ? 'highlight' : '']">
+    <div class="json-viewer-index"><span v-if="props.lineNumber !== undefined">{{ props.lineNumber }}</span></div>
+    <div class="json-viewer-content">
+      <pre><span
       :style="paddingLeft"
       :class="[
         props?.pointer ? 'haspoint' : ''
       ]"
       @click="onclick()"
       >{{props.line.trimStart()}}</span></pre>
-  </li>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -43,7 +45,16 @@ const paddingLeft = computed((): string => {
  */
 const highlight = computed((): boolean => {
   if (props.highlights && props.pointer) {
-    return props.highlights.find(element => props.pointer?.indexOf(element) === 0) !== undefined
+    const pointerElements = props.pointer.split('/')
+    return props.highlights.find(item => {
+      const itemElements = item.split('/')
+      for (let index = 0; index < itemElements.length; index++) {
+        if (pointerElements[index] !== itemElements[index]) {
+          return false
+        }
+      }
+      return true
+    }) !== undefined
   } else {
     return false
   }

@@ -1,17 +1,26 @@
 <template>
   <div class="control-bar">
-    <el-button type="primary" :icon="CaretTop" @click="loadJson()">JESGO-JSONを読み込み</el-button>
+    <div>
+      <el-button type="primary" :icon="CaretTop" @click="loadJson()">JESGO-JSONを読み込み</el-button>
+    </div>
 
-    <el-button-group>
-      <el-button type="primary" :icon="CaretBottom" @click="saveCSV">CSVを保存</el-button>
-      <el-button type="primary" :icon="CaretBottom" @click="saveError">エラーを保存</el-button>
-    </el-button-group>
+    <div>
+      <el-button-group>
+        <el-button type="primary" :icon="CaretBottom" @click="saveCSV">CSVを保存</el-button>
+        <el-button type="primary" :icon="CaretBottom" @click="saveError">エラーを保存</el-button>
+      </el-button-group>
+    </div>
 
-    <el-button-group>
-      <el-button type="primary" :icon="CaretTop" @click="loadRule">ルールを読み込み</el-button>
-      <el-button type="primary" :icon="CaretBottom" @click="saveRule">ルールを保存</el-button>
-    </el-button-group>
-    <el-button type="primary" :icon="CaretRight" @click="performProcessing">実行</el-button>
+    <div>
+      <el-button-group>
+        <el-button type="primary" :icon="CaretTop" @click="loadRule">ルールセットを読み込み</el-button>
+        <el-button type="primary" :icon="CaretBottom" @click="saveRule">ルールセットを保存</el-button>
+      </el-button-group>
+    </div>
+
+    <div>
+      <el-button type="primary" :icon="CaretRight" @click="performProcessing">実行</el-button>
+    </div>
 
     <input type="file" ref="inputFileJson" accept="*.json" style="display: none;" @input="loadJsonDocument($event)">
     <input type="file" ref="inputRule" accept="*.json" style="display: none;" @input="loadRuleFile($event)">
@@ -40,7 +49,7 @@ function loadJson ():void {
 }
 
 /**
- * loadJson inputFileJsonへのclickイベント発火
+ * loadJson inputRuleへのclickイベント発火
  */
 function loadRule ():void {
   inputRule.value.click()
@@ -419,7 +428,13 @@ function processDocument (index:number) {
 div.control-bar {
   /* border: 1px solid cyan; */
   flex: initial;
+  width: 100vw;
   display: flex;
+  flex-direction: row;
   justify-content: space-around;
+}
+
+div.control-bar > div {
+  display: flexbox;
 }
 </style>

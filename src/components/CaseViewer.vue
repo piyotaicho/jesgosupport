@@ -133,13 +133,15 @@ async function copytoClipboard (): Promise<void> {
 <style>
 div.case-viewer {
   /* border: 1px solid cyan; */
+  position: relative;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   height: 100%;
-  overflow-y: auto;
 }
 
 div.case-viewer-identifiers {
+  flex: initial;
   display: flex;
   flex-direction: column;
 }

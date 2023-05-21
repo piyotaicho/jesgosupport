@@ -1,24 +1,26 @@
 <template>
   <div class="app_box">
     <ControlBar/>
-    <Splitpanes horizontal :class="['default-theme', 'pane-root']">
-      <Pane size="10">
-        <CsvViewer :csv="CsvDocument"></CsvViewer>
-      </Pane>
-      <Pane size="10">
-        <ErrorViewer />
-      </Pane>
-      <Pane size="80">
-        <Splitpanes style="height: 100%;" class="default-theme">
-          <Pane size="50">
-            <CaseViewer :json="JsonDocument"></CaseViewer>
-          </Pane>
-          <Pane size="50">
-            <LogicSection></LogicSection>
-          </Pane>
-        </Splitpanes>
-      </Pane>
-    </Splitpanes>
+    <div class="panes">
+      <Splitpanes horizontal :dblClickSplitter="false" class="default-theme pane-root">
+        <Pane size="8">
+          <CsvViewer :csv="CsvDocument"></CsvViewer>
+        </Pane>
+        <Pane size="8">
+          <ErrorViewer />
+        </Pane>
+        <Pane size="80">
+          <Splitpanes :dblClickSplitter="false" class="default-theme">
+            <Pane size="45">
+              <CaseViewer :json="JsonDocument"></CaseViewer>
+            </Pane>
+            <Pane size="55">
+              <LogicSection></LogicSection>
+            </Pane>
+          </Splitpanes>
+        </Pane>
+      </Splitpanes>
+    </div>
     <FooterCopyrights />
   </div>
 </template>
@@ -50,17 +52,35 @@ const CsvDocument = computed(() => {
 </script>
 
 <style>
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
 div.app_box {
   display: flex;
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .clickable :hover {
   cursor: pointer;
 }
 
-.pane-root {
-  width: 98vw; height: 94vh; margin-left: auto; margin-right: auto;
+div.panes {
+  box-sizing: border-box;
+  height: 90%;
+  flex: 1;
 }
+
+.pane-root {
+  width: calc(100%-2vw);
+  margin-left: 1vw;;
+  margin-right: 1vw;;
+}
+
 </style>

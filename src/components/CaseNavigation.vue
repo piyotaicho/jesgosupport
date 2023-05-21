@@ -5,8 +5,8 @@
         前のレコード
       </el-button>
     </div>
-    <div>
-      <span class="navigation_number">
+    <div class="navigation_number">
+      <span>
         {{ props.index + 1 }} / {{ props.length }}
       </span>
     </div>
@@ -61,18 +61,15 @@ function next () {
 
 <style>
 div.case_navigation {
+  flex: initial;
   display: flex;
   flex-direction: row;
-  align-content: center;
   min-width: 40rem;
-  margin: 0 auto;
+  margin: 0 2rem;
 }
 
-div.case_navigation + div {
-  flex: auto;
-}
-
-span.navigation_number {
-  padding: 0.5rem 1rem;
+div.navigation_number {
+  margin: 0 2rem;
+  margin-top: 0.25rem;
 }
 </style>
