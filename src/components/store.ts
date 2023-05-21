@@ -2,7 +2,6 @@ import { InjectionKey } from 'vue'
 import { createStore, useStore as vuexUseStore, Store } from 'vuex'
 import { ErrorObject, JsonObject, CsvObject, LogicRule } from './types'
 import { JSONPath } from 'jsonpath-plus'
-import { START_ALIGNMENT } from 'element-plus/es/components/virtual-list/src/defaults'
 
 export interface State {
   JsonDocument: JsonObject,
