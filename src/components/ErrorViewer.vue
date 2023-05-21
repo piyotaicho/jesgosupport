@@ -2,7 +2,7 @@
   <div class="errorViewer">
     <dl>
       <template v-for="(errorReport, index) of errorDocuments" :key="index">
-        <dt>hash: {{ errorReport.hash }}</dt>
+        <dt>hash: {{ errorReport.hash }} <span v-if="errorReport?.type">({{ errorReport.type }})</span></dt>
         <dd v-for="(errorLine, subindex) of errorReport.errors" :key="subindex">{{ errorLine }}</dd>
       </template>
     </dl>

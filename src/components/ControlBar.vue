@@ -34,6 +34,7 @@ import { CaretTop, CaretBottom, CaretRight } from '@element-plus/icons-vue'
 import { ref } from 'vue'
 import { useStore } from './store'
 import Papa from 'papaparse'
+import { JSONPath } from 'jsonpath-plus'
 import { ElMessageBox } from 'element-plus'
 
 const store = useStore()
@@ -77,7 +78,13 @@ function saveCSV ():void {
 
 function saveError ():void {
   if (store.state.ErrorDocument.length > 0) {
-    const data = JSON.stringify(store.state.ErrorDocument.map(element => { return { hash: element.hash, messages: element.errors } }), undefined, ' ')
+    const data = JSON.stringify(store.state.ErrorDocument.map(element => {
+      return {
+        hash: element.hash,
+        type: element?.type || '',
+        messages: element.errors
+      }
+    }), undefined, ' ')
     userDownload(data, 'errorreports.json')
   }
 }
@@ -172,22 +179,58 @@ function performProcessing (): void {
 
 function processDocument (index:number) {
   const hash = store.getters.documentRef(index)?.hash || ''
-  const hisid = store.getters.documentRef(index)?.his_id || ''
-  const name = store.getters.documentRef(index)?.name || ''
 
+  const returnObject: {csv: string[], errors: string[]}|undefined = processor(store.getters.documentRef(index), store.state.RuleSet)
+
+  // 処理済みデータを書き出し
+  if (returnObject !== undefined) {
+    const { csv: csvRow, errors: errorMessages } = returnObject
+    store.commit('addCsvDocument', csvRow)
+    const type = store.getters.jesgoDocumentRef(index)[0]?.患者台帳?.がん種
+    console.log(type)
+    store.commit('addErrorDocument', type
+      ? {
+          hash,
+          type,
+          errors: [...errorMessages]
+        }
+      : {
+          hash,
+          errors: [...errorMessages]
+        }
+    )
+  }
+}
+
+/**
+ * マクロ実行ユニット
+ * @param {JsonObject} 1症例分のオブジェクト
+ * @param {LogicRule[]} ルールセット配列
+ * @returns {csv: string[][], errors: string[]}
+ */
+// eslint-disable-next-line camelcase
+function processor (content: {hash?: string, his_id?: string, name?: string, documentList: JsonObject}, rules: LogicRule[]): undefined|{csv: string[], errors: string[]} {
+  const hash = content?.hash || ''
+  const hisid = content?.his_id || ''
+  const name = content?.name || ''
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const jesgoDocument = (content.documentList as JsonObject[]).filter(element => (element as any)?.患者台帳)
+
+  // 結果バッファ
   const csvRow:string[] = []
   const errorMessages:string[] = []
 
-  let breakOut = false
-
-  for (let ruleIndex = 0; ruleIndex < store.state.RuleSet.length; ruleIndex++) {
-    const rule = store.state.RuleSet[ruleIndex]
+  // ルールセットの逐次解析
+  for (let ruleIndex = 0; ruleIndex < rules.length; ruleIndex++) {
+    const rule = rules[ruleIndex]
 
     console.log(`Start processing ruleset "${rule.title}".`)
 
+    // ソースと変数はルールごとのスコープ
     const sourceValues:(string|undefined)[][] = []
     const variables:(string|undefined)[][] = [[], [], [], [], [], [], [], [], [], [], []]
 
+    // 引数のエスケープ解析
     function parseArg (arg: string) : string[] {
       if (arg !== undefined && arg !== null) {
         if (arg.charAt(0) === '@') {
@@ -212,6 +255,31 @@ function processDocument (index:number) {
       }
     }
 
+    // JSONパスで値を取得
+    function parseJesgo (jsonpath: string|string[]) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let result:any
+      try {
+        // jsonpathが配列の場合は[0]がメイン
+        const primarypath:string = Array.isArray(jsonpath) ? jsonpath[0] : jsonpath
+        result = JSONPath({
+          path: primarypath,
+          json: jesgoDocument
+        })
+
+        // サブパスがあれば続いて処理する
+        if (Array.isArray(jsonpath) && (jsonpath[1] || '') !== '') {
+          result = JSONPath({
+            path: jsonpath[1],
+            json: result
+          })
+        }
+      } catch (e) {
+        console.error(e)
+      }
+      return result
+    }
+
     // ソースを解析
     if (rule.source) {
       for (let sourceIndex = 0; sourceIndex < rule.source.length; sourceIndex++) {
@@ -228,7 +296,7 @@ function processDocument (index:number) {
               sourceValues.splice(sourceIndex, 1, [name])
               break
             default:
-              sourceValues.splice(sourceIndex, 1, store.getters.parseJesgoDocument(path, index))
+              sourceValues.splice(sourceIndex, 1, parseJesgo(path))
           }
         }
         console.log(`Parse source[${sourceIndex}], assigned ${JSON.stringify(sourceValues[sourceIndex])}.`)
@@ -363,7 +431,7 @@ function processDocument (index:number) {
       return true
     }
 
-    // プロセスを実行
+    // マクロを逐次実行
     for (let step = 0; step < (rule.procedure || []).length;) {
       const procedure = (rule.procedure || [])[step]
       let result = true
@@ -382,7 +450,7 @@ function processDocument (index:number) {
           assignvars(parseArg(args[0]), args[1] || '$error')
       }
 
-      // 命令分岐
+      // 分岐処理
       if (result) {
         // 正常終了
         if (procedure.trueBehaivior === 'Abort') {
@@ -398,8 +466,8 @@ function processDocument (index:number) {
         // eslint-disable-next-line no-labels
         if (procedure.type === 'Operators' || procedure.type === 'Translation') {
           if (procedure.falseBehaivior === 'Exit') {
-            breakOut = true
-            ruleIndex = store.state.RuleSet.length // ルールセットループから抜ける
+            // 症例に対する処理の中止
+            return undefined
           }
           if (procedure.falseBehaivior === 'Abort') {
             step = (rule.procedure || []).length // 処理ループから抜ける
@@ -413,13 +481,10 @@ function processDocument (index:number) {
     }
   }
 
-  // 処理済みデータを書き出し
-  if (!breakOut) {
-    store.commit('addCsvDocument', csvRow)
-    store.commit('addErrorDocument', {
-      hash,
-      errors: [...errorMessages]
-    })
+  // 返り値の処理
+  return {
+    csv: csvRow,
+    errors: errorMessages
   }
 }
 </script>
