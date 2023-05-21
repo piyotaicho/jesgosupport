@@ -1,21 +1,23 @@
 <template>
   <div class="csvViewer">
-    <table>
-      <tr v-for="(line, lineIndex) in csvData" :key="lineIndex">
-        <template v-if="lineIndex === 0">
-          <th><el-icon @click="clearCsv"><Delete/></el-icon></th>
-          <th v-for="(cell, columnIndex) in line" :key="columnIndex">
-            {{ cell }}
-          </th>
-        </template>
-        <template v-else>
-          <th>{{ lineIndex }}</th>
-          <td v-for="(cell, columnIndex) in line" :key="columnIndex">
-            {{ cell }}
-          </td>
-        </template>
-      </tr>
-    </table>
+    <div>
+      <table>
+        <tr v-for="(line, lineIndex) in csvData" :key="lineIndex">
+          <template v-if="lineIndex === 0">
+            <th><el-icon @click="clearCsv"><Delete/></el-icon></th>
+            <th v-for="(cell, columnIndex) in line" :key="columnIndex">
+              {{ cell }}
+            </th>
+          </template>
+          <template v-else>
+            <th>{{ lineIndex }}</th>
+            <td v-for="(cell, columnIndex) in line" :key="columnIndex">
+              {{ cell }}
+            </td>
+          </template>
+        </tr>
+      </table>
+    </div>
   </div>
 </template>
 
@@ -58,15 +60,21 @@ function base26 (value: number): string {
 
 <style>
 div.csvViewer {
+  box-sizing: border-box;
   width: 100%;
   height: 100%;
   overflow: auto;
 }
 
-.csvViewer table{
+div.csvViewer > div {
+  box-sizing: content-box;
+  height: 100%;
+  overflow: visible;
+}
+
+div.csvViewer table{
   font-size: 0.9rem;
   border-collapse: collapse;
-  overflow: auto;
 }
 
 .csvViewer th {

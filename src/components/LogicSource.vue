@@ -8,7 +8,7 @@
     </div>
     <div class="source-block-content">
       <div class="source-block-path">
-        <div>
+        <div class="source-block-path-title">
           パス:
         </div>
         <div>
@@ -26,7 +26,7 @@
         </div>
       </div>
       <div class="source-block-path">
-        <div>
+        <div class="source-block-path-title">
           サブパス:
         </div>
         <div>
@@ -157,8 +157,12 @@ div.source-block-path {
   flex-direction: column;
 }
 
-div.source-block-path > div:first-child {
-  width: 7rem;
+div.source-block-path-title {
+  box-sizing: border-box;
+  position: relative;
+  flex: initial;
+  min-width: 6rem;
+  max-width: 6rem;
 }
 
 div.source-block-content {

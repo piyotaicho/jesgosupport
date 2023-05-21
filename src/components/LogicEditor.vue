@@ -2,10 +2,10 @@
   <div>
     <div>
       <!-- コントロールボタン -->
-      <el-button type="primary" round :icon="Plus" @click="addBlock('Operators')">条件</el-button>
-      <el-button type="primary" round :icon="Plus" @click="addBlock('Variables')">変数</el-button>
-      <el-button type="primary" round :icon="Plus" @click="addBlock('Translation')">置換</el-button>
-      <el-button type="primary" round :icon="Plus" @click="addBlock('Store')">割り当て</el-button>
+      <ElButton type="primary" round :icon="Plus" @click="addBlock('Operators')">条件</ElButton>
+      <ElButton type="primary" round :icon="Plus" @click="addBlock('Variables')">変数</ElButton>
+      <ElButton type="primary" round :icon="Plus" @click="addBlock('Translation')">置換</ElButton>
+      <ElButton type="primary" round :icon="Plus" @click="addBlock('Store')">割り当て</ElButton>
       <!-- <el-button type="primary" round :icon="Delete"/> -->
     </div>
     <div>
@@ -35,7 +35,7 @@ const emits = defineEmits<{
 function addBlock (blockType: BlockType) {
   const newBlock: LogicBlock = {
     type: blockType,
-    arguments: [],
+    arguments: blockType !== 'Operators' ? [] : ['', 'value', '', 'eq'],
     trueBehaivior: 1
   }
   emits('update:blocks', [...props.blocks, newBlock])

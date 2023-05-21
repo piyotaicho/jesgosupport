@@ -3,7 +3,10 @@
     <div class="logic-section-ruleset">
       <div class="logic-section-ruleset-selector">
         ルールの名称 :
-        <el-select v-model="currentRulesetTitle" placeholder="ルールを選択">
+        <el-select v-model="currentRulesetTitle"
+          placeholder="ルールを選択"
+          no-data-text="選択可能なルールがありません"
+          >
           <el-option v-for="(title, index) in ruleTitles" :key="index"
             :value="title"
             :label="title" />
@@ -16,16 +19,16 @@
         </el-button-group>
       </div>
     </div>
-    <div class="logic-section-ruleset">
+    <div class="logic-section-ruleset" v-show="currentRulesetTitle !== ''">
       <el-input v-model="description" placeholder="ルールの説明" type="textarea" />
     </div>
 
-    <div class="logic-section-ruleset">
+    <div class="logic-section-ruleset" v-show="currentRulesetTitle !== ''">
       <div style="width: 100%;">
         <LogicSource v-for="(block, index) in sources" :key="index" :index="index" :block="block" @updateblock="updateSource"/>
       </div>
     </div>
-    <div class="logic-section-ruleset">
+    <div class="logic-section-ruleset" v-show="currentRulesetTitle !== ''">
       <!-- ロジックエディタ -->
       <LogicEditor v-model:blocks="procedures"/>
     </div>
@@ -106,7 +109,7 @@ const description: WritableComputedRef<string> = computed({
         currentRuleset.value,
         { description: text.trim() }
       )
-      store.commit('updateRuleSet', newRule)
+      store.commit('upsertRuleSet', newRule)
     }
   }
 })
@@ -123,7 +126,7 @@ const sources: WritableComputedRef<SourceBlock[]> = computed({
       currentRuleset?.value || {},
       { source: newSources }
     )
-    store.commit('updateRuleSet', newRule)
+    store.commit('upsertRuleSet', newRule)
   }
 })
 
@@ -143,7 +146,7 @@ const procedures: WritableComputedRef<LogicBlock[]> = computed({
       currentRuleset?.value || {},
       { procedure: newSets }
     )
-    store.commit('updateRuleSet', newRule)
+    store.commit('upsertRuleSet', newRule)
   }
 })
 
@@ -198,8 +201,8 @@ div.logic-section {
   min-width: 47rem;
   max-width: 47rem;
   /* border: 1px solid cyan; */
-  display: flex;
-  flex-direction: column;
+  /* display: flex;
+  flex-direction: column; */
   height: 100%;
   overflow-y: auto;
 }

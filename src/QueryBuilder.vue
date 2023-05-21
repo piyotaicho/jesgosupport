@@ -61,8 +61,9 @@ div.app_box {
   display: flex;
   position: absolute;
   top: 0;
-  left: 0;
+  left: 0.8rem;
   bottom: 0;
+  right: 0.8rem;
   flex-direction: column;
   overflow: hidden;
 }
@@ -78,9 +79,7 @@ div.panes {
 }
 
 .pane-root {
-  width: calc(100%-2vw);
-  margin-left: 1vw;;
-  margin-right: 1vw;;
+  width: 100%;
 }
 
 </style>
