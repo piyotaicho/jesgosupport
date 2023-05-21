@@ -2,7 +2,7 @@
   <div class="Logic-block" :style="{ backgroundColor: blockColor }">
     <div class="Logic-block-linenumber">
       <el-icon @click="reorderBlock(-1)" class="clickable"><ArrowUpBold /></el-icon>
-      {{ props.index + 1 }}
+      <div class="Logic-block-linenumber-number">{{ props.index + 1 }}</div>
       <el-icon @click="deleteBlock()" class="clickable"><CloseBold /></el-icon>
       <el-icon @click="reorderBlock(+1)" class="clickable"><ArrowDownBold /></el-icon>
     </div>
@@ -19,7 +19,7 @@
             </el-select>
             の
             <el-select v-model="argument2nd" placeholder="情報の種類を選択">
-              <el-option label="値" value="value" />
+              <el-option label="値" value="value"/>
               <el-option label="数" value="count"/>
             </el-select>
             が
@@ -314,7 +314,7 @@ div.Logic-block {
 }
 
 div.Logic-block-linenumber {
-  display: flexbox;
+  display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
@@ -324,6 +324,10 @@ div.Logic-block-linenumber {
   margin: 1rem 0;
 }
 
+div.Logic-block-linenumber > div, i {
+  margin-top: 0.3rem;
+  margin-bottom: 0.3rem;
+}
 div.Logic-block-content {
   display: flex;
   flex-direction: column;
