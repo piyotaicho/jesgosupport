@@ -24,22 +24,28 @@
             </el-select>
             が
           </div>
-          <div>
-            <el-select filterable allow-create placeholder="比較対象を入力もしくは選択"
-              v-model="argument3rd"
-            >
-              <el-option v-for="(element, index) in optionsLabelValue" :key="index" :label="element.label + 'の値'" :value="element.value" />
-            </el-select>
-            <el-select v-model="argument4th" placeholder="条件を選択">
-              <el-option label="と同じ" value="eq"/>
-              <el-option label="より大きい" value="gt"/>
-              <el-option label="以上" value="ge"/>
-              <el-option label="より小さい" value="lt"/>
-              <el-option label="以下" value="le"/>
-              <el-option label="に含まれる" value="in"/>
-              <el-option label="を含む" value="incl"/>
-              <el-option label="にマッチする(正規表現)" value="regexp"/>
-            </el-select>
+          <div style="display: flex; flex-direction: row;">
+            <div>
+              <DropdownCombo
+                placeholder="比較対象を入力もしくは選択"
+                v-model="argument3rdTranslated"
+              >
+                <el-option v-for="(element, index) in optionsLabelValue" :key="index" :label="element.label" :value="element.value" />
+              </DropdownCombo>
+            </div>
+            <div>
+              の値
+              <el-select v-model="argument4th" placeholder="条件を選択">
+                <el-option label="と同じ" value="eq"/>
+                <el-option label="より大きい" value="gt"/>
+                <el-option label="以上" value="ge"/>
+                <el-option label="より小さい" value="lt"/>
+                <el-option label="以下" value="le"/>
+                <el-option label="に含まれる" value="in"/>
+                <el-option label="を含む" value="incl"/>
+                <el-option label="にマッチする(正規表現)" value="regexp"/>
+              </el-select>
+            </div>
           </div>
         </template>
 
@@ -48,15 +54,17 @@
           <div>
             変数に値を割り当てます
           </div>
-          <div>
-            <el-select filterable allow-create placeholder="値を入力もしくは選択"
-              v-model="argument1st">
-              <el-option v-for="(element, index) in optionsLabelValue" :key="index" :label="element.label + 'の値'" :value="element.value" />
-            </el-select>
-            を
+          <div style="display: flex; flex-direction: row;">
+            <div style="flex: 1;">
+              <DropdownCombo placeholder="値を入力もしくは選択"
+                v-model="argument1stTranslated">
+                <el-option v-for="(element, index) in optionsLabelValue" :key="index" :label="element.label" :value="element.value" />
+              </DropdownCombo>
+            </div>
+            <div style="flex: initial;">を</div>
           </div>
           <div>
-            <el-select v-model="argument2nd">
+            <el-select v-model="argument2nd" placeholder="変数を選択">
               <el-option v-for="number in ['1','2','3','4','5','6','7','8','9','0']" :key="number" :label="'変数' + number" :value="'$' + number" />
             </el-select>
             に代入する
@@ -70,7 +78,7 @@
           </div>
           <div>
             <el-select placeholder="値の元を選択" v-model="argument1st">
-              <el-option v-for="(element, index) in optionsLabelValue" :key="index" :label="element.label + 'の値'" :value="element.value" />
+              <el-option v-for="(element, index) in optionsLabelValue" :key="index" :label="element.label" :value="element.value" />
             </el-select>
             を以下のテーブルに従って変換します。
           </div>
@@ -94,18 +102,20 @@
           <div>
             値をCSVのフィールドもしくは症例エラー出力に割り当てます
           </div>
-          <div>
-            <el-select filterable allow-create placeholder="値を入力もしくは選択"
-              v-model="argument1st">
-              <el-option v-for="(element, index) in optionsLabelValue" :key="index" :label="element.label + 'の値'" :value="element.value" />
-            </el-select>
-            を
+          <div style="display: flex; flex-direction: row;">
+            <div style="flex: 1;">
+              <DropdownCombo placeholder="値を入力もしくは選択"
+                v-model="argument1stTranslated">
+                <el-option v-for="(element, index) in optionsLabelValue" :key="index" :label="element.label" :value="element.value" />
+              </DropdownCombo>
+            </div>
+            <div style="flex: initial;">を</div>
           </div>
-          <div>
-            <el-select filterable allow-create placeholder="CSVの桁表記を入力もしくは選択"
-              v-model.trim="argument2nd">
+          <div style="display: flex; flex-direction: row;">
+            <DropdownCombo placeholder="CSVの桁表記を入力"
+              v-model.trim="argument2ndTranslated">
               <el-option label="エラー出力" value="$error"/>
-            </el-select>
+            </DropdownCombo>
             に出力
           </div>
         </template>
@@ -137,6 +147,7 @@
 import { computed, WritableComputedRef, ComputedRef } from 'vue'
 import { LogicBlock } from './types'
 import { ArrowUpBold, ArrowDownBold, CloseBold } from '@element-plus/icons-vue'
+import DropdownCombo from './DropdownCombo.vue'
 
 const optionsLabelValue = [
   { label: 'ソース1', value: '@1' },
@@ -189,14 +200,53 @@ const argument1st: WritableComputedRef<string> = computed({
   set: (value) => setArguments(0, value)
 })
 
+const argument1stTranslated: WritableComputedRef<string> = computed({
+  get: () => {
+    const value = props.block.arguments[0] || ''
+    const foundIndex = optionsLabelValue.findIndex(item => item.value === value)
+    return (foundIndex === -1) ? value : optionsLabelValue[foundIndex].label
+  },
+  set: (value) => {
+    const foundIndex = optionsLabelValue.findIndex(item => item.label === value)
+    setArguments(0, foundIndex === -1 ? value : optionsLabelValue[foundIndex].value)
+  }
+})
+
 const argument2nd: WritableComputedRef<string> = computed({
   get: () => props.block.arguments[1] || '',
   set: (value) => setArguments(1, value)
 })
 
+const argument2ndTranslated: WritableComputedRef<string> = computed({
+  get: () => {
+    const optionsLabelValueForArg2 = [...optionsLabelValue, { label: 'エラー出力', value: '$error' }]
+    const value = props.block.arguments[1] || ''
+    const foundIndex = optionsLabelValueForArg2.findIndex(item => item.value === value)
+    return (foundIndex === -1) ? value : optionsLabelValueForArg2[foundIndex].label
+  },
+  set: (value) => {
+    const optionsLabelValueForArg2 = [...optionsLabelValue, { label: 'エラー出力', value: '$error' }]
+    const foundIndex = optionsLabelValueForArg2.findIndex(item => item.label === value)
+    setArguments(1, foundIndex === -1 ? value : optionsLabelValueForArg2[foundIndex].value)
+  }
+})
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const argument3rd: WritableComputedRef<string> = computed({
   get: () => props.block.arguments[2] || '',
   set: (value) => setArguments(2, value)
+})
+
+const argument3rdTranslated: WritableComputedRef<string> = computed({
+  get: () => {
+    const value = props.block.arguments[2] || ''
+    const foundIndex = optionsLabelValue.findIndex(item => item.value === value)
+    return (foundIndex === -1) ? value : optionsLabelValue[foundIndex].label
+  },
+  set: (value) => {
+    const foundIndex = optionsLabelValue.findIndex(item => item.label === value)
+    setArguments(2, foundIndex === -1 ? value : optionsLabelValue[foundIndex].value)
+  }
 })
 
 const argument4th: WritableComputedRef<string> = computed({
