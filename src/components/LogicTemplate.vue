@@ -65,7 +65,33 @@
           </div>
           <div>
             <el-select v-model="argument2nd" placeholder="変数を選択">
-              <el-option v-for="number in ['1','2','3','4','5','6','7','8','9','0']" :key="number" :label="'変数' + number" :value="'$' + number" />
+              <template v-for="(element, index) in optionsLabelValue" :key="index" >
+                <el-option v-if="element.label.slice(0, 2) === '変数'" :label="element.label" :value="element.value" />
+              </template>
+            </el-select>
+            に代入する
+          </div>
+        </template>
+
+        <template v-if="props.block.type == 'Query'">
+        <!-- サブパスの適用 -->
+          <div>
+            変数に対してJSONPathによるクエリを適用します
+          </div>
+          <div>
+            <el-select placeholder="値の元を選択" v-model="argument1st">
+              <el-option v-for="(element, index) in optionsLabelValue" :key="index" :label="element.label" :value="element.value" />
+            </el-select>
+            に以下のJSONPathを適用
+          </div>
+          <div>
+            <el-input placeholder="JSONPath文字列を入力" clearable v-model="argument2nd" />
+          </div>
+          <div>
+            <el-select v-model="argument3rd" placeholder="変数を選択">
+              <template v-for="(element, index) in optionsLabelValue" :key="index" >
+                <el-option v-if="element.label.slice(0, 2) === '変数'" :label="element.label" :value="element.value" />
+              </template>
             </el-select>
             に代入する
           </div>
@@ -145,7 +171,7 @@
 
 <script setup lang="ts">
 import { computed, WritableComputedRef, ComputedRef } from 'vue'
-import { LogicBlock } from './types'
+import { LogicBlock, failableBlockTypes } from './types'
 import { ArrowUpBold, ArrowDownBold, CloseBold } from '@element-plus/icons-vue'
 import DropdownCombo from './DropdownCombo.vue'
 
@@ -178,12 +204,11 @@ const emits = defineEmits<{
   (e: 'reorder', index: number, offset: number): void
 }>()
 
-// const translationTable:Ref<string[][]> = ref([['', '']])
-
 const blockColor = computed(() => {
   const colorTable = {
     Operators: '#59c059',
     Variables: '#ff8c1a',
+    Query: '#5cb1d6',
     Translation: '#ffab19',
     Store: '#4c97ff'
   }
@@ -264,7 +289,7 @@ const translationTable:ComputedRef<string[][]> = computed(() => {
 
 const isFalseBehavior = computed(() => {
   if (props.block) {
-    if (props.block.type === 'Operators' || props.block.type === 'Translation') {
+    if (failableBlockTypes.includes(props.block.type)) {
       return true
     }
   }

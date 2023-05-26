@@ -11,7 +11,7 @@ export type SourceBlock = {
   subpath?: string
 }
 
-export type BlockType = 'Operators'|'Variables'|'Translation'|'Store'
+export type BlockType = 'Operators'|'Variables'|'Query'|'Translation'|'Store'
 export type LogicBlock = {
   type: BlockType,
   arguments: string[],
@@ -19,6 +19,12 @@ export type LogicBlock = {
   trueBehaivior: 'Abort'|number,
   falseBehaivior?: 'Exit'|'Abort'|number
 }
+
+export const failableBlockTypes = [
+  'Operators',
+  'Query',
+  'Translation'
+]
 
 export type LogicRule = {
   title: string,
