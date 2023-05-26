@@ -38,8 +38,7 @@ export const store = createStore<State>({
     jesgoDocumentRef: (_, getters) => (index:number|undefined) => {
       if (getters.documentRef(index)?.documentList) {
         const documentLists = getters.documentRef(index)?.documentList as JsonObject[]
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return documentLists.filter(element => (element as any)?.患者台帳)
+        return documentLists
       } else {
         return []
       }
