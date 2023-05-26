@@ -116,7 +116,10 @@ async function loadRuleFile (event: Event) {
   const content = await loadJsonFile(event)
   if (content) {
     try {
-      const loadedRuleset = JSON.parse(content as string) as LogicRule[]
+      // version 0.1.0のtypoを強制的に排除
+      const replacedContent = (content as string).replace(/([bB])ehaivior/g, '$1ehavior')
+      const loadedRuleset = JSON.parse(replacedContent) as LogicRule[]
+
       if (Array.isArray(loadedRuleset) && loadedRuleset[0]?.title) {
         store.commit('setRuleSet', loadedRuleset)
       } else {
