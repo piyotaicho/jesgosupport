@@ -59,6 +59,11 @@ function reorderBlock (index: number, offset: number) {
   ) {
     newBlocks.splice(index + offset, 0, newBlocks.splice(index, 1)[0])
     emits('update:blocks', newBlocks)
+
+    const scrollableElement = document.getElementById('logicBlock' + (index + offset).toString())
+    if (scrollableElement) {
+      scrollableElement.scrollIntoView()
+    }
   }
 }
 </script>

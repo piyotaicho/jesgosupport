@@ -1,6 +1,6 @@
 <template>
-  <div class="Logic-block" :style="{ backgroundColor: blockColor }">
-    <div class="Logic-block-linenumber">
+  <div class="Logic-block" :id="'logicBlock' + props.index.toString()" :style="{ backgroundColor: blockColor }">
+    <div class="Logic-block-linenumber" :id="'logicBlock' + props.index.toString()">
       <el-icon @click="reorderBlock(-1)" class="clickable"><ArrowUpBold /></el-icon>
       <div class="Logic-block-linenumber-number">{{ props.index + 1 }}</div>
       <el-icon @click="deleteBlock()" class="clickable"><CloseBold /></el-icon>
