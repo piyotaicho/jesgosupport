@@ -6,7 +6,7 @@ JESGOからプラグイン経由で出力された全症例に該当するJSON�
 日本語での簡単なJSONパスの資料として https://qiita.com/takkii1010/items/0ce1c834d3a73496ccef があります。また、使用しているライブラリJSONPath Plus https://www.npmjs.com/package/jsonpath-plus のドキュメントも余裕があったら参照することをお薦めします。 
 
 ## プラグインの登録
-JSONファイルの出力には /jesgo-plugin/jesgo-json.js をJESGOにプラグインとして登録してご利用下さい。  
+JSONファイルの出力には [/jesgo-plugin/jesgo-json.js](jesgo-plugin/jesgo-json.js) をダウンロードして、JESGOにプラグインとして登録してご利用下さい。  
 エラーメッセージのJSONファイルを JESGOに取り込むには /jesgo-plugin/jesgo-error-import.js をJESGOにプラグインとして登録してご利用下さい。
 
 ## 本ユーティリティの機能
