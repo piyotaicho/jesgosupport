@@ -2,14 +2,14 @@
   <div>
     <div>
       <!-- コントロールボタン -->
-      <ElButton type="primary" round :icon="Plus" @click="addBlock('Operators')">条件</ElButton>
-      <ElButton type="primary" round :icon="Plus" @click="addBlock('Variables')">変数</ElButton>
-      <ElButton type="primary" round :icon="Plus" @click="addBlock('Query')">抽出</ElButton>
-      <ElButton type="primary" round :icon="Plus" @click="addBlock('Translation')">置換</ElButton>
-      <ElButton type="primary" round :icon="Plus" @click="addBlock('Store')">割り当て</ElButton>
+      <ElButton :color="BlockColorByType.Operators" round :icon="Plus" @click="addBlock('Operators')">条件</ElButton>
+      <ElButton :color="BlockColorByType.Variables" round :icon="Plus" @click="addBlock('Variables')">変数</ElButton>
+      <ElButton :color="BlockColorByType.Query" round :icon="Plus" @click="addBlock('Query')">抽出</ElButton>
+      <ElButton :color="BlockColorByType.Translation" round :icon="Plus" @click="addBlock('Translation')">置換</ElButton>
+      <ElButton :color="BlockColorByType.Store" round :icon="Plus" @click="addBlock('Store')">割り当て</ElButton>
       <!-- <el-button type="primary" round :icon="Delete"/> -->
     </div>
-    <div>
+    <div id="logicBlocks">
       <!-- ロジック編集 -->
       <LogicTemplate v-for="(block, index) in props.blocks" :key="index"
         :index="index" :block="block"
@@ -22,8 +22,9 @@
 <script setup lang="ts">
 // import { ref } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
-import { LogicBlock, BlockType, failableBlockTypes } from './types'
+import { LogicBlock, BlockType, failableBlockTypes, BlockColorByType } from './types'
 import LogicTemplate from './LogicTemplate.vue'
+import { nextTick } from 'vue'
 
 const props = defineProps<{
   blocks: LogicBlock[]
@@ -41,6 +42,15 @@ function addBlock (blockType: BlockType) {
     ...failableBlockTypes.includes(blockType) ? { falseBehavior: 'Abort' } : {}
   }
   emits('update:blocks', [...props.blocks, newBlock])
+
+  // DOMのレンダリングまで待って要素にスクロール 80ms は使用の不都合にならないように
+  nextTick()
+  setTimeout(() => {
+    const scrollableElement = document.getElementById('logicBlocks')
+    if (scrollableElement) {
+      scrollableElement.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    }
+  }, 80)
 }
 
 function deleteBlock (index: number) {
@@ -62,7 +72,7 @@ function reorderBlock (index: number, offset: number) {
 
     const scrollableElement = document.getElementById('logicBlock' + (index + offset).toString())
     if (scrollableElement) {
-      scrollableElement.scrollIntoView()
+      scrollableElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
   }
 }
