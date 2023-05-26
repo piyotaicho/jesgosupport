@@ -136,7 +136,13 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
         case 'regexp':
           return op1value.some(item => {
             const expression = op2[0].toString()
-            return RegExp(expression).test(item.toString())
+            // /.../オプション 形式の正規表現にも対応、ただしgは使用できない
+            const patternMatch = expression.match(/^\/((?:[^/\\]+|\\.)*)\/([gimy]{0,4})$/)
+            if (patternMatch) {
+              return RegExp(patternMatch[1], patternMatch[2].replace('g', '')).test(item.toString())
+            } else {
+              return RegExp(expression).test(item.toString())
+            }
           })
         default:
           verbose(`Illegal operator "${oper}"`, true)
