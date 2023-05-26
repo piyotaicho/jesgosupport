@@ -159,7 +159,10 @@ async function loadJsonFile (event: Event): Promise<string|ArrayBuffer|null> {
  * @param {string} filename
  */
 function userDownload (data: string, filename: string): void {
-  const blob = new Blob([data], { type: 'application/json' })
+  const blob = filename.includes('.json')
+    ? new Blob([data], { type: 'application/json' })
+    // Excelがアレ過ぎるのでCSVにはBOMをつける
+    : new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), data], { type: 'text/csv' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.setAttribute('download', filename)
