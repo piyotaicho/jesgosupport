@@ -171,9 +171,10 @@
 
 <script setup lang="ts">
 import { computed, WritableComputedRef, ComputedRef } from 'vue'
-import { LogicBlock, failableBlockTypes } from './types'
+import { LogicBlock, failableBlockTypes, BlockColorByType } from './types'
 import { ArrowUpBold, ArrowDownBold, CloseBold } from '@element-plus/icons-vue'
 import DropdownCombo from './DropdownCombo.vue'
+import { ElMessageBox } from 'element-plus'
 
 const optionsLabelValue = [
   { label: 'ソース1', value: '@1' },
@@ -205,16 +206,8 @@ const emits = defineEmits<{
 }>()
 
 const blockColor = computed(() => {
-  const colorTable = {
-    Operators: '#59c059',
-    Variables: '#ff8c1a',
-    Query: '#5cb1d6',
-    Translation: '#ffab19',
-    Store: '#4c97ff'
-  }
-
   if (props.block) {
-    return colorTable[props.block.type]
+    return BlockColorByType[props.block.type]
   } else {
     return '#cecdce'
   }
@@ -363,8 +356,14 @@ function setTranslation (index:number, op1:string, op2:string) {
 /**
  * deleteBlock ブロック削除のイベントを発火
  */
-function deleteBlock () {
-  emits('delete', props.index)
+async function deleteBlock () {
+  try {
+    await ElMessageBox.confirm('削除してよろしいですか',
+      { confirmButtonText: '削除する', cancelButtonText: 'キャンセル' }
+    )
+    emits('delete', props.index)
+  } catch {
+  }
 }
 
 /**
