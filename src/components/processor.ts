@@ -203,7 +203,7 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
       }
 
       const originalValues:JsonObject[] = parseArg(arg)
-      if (typeof originalValues === 'object') {
+      if (originalValues.toString() === '[object Object]') {
         verbose(`Translation: failure : ${arg} is object.`, true)
         return false
       }
@@ -356,13 +356,13 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
       // 結果からの分岐処理
       if (result) {
         // 正常終了
-        if (procedure.trueBehaivior === 'Abort') {
+        if (procedure.trueBehavior === 'Abort') {
           step = (rule.procedure || []).length // 処理ループから抜ける
         } else {
-          if (typeof procedure.trueBehaivior === 'number') {
-            console.log(`Proceed next ${procedure.trueBehaivior} steps.`)
+          if (typeof procedure.trueBehavior === 'number') {
+            console.log(`Proceed next ${procedure.trueBehavior} steps.`)
             // move steps forward
-            step += procedure.trueBehaivior
+            step += procedure.trueBehavior
           } else {
             step++
           }
@@ -370,16 +370,16 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
       } else {
         // eslint-disable-next-line no-labels
         if (procedure.type === 'Operators' || procedure.type === 'Translation') {
-          if (procedure.falseBehaivior === 'Exit') {
+          if (procedure.falseBehavior === 'Exit') {
             // 症例に対する処理の中止
             return undefined
           }
-          if (procedure.falseBehaivior === 'Abort') {
+          if (procedure.falseBehavior === 'Abort') {
             step = (rule.procedure || []).length // 処理ループから抜ける
           }
-          if (typeof procedure.falseBehaivior === 'number') {
+          if (typeof procedure.falseBehavior === 'number') {
             // move steps forward
-            step += procedure.falseBehaivior
+            step += procedure.falseBehavior
           }
         }
       }

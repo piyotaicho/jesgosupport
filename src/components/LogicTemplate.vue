@@ -146,16 +146,16 @@
           </div>
         </template>
       </div>
-      <div class="Logic-block-behaivior">
+      <div class="Logic-block-behavior">
         <!-- 成功もしくは条件を満たした場合の動作を選択 -->
-        上記が成立した場合: <el-select v-model="trueBehaivior">
+        上記が成立した場合: <el-select v-model="trueBehavior">
           <el-option label="次のブロックへ" :value="1"/>
           <el-option v-for="number in [2,3,4,5,6,7,8,9]" :key="number" :label="number + 'つ先のブロックへ'" :value="number" />
           <el-option label="10先のブロックへ" :value="10"/>
           <el-option label="ルールの処理を終了" value="Abort"/>
         </el-select>
       </div>
-      <div class="Logic-block-behaivior" v-if="isFalseBehavior">
+      <div class="Logic-block-behavior" v-if="isFalseBehavior">
         <!-- 不成功もしくは条件を満たさない場合の動作を選択 -->
         上記が成立しなかった場合: <el-select v-model="falseBehavior">
           <el-option label="次のブロックへ" :value="1"/>
@@ -296,21 +296,21 @@ const isFalseBehavior = computed(() => {
   return false
 })
 
-const trueBehaivior = computed({
-  get: () => props.block.trueBehaivior || 1,
+const trueBehavior = computed({
+  get: () => props.block.trueBehavior || 1,
   set: (value) => {
     if (typeof value === 'number' || value === 'Abort') {
-      const newBlock = Object.assign(props.block, { trueBehaivior: value })
+      const newBlock = Object.assign(props.block, { trueBehavior: value })
       emits('update:block', newBlock)
     }
   }
 })
 
 const falseBehavior = computed({
-  get: () => props.block?.falseBehaivior || 'Abort',
+  get: () => props.block?.falseBehavior || 'Abort',
   set: (value) => {
     if (typeof value === 'number' || value === 'Abort' || value === 'Exit') {
-      const newBlock = Object.assign(props.block, { falseBehaivior: value })
+      const newBlock = Object.assign(props.block, { falseBehavior: value })
       emits('update:block', newBlock)
     }
   }
@@ -413,7 +413,7 @@ div.Logic-block-logic {
   margin: 0.5rem 1rem;
 }
 
-div.Logic-block-behaivior {
+div.Logic-block-behavior {
   display: flexbox;
   margin: 0.5rem 1rem;
 }

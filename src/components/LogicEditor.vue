@@ -4,6 +4,7 @@
       <!-- コントロールボタン -->
       <ElButton type="primary" round :icon="Plus" @click="addBlock('Operators')">条件</ElButton>
       <ElButton type="primary" round :icon="Plus" @click="addBlock('Variables')">変数</ElButton>
+      <ElButton type="primary" round :icon="Plus" @click="addBlock('Query')">抽出</ElButton>
       <ElButton type="primary" round :icon="Plus" @click="addBlock('Translation')">置換</ElButton>
       <ElButton type="primary" round :icon="Plus" @click="addBlock('Store')">割り当て</ElButton>
       <!-- <el-button type="primary" round :icon="Delete"/> -->
@@ -21,7 +22,7 @@
 <script setup lang="ts">
 // import { ref } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
-import { LogicBlock, BlockType } from './types'
+import { LogicBlock, BlockType, failableBlockTypes } from './types'
 import LogicTemplate from './LogicTemplate.vue'
 
 const props = defineProps<{
@@ -36,7 +37,8 @@ function addBlock (blockType: BlockType) {
   const newBlock: LogicBlock = {
     type: blockType,
     arguments: blockType !== 'Operators' ? [] : ['', 'value', '', 'eq'],
-    trueBehaivior: 1
+    trueBehavior: 1,
+    ...failableBlockTypes.includes(blockType) ? { falseBehavior: 'Abort' } : {}
   }
   emits('update:blocks', [...props.blocks, newBlock])
 }
@@ -55,8 +57,6 @@ function reorderBlock (index: number, offset: number) {
     (index > 0 && offset === -1) ||
     (index < newBlocks.length - 1 && offset === 1)
   ) {
-    // const preserve = newBlocks.splice(index, 1)[0]
-    // newBlocks.splice(index + offset, 0, preserve)
     newBlocks.splice(index + offset, 0, newBlocks.splice(index, 1)[0])
     emits('update:blocks', newBlocks)
   }

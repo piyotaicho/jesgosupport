@@ -16,8 +16,8 @@ export type LogicBlock = {
   type: BlockType,
   arguments: string[],
   lookup?: string[][],
-  trueBehaivior: 'Abort'|number,
-  falseBehaivior?: 'Exit'|'Abort'|number
+  trueBehavior: 'Abort'|number,
+  falseBehavior?: 'Exit'|'Abort'|number
 }
 
 export const failableBlockTypes = [
