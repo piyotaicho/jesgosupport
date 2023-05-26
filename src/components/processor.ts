@@ -79,7 +79,7 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
           })
         }
       } catch (e) {
-        console.error(e)
+        verbose(`parseJesgo: JSONPath exception : ${e}`, true)
       }
       return result
     }
