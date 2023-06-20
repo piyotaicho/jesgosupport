@@ -29,12 +29,12 @@
 </template>
 
 <script setup lang="ts">
-import { JsonObject, LogicRule } from './types'
+import { CsvObject, JsonObject, LogicRule } from './types'
 import { CaretTop, CaretBottom, CaretRight } from '@element-plus/icons-vue'
-import { ref } from 'vue'
+import { h, ref } from 'vue'
 import { useStore } from './store'
 import Papa from 'papaparse'
-import { ElMessageBox } from 'element-plus'
+import { ElInputNumber, ElMessageBox } from 'element-plus'
 import { processor } from './processor'
 
 const store = useStore()
@@ -66,9 +66,28 @@ function saveRule ():void {
   }
 }
 
-function saveCSV ():void {
+async function saveCSV ():Promise<void> {
   if (store.state.CsvDocument.length > 0) {
-    const data = Papa.unparse(store.state.CsvDocument, {
+    const csvOffset = ref(0)
+    await ElMessageBox({
+      title: 'オフセットの設定',
+      message: () => h('p', null, [
+        h('span', null, 'CSV出力の行オフセットを設定できます.'),
+        h(ElInputNumber, {
+          min: 0,
+          modelValue: csvOffset.value,
+          'onUpdate:modelValue': (val: number|undefined) => { csvOffset.value = Number(val) || 0 }
+        })
+      ])
+    })
+
+    const exportCsvDocument: CsvObject = []
+    for (let i = 0; i < csvOffset.value; i++) {
+      exportCsvDocument.push([])
+    }
+    exportCsvDocument.push(...store.state.CsvDocument)
+
+    const data = Papa.unparse(exportCsvDocument, {
       header: false,
       quotes: false
     })
