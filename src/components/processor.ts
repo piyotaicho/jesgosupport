@@ -8,10 +8,11 @@ import { JSONPath } from 'jsonpath-plus'
  * @returns {csv: string[][], errors: string[]}
  */
 // eslint-disable-next-line camelcase
-export function processor (content: { hash?: string, his_id?: string, name?: string, documentList: JsonObject }, rules: LogicRule[]): undefined | { csv: string[], errors: string[] } {
+export function processor (content: { hash?: string, his_id?: string, name?: string, date_of_birth?: string, documentList: JsonObject }, rules: LogicRule[]): undefined | { csv: string[], errors: string[] } {
   const hash = content?.hash || ''
   const hisid = content?.his_id || ''
   const name = content?.name || ''
+  const dateOfBirth = content?.date_of_birth || ''
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const jesgoDocument = (content.documentList as JsonObject[]).filter(element => (element as any)?.患者台帳)
 
@@ -98,6 +99,9 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
               break
             case '$name':
               sourceValues.splice(sourceIndex, 1, [name])
+              break
+            case '$date_of_birth':
+              sourceValues.splice(sourceIndex, 1, [dateOfBirth])
               break
             default:
               sourceValues.splice(sourceIndex, 1, parseJesgo(path))

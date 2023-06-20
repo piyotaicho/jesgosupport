@@ -97,6 +97,48 @@
           </div>
         </template>
 
+        <template v-if="props.block.type == 'Period'">
+        <!-- 日付計算 -->
+          <div>
+            日付を保持した値の差分を計算します
+          </div>
+          <div style="display: flex; flex-direction: row;">
+            <el-select placeholder="基準を選択" v-model="argument1st">
+              <template v-for="(element, index) in optionsLabelValue" :key="index" >
+                <el-option v-if="element.label !== 'ハッシュ値'" :label="element.label" :value="element.value" />
+              </template>
+            </el-select>
+            <span>と</span>
+            <el-select v-model="argument2nd" placeholder="比較対象を選択">
+              <template v-for="(element, index) in optionsLabelValue" :key="index" >
+                <el-option v-if="element.label !== 'ハッシュ値'" :label="element.label" :value="element.value" />
+              </template>
+            </el-select>
+            <span>の差を</span>
+          </div>
+          <div style="display: flex; flex-direction: row;">
+            <el-select v-model="argument3rd" placeholder="条件を選択">
+              <el-option label="年(切り捨て)" value="years"/>
+              <el-option label="年(切り上げ)" value="years,roundup"/>
+              <el-option label="月(切り捨て)" value="months"/>
+              <el-option label="月(切り上げ)" value="months,roundup"/>
+              <el-option label="週(切り捨て)" value="weeks"/>
+              <el-option label="週(切り上げ)" value="weeks,roundup"/>
+              <el-option label="日" value="days"/>
+            </el-select>
+            <span>で</span>
+            <DropdownCombo
+              placeholder="代入先の変数"
+              v-model="argument4th"
+            >
+              <template v-for="(element, index) in optionsLabelValue" :key="index" >
+                <el-option v-if="element.label.slice(0, 2) === '変数'" :label="element.label" :value="element.value" />
+              </template>
+            </DropdownCombo>
+            <span>に代入</span>
+          </div>
+        </template>
+
         <template v-if="props.block.type == 'Translation'">
         <!-- 値の置換 -->
           <div>

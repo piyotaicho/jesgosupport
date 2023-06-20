@@ -6,6 +6,7 @@
       <ElButton :color="BlockColorByType.Variables" round :icon="Plus" @click="addBlock('Variables')">変数</ElButton>
       <ElButton :color="BlockColorByType.Query" round :icon="Plus" @click="addBlock('Query')">抽出</ElButton>
       <ElButton :color="BlockColorByType.Translation" round :icon="Plus" @click="addBlock('Translation')">置換</ElButton>
+      <ElButton :color="BlockColorByType.Translation" round :icon="Plus" @click="addBlock('Period')">日付計算</ElButton>
       <ElButton :color="BlockColorByType.Store" round :icon="Plus" @click="addBlock('Store')">割り当て</ElButton>
       <!-- <el-button type="primary" round :icon="Delete"/> -->
     </div>

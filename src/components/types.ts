@@ -11,12 +11,13 @@ export type SourceBlock = {
   subpath?: string
 }
 
-export type BlockType = 'Operators'|'Variables'|'Query'|'Translation'|'Store'
+export type BlockType = 'Operators'|'Variables'|'Query'|'Translation'|'Period'|'Store'
 export const BlockColorByType = {
   Operators: '#59c059',
   Variables: '#ff8c1a',
   Query: '#ffbf00',
   Translation: '#ffab19',
+  Period: '#ffc45e',
   Store: '#4c97ff'
 }
 
@@ -31,7 +32,8 @@ export type LogicBlock = {
 export const failableBlockTypes = [
   'Operators',
   'Query',
-  'Translation'
+  'Translation',
+  'Period'
 ]
 
 export type LogicRule = {
