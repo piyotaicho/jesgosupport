@@ -113,6 +113,7 @@
               <template v-for="(element, index) in optionsLabelValue" :key="index" >
                 <el-option v-if="element.label !== 'ハッシュ値'" :label="element.label" :value="element.value" />
               </template>
+              <el-option label="今日の日付" value="$now" />
             </el-select>
             <span>の差を</span>
           </div>
