@@ -1,4 +1,4 @@
-import { JsonObject, LogicRule } from './types'
+import { JsonObject, LogicRule, failableBlockTypes } from './types'
 import { JSONPath } from 'jsonpath-plus'
 
 /**
@@ -320,14 +320,15 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
     }
 
     // ファンクション：日付計算
-    function dateCalc (op1: string, op2: JsonObject[], mode: string, dst: string): boolean {
+    function dateCalc (op1: JsonObject[], op2: JsonObject[], mode: string, dst: string): boolean {
       verbose(`Function <dateCalc>: ${op2} to ${dst}`)
 
       // 日付フォーマットの確認
       const dateRegexp = /(?<year>\d{4})[-/](?<month>0?[1-9]|1[0-2])[-/](?<date>0?[1-9]|[12][0-9]|3[01])/
 
       // 基準値の設定
-      const dateMatch = op1.match(dateRegexp)
+      const op1value: string = op1[0].toString()
+      const dateMatch = op1value.match(dateRegexp)
       if (dateMatch === null) {
         verbose(`DateCalc: ${op1} is not in correct date format.`)
         return false
@@ -381,8 +382,8 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
         }
       }
 
-      // エラー処理
-      if (results.indexOf('-1') === -1) {
+      // エラーがあったらfalse
+      if (results.indexOf('-1') !== -1) {
         return false
       }
 
@@ -396,6 +397,7 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
         return true
       } else {
         verbose(`DateCals: ${dst} is not assinable.`)
+        return false
       }
     }
 
@@ -450,6 +452,9 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
         case 'Translation':
           result = translator(args[0], procedure.lookup || [['', '']])
           break
+        case 'Period':
+          result = dateCalc(parseArg(args[0]), parseArg(args[1]), args[2], args[3])
+          break
         case 'Store':
           assignvars(parseArg(args[0]), args[1] || '$error')
       }
@@ -470,7 +475,7 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
         }
       } else {
         // eslint-disable-next-line no-labels
-        if (procedure.type === 'Operators' || procedure.type === 'Translation') {
+        if (failableBlockTypes.indexOf(procedure.type) !== -1) {
           if (procedure.falseBehavior === 'Exit') {
             // 症例に対する処理の中止
             return undefined
@@ -482,6 +487,8 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
             // move steps forward
             step += procedure.falseBehavior
           }
+        } else {
+          step++
         }
       }
     }

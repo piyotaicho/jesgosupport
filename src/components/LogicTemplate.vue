@@ -128,14 +128,11 @@
               <el-option label="日" value="days"/>
             </el-select>
             <span>で</span>
-            <DropdownCombo
-              placeholder="代入先の変数"
-              v-model="argument4th"
-            >
+            <el-select v-model="argument4th" placeholder="変数を選択">
               <template v-for="(element, index) in optionsLabelValue" :key="index" >
                 <el-option v-if="element.label.slice(0, 2) === '変数'" :label="element.label" :value="element.value" />
               </template>
-            </DropdownCombo>
+            </el-select>
             <span>に代入</span>
           </div>
         </template>
