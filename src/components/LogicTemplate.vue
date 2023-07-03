@@ -160,6 +160,49 @@
           </div>
         </template>
 
+        <template v-if="props.block.type == 'Sets'">
+        <!-- 集合演算 -->
+          <div>
+            値集合と値集合の理論演算を行います
+          </div>
+          <div style="display: flex; flex-direction: row;">
+            <DropdownCombo
+              placeholder="値1"
+              v-model="argument1stTranslated"
+            >
+              <template v-for="(element, index) in optionsLabelValue" :key="index" >
+                <el-option v-if="element.label !== 'ハッシュ値'" :label="element.label" :value="element.value" />
+              </template>
+            </DropdownCombo>
+            <span>と</span>
+            <DropdownCombo
+              placeholder="値2"
+              v-model="argument2ndTranslated"
+            >
+              <template v-for="(element, index) in optionsLabelValue" :key="index" >
+                <el-option v-if="element.label !== 'ハッシュ値'" :label="element.label" :value="element.value" />
+              </template>
+            </DropdownCombo>
+            <span>の</span>
+          </div>
+          <div style="display: flex; flex-direction: row;">
+            <el-select v-model="argument3rd" placeholder="演算方法を選択">
+              <el-option label="単純連結" value="add"/>
+              <el-option label="和集合" value="union"/>
+              <el-option label="積集合" value="intersect"/>
+              <el-option label="差集合" value="difference"/>
+              <el-option label="排他的論理和" value="xor"/>
+            </el-select>
+            <span>を</span>
+            <el-select v-model="argument4th" placeholder="変数を選択">
+              <template v-for="(element, index) in optionsLabelValue" :key="index" >
+                <el-option v-if="element.label.slice(0, 2) === '変数'" :label="element.label" :value="element.value" />
+              </template>
+            </el-select>
+            <span>に代入</span>
+          </div>
+        </template>
+
         <template v-if="props.block.type == 'Translation'">
         <!-- 値の置換 -->
           <div>

@@ -401,6 +401,54 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
       }
     }
 
+    // ファンクション：集合理論演算
+    function setOperation (op1: JsonObject[], op2: JsonObject[], mode: string, dst: string): void {
+      verbose(`Function <translation>: ${mode} of ${op1} and ${op2} into ${dst}`)
+
+      // 配列の要素を利用して理論演算を行うのでelementをJSON文字列に一度変換する
+      const op1values:string[] = op1.map(element => JSON.stringify(element))
+      const op2values:string[] = op2.map(element => JSON.stringify(element))
+
+      let results:string[] = []
+      switch (mode) {
+        case 'union':
+          results = op2values.reduce(
+            (accum, item) => [...accum, ...(accum.includes(item) ? [] : [item])],
+            [...op1values]
+          )
+          break
+        case 'intersect':
+          results = op1values.filter(item => op2values.includes(item))
+          break
+        case 'difference':
+          results = op1values.reduce(
+            (accum, item) => [...accum, ...(op2values.includes(item) ? [] : [item])],
+            [] as string[]
+          )
+          break
+        case 'xor':
+          results = [...op1values, ...op2values].reduce(
+            (accum, item, _, orig) => [...accum, ...(orig.filter(value => value === item).length > 1 ? [] : [item])],
+            [] as string[]
+          )
+          break
+        case 'add':
+        default:
+          results = [...op1values, ...op2values]
+      }
+
+      if (
+        dst !== '' &&
+        ['$hash', '$his_id', '$name', '$now'].indexOf(dst) === -1 &&
+        dst.charAt(0) === '$') {
+        // 変数に結果を格納
+        const index = Number(dst.charAt(1))
+        variables[index] = results.map(item => JSON.parse(item))
+      } else {
+        verbose(`DateCals: ${dst} is not assinable.`)
+      }
+    }
+
     // ファンクション：出力
     function assignvars (op1: JsonObject[], dst: string): boolean {
       verbose(`Function <assign>: ${op1.join(',')} to ${dst}`)
@@ -454,6 +502,9 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
           break
         case 'Period':
           result = dateCalc(parseArg(args[0]), parseArg(args[1]), args[2], args[3])
+          break
+        case 'Sets':
+          setOperation(parseArg(args[0]), parseArg(args[1]), args[2], args[3])
           break
         case 'Store':
           assignvars(parseArg(args[0]), args[1] || '$error')
