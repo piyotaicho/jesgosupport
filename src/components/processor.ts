@@ -1,4 +1,4 @@
-import { JsonObject, LogicRule } from './types'
+import { JsonObject, LogicRule, failableBlockTypes } from './types'
 import { JSONPath } from 'jsonpath-plus'
 
 /**
@@ -8,10 +8,11 @@ import { JSONPath } from 'jsonpath-plus'
  * @returns {csv: string[][], errors: string[]}
  */
 // eslint-disable-next-line camelcase
-export function processor (content: { hash?: string, his_id?: string, name?: string, documentList: JsonObject }, rules: LogicRule[]): undefined | { csv: string[], errors: string[] } {
+export function processor (content: { hash?: string, his_id?: string, name?: string, date_of_birth?: string, documentList: JsonObject }, rules: LogicRule[]): undefined | { csv: string[], errors: string[] } {
   const hash = content?.hash || ''
   const hisid = content?.his_id || ''
   const name = content?.name || ''
+  const dateOfBirth = content?.date_of_birth || ''
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const jesgoDocument = (content.documentList as JsonObject[]).filter(element => (element as any)?.患者台帳)
 
@@ -36,18 +37,29 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
     // 引数の実値への展開
     function parseArg (arg: string): JsonObject[] {
       if (arg !== undefined && arg !== null) {
+        // @ソース値
         if (arg.charAt(0) === '@') {
           const index = Number(arg.charAt(1)) - 1
           return sourceValues[index] as JsonObject[] || ['']
         }
 
+        // $変数
         if (arg.charAt(0) === '$') {
           if (arg === '$hash') {
             return [hash]
-          } else {
-            const index = Number(arg.charAt(1))
-            return variables[index] as JsonObject[] || ['']
           }
+
+          if (arg === '$now') {
+            const now = new Date()
+            const nowYear = now.getFullYear()
+            const nowMonth = (now.getMonth() + 1).toString().padStart(2, '0')
+            const nowDate = (now.getDate() + 1).toString().padStart(2, '0')
+            return [`${nowYear}-${nowMonth}-${nowDate}`]
+          }
+
+          // $number - 変数
+          const index = Number(arg.charAt(1))
+          return variables[index] as JsonObject[] || ['']
         }
 
         // 文字列の場合はカンマ区切りで切り出して配列にする
@@ -84,7 +96,7 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
       return result
     }
 
-    // ソースを解析
+    // ソースを解析して値を設定する
     if (rule.source) {
       for (let sourceIndex = 0; sourceIndex < rule.source.length; sourceIndex++) {
         const path = rule.source[sourceIndex as number].path || ''
@@ -98,6 +110,9 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
               break
             case '$name':
               sourceValues.splice(sourceIndex, 1, [name])
+              break
+            case '$date_of_birth':
+              sourceValues.splice(sourceIndex, 1, [dateOfBirth])
               break
             default:
               sourceValues.splice(sourceIndex, 1, parseJesgo(path))
@@ -203,8 +218,8 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
       verbose(`Function <translation>: ${arg}`)
 
       // 置換できない値が指定された場合はエラー
-      if (['$hash', '$his_id', '$name'].includes(arg)) {
-        verbose(`Translation: ${arg} is not translationTableObjects value.`, true)
+      if (['$hash', '$his_id', '$name', '$now'].includes(arg)) {
+        verbose(`Translation: ${arg} is not tanslatable value.`, true)
         return false
       }
 
@@ -304,6 +319,88 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
       return result
     }
 
+    // ファンクション：日付計算
+    function dateCalc (op1: JsonObject[], op2: JsonObject[], mode: string, dst: string): boolean {
+      verbose(`Function <dateCalc>: ${op2} to ${dst}`)
+
+      // 日付フォーマットの確認
+      const dateRegexp = /(?<year>\d{4})[-/](?<month>0?[1-9]|1[0-2])[-/](?<date>0?[1-9]|[12][0-9]|3[01])/
+
+      // 基準値の設定
+      const op1value: string = op1[0].toString()
+      const dateMatch = op1value.match(dateRegexp)
+      if (dateMatch === null) {
+        verbose(`DateCalc: ${op1} is not in correct date format.`)
+        return false
+      }
+
+      const baseDate = new Date(
+        Number(dateMatch.groups?.year || '1970'),
+        Number(dateMatch.groups?.month || '1') - 1,
+        Number(dateMatch.groups?.date || '1')
+      )
+
+      const results:string[] = []
+      for (const target of op2) {
+        const targetMatch = target.toString().match(dateRegexp)
+        if (targetMatch === null) {
+          // 日付計算できない内容が含まれている場合は -1 を出力
+          results.push('-1')
+        } else {
+          const targetDate = new Date(
+            Number(targetMatch.groups?.year || '1970'),
+            Number(targetMatch.groups?.month || '1') - 1,
+            Number(targetMatch.groups?.date || '1')
+          )
+
+          let difference = 0
+          const roundup = mode.includes(',roundup')
+          switch (mode) {
+            case 'years':
+            case 'years,roundup':
+              difference = targetDate.getFullYear() - baseDate.getFullYear() +
+                (roundup && (targetDate.getTime() > baseDate.getTime()) ? 1 : 0)
+              break
+            case 'months':
+            case 'months,roundup':
+              difference = (targetDate.getFullYear() - baseDate.getFullYear()) * 12 +
+                (targetDate.getMonth() - baseDate.getMonth()) +
+                (roundup && (targetDate.getTime() > baseDate.getTime()) ? 1 : 0)
+              break
+            case 'weeks':
+            case 'weeks,roundup':
+            case 'days':
+              difference = (targetDate.getTime() - baseDate.getTime()) / (86400000) | 1
+              if (mode !== 'days') {
+                difference = difference / 7 | 1 + (roundup && difference % 7 !== 0 ? 1 : 0)
+              }
+              break
+            default:
+              difference = -1
+          }
+          results.push(difference.toString())
+        }
+      }
+
+      // エラーがあったらfalse
+      if (results.indexOf('-1') !== -1) {
+        return false
+      }
+
+      if (
+        dst !== '' &&
+        ['$hash', '$his_id', '$name', '$now'].indexOf(dst) === -1 &&
+        dst.charAt(0) === '$') {
+        // 変数に結果を格納
+        const index = Number(dst.charAt(1))
+        variables[index] = results
+        return true
+      } else {
+        verbose(`DateCals: ${dst} is not assinable.`)
+        return false
+      }
+    }
+
     // ファンクション：出力
     function assignvars (op1: JsonObject[], dst: string): boolean {
       verbose(`Function <assign>: ${op1.join(',')} to ${dst}`)
@@ -355,6 +452,9 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
         case 'Translation':
           result = translator(args[0], procedure.lookup || [['', '']])
           break
+        case 'Period':
+          result = dateCalc(parseArg(args[0]), parseArg(args[1]), args[2], args[3])
+          break
         case 'Store':
           assignvars(parseArg(args[0]), args[1] || '$error')
       }
@@ -375,7 +475,7 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
         }
       } else {
         // eslint-disable-next-line no-labels
-        if (procedure.type === 'Operators' || procedure.type === 'Translation') {
+        if (failableBlockTypes.indexOf(procedure.type) !== -1) {
           if (procedure.falseBehavior === 'Exit') {
             // 症例に対する処理の中止
             return undefined
@@ -387,6 +487,8 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
             // move steps forward
             step += procedure.falseBehavior
           }
+        } else {
+          step++
         }
       }
     }

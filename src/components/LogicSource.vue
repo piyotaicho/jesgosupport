@@ -4,7 +4,7 @@
       <el-tooltip placement="top-start" content="クリックでソースをプレビューします.">
         <span>ソース {{ props.index + 1 }}</span>
       </el-tooltip>
-      <el-button :icon="View" type="primary" circle/>
+      <el-button :icon="View" type="primary" circle :disabled="sourcePath === ''"/>
     </div>
     <div class="source-block-content">
       <div class="source-block-path">
@@ -16,12 +16,13 @@
             <el-option value="$hash" label="ハッシュ値"/>
             <el-option value="$his_id" label="カルテ番号"/>
             <el-option value="$name" label="患者名"/>
+            <el-option value="$date_of_birth" label="生年月日"/>
             <el-option value="$highlight" label="強調表示のパスを引用" />
           </DropdownCombo>
         </div>
         <div>
           <el-tooltip placement="top-end" content="入力されたJSONパスをハイライトします.">
-            <el-button :icon="Aim" type="primary" circle @click="highlight()"/>
+            <el-button :icon="Aim" type="primary" circle @click="highlight()" :disabled="disableHighlight"/>
           </el-tooltip>
         </div>
       </div>
@@ -50,7 +51,8 @@ const store = useStore()
 const reservedWords = [
   '$hash',
   '$his_id',
-  '$name'
+  '$name',
+  '$date_of_birth'
 ]
 
 const props = defineProps<{
@@ -63,6 +65,7 @@ const emits = defineEmits<{
 }>()
 
 const disableSubpath = computed(() => reservedWords.indexOf(props.block.path) !== -1)
+const disableHighlight = computed(() => ['', ...reservedWords].indexOf(sourcePath.value) !== -1)
 
 const sourcePath :WritableComputedRef<string> = computed({
   get: () => props.block.path || '',
@@ -100,7 +103,7 @@ function highlight (disable = false) {
  * previewSource ソースの値のプレビューを表示する
  */
 function previewSource (): void {
-  if (store.getters.documentLength > 0) {
+  if (store.getters.documentLength > 0 && sourcePath.value) {
     let result = ''
     switch (sourcePath.value) {
       case '$hash':
@@ -112,13 +115,16 @@ function previewSource (): void {
       case '$name':
         result = JSON.stringify(store.getters.documentRef()?.name || 'N/A')
         break
+      case '$date_of_birth':
+        result = JSON.stringify(store.getters.documentRef()?.date_of_birth || 'N/A')
+        break
       default:
         result = JSON.stringify(store.getters.parseJesgoDocument([sourcePath.value, sourceSubPath.value]))
     }
 
     ElMessageBox({
       message: h('div', null, [
-        h('p', 'ソースの結果は'),
+        h('p', 'ソースの抽出結果は'),
         h('span', `${result}`),
         h('p', 'です.')
       ])
