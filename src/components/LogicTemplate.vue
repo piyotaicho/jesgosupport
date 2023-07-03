@@ -103,18 +103,41 @@
             日付を保持した値の差分を計算します
           </div>
           <div style="display: flex; flex-direction: row;">
-            <el-select placeholder="基準を選択" v-model="argument1st">
-              <template v-for="(element, index) in optionsLabelValue" :key="index" >
-                <el-option v-if="element.label !== 'ハッシュ値'" :label="element.label" :value="element.value" />
-              </template>
-            </el-select>
-            <span>と</span>
-            <el-select v-model="argument2nd" placeholder="比較対象を選択">
+            <DropdownCombo
+              placeholder="基準を入力もしくは選択"
+              v-model="argument1stTranslated"
+            >
+              <!-- <el-option v-for="(element, index) in optionsLabelValue" :key="index" :label="element.label" :value="element.value" /> -->
               <template v-for="(element, index) in optionsLabelValue" :key="index" >
                 <el-option v-if="element.label !== 'ハッシュ値'" :label="element.label" :value="element.value" />
               </template>
               <el-option label="今日の日付" value="$now" />
-            </el-select>
+            </DropdownCombo>
+
+            <!-- <el-select placeholder="基準を選択" v-model="argument1st">
+              <template v-for="(element, index) in optionsLabelValue" :key="index" >
+                <el-option v-if="element.label !== 'ハッシュ値'" :label="element.label" :value="element.value" />
+              </template>
+            </el-select> -->
+            <span>と</span>
+
+            <DropdownCombo
+              placeholder="基準を入力もしくは選択"
+              v-model="argument2ndTranslated"
+            >
+              <!-- <el-option v-for="(element, index) in optionsLabelValue" :key="index" :label="element.label" :value="element.value" /> -->
+              <template v-for="(element, index) in optionsLabelValue" :key="index" >
+                <el-option v-if="element.label !== 'ハッシュ値'" :label="element.label" :value="element.value" />
+              </template>
+              <el-option label="今日の日付" value="$now" />
+            </DropdownCombo>
+
+            <!-- <el-select v-model="argument2nd" placeholder="比較対象を選択">
+              <template v-for="(element, index) in optionsLabelValue" :key="index" >
+                <el-option v-if="element.label !== 'ハッシュ値'" :label="element.label" :value="element.value" />
+              </template>
+              <el-option label="今日の日付" value="$now" />
+            </el-select> -->
             <span>の差を</span>
           </div>
           <div style="display: flex; flex-direction: row;">
