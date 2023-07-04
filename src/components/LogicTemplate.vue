@@ -160,6 +160,31 @@
           </div>
         </template>
 
+        <template v-if="props.block.type == 'Sort'">
+        <!-- 並び替え -->
+          <div>
+            値でソートします
+          </div>
+          <div>
+            <el-select placeholder="値の元を選択" v-model="argument1st">
+              <template v-for="(element, index) in optionsLabelValue" :key="index" >
+                <el-option v-if="element.label !== 'ハッシュ値'" :label="element.label" :value="element.value" />
+              </template>
+            </el-select>
+            <span>の格値を以下のJSONPathの基づき</span>
+          </div>
+          <div>
+            <el-input placeholder="JSONPath文字列を入力(省略可)" clearable v-model="argument2nd" />
+          </div>
+          <div>
+            <el-select v-model="argument3rd" placeholder="並べ替えの方向">
+              <el-option label="昇順" value="asc"/>
+              <el-option label="降順" value="desc"/>
+            </el-select>
+            <span>で並べ替えます</span>
+          </div>
+        </template>
+
         <template v-if="props.block.type == 'Translation'">
         <!-- 値の置換 -->
           <div>

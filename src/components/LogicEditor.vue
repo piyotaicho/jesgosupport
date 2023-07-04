@@ -7,8 +7,9 @@
       <ElDropdown @command="addModifiers" style="padding-left: 1rem; padding-right: 1rem;">
         <ElButton color="yellow" style="border: 1px solid gray;" round :icon="Plus">演算<ElIcon class="el-icon--right"><ArrowDown /></ElIcon></ElButton>
         <template #dropdown>
-          <ElDropdownItem command="Query">抽出</ElDropdownItem>
           <ElDropdownItem command="Translation">置換</ElDropdownItem>
+          <ElDropdownItem command="Sort">ソート</ElDropdownItem>
+          <ElDropdownItem command="Query" divided>抽出</ElDropdownItem>
           <ElDropdownItem command="Period">日付計算</ElDropdownItem>
         </template>
       </ElDropdown>

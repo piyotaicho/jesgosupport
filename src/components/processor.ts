@@ -218,8 +218,8 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
       verbose(`Function <translation>: ${arg}`)
 
       // 置換できない値が指定された場合はエラー
-      if (['$hash', '$his_id', '$name', '$now'].includes(arg)) {
-        verbose(`Translation: ${arg} is not tanslatable value.`, true)
+      if (['', '$hash', '$his_id', '$name', '$now'].includes(arg)) {
+        verbose(`Translation: "${arg}" is not tanslatable value.`, true)
         return false
       }
 
@@ -319,6 +319,57 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
       return result
     }
 
+    // ファンクション：ソート
+    function sortarray (arg: string, indexPath = '', mode = 'asc'): void {
+      verbose(`Function <sort>: Sort "${arg}" by "${indexPath}" (${mode})`)
+
+      // 置換できない値が指定された場合はなにもしない
+      if (['', '$hash', '$his_id', '$name', '$now'].includes(arg)) {
+        verbose(`Sort: "${arg}" is not changable value.`, true)
+        return
+      }
+
+      const source = parseArg(arg)
+      let result = []
+      if (indexPath.trim() !== '' || indexPath.trim() !== '$') {
+        // argの中身で単純にソートする
+        result = mode === 'desc'
+          ? source.map(item => JSON.stringify(item)).sort().reverse().map(item => JSON.parse(item))
+          : source.map(item => JSON.stringify(item)).sort().map(item => JSON.parse(item))
+      } else {
+        // argの中身に対してJsonpathで抽出された内容をkeyにしてソートする
+        // Jsonpathにエラーがあると全ての結果は '' になるので順列は変化しない
+        const keyvalues = source.map(item => {
+          const value = JSON.stringify(item)
+          const key = JSON.stringify(JSONPath({ path: indexPath, json: item }))
+          return { [key]: value }
+        })
+        result = mode === 'desc'
+          ? keyvalues.sort((a, b) =>
+            (a as unknown as {key: string}).key === (b as unknown as {key: string}).key
+              ? 0
+              : ((a as unknown as {key: string}).key > (b as unknown as {key: string}).key ? 1 : -1)
+          )
+            .reverse()
+            .map(item => JSON.parse((item as unknown as {value:string}).value))
+          : keyvalues.sort((a, b) =>
+            (a as unknown as {key: string}).key === (b as unknown as {key: string}).key
+              ? 0
+              : ((a as unknown as {key: string}).key > (b as unknown as {key: string}).key ? 1 : -1)
+          )
+            .map(item => JSON.parse((item as unknown as {value:string}).value))
+      }
+
+      // 全て置換できたら元のデータを書き換える
+      if (result && arg.charAt(0) === '@') {
+        const index = Number(arg.charAt(1)) - 1
+        sourceValues.splice(index, 1, result)
+      }
+      if (result && arg.charAt(0) === '$') {
+        const index = Number(arg.charAt(1))
+        variables.splice(index, 1, result)
+      }
+    }
     // ファンクション：日付計算
     function dateCalc (op1: JsonObject[], op2: JsonObject[], mode: string, dst: string): boolean {
       verbose(`Function <dateCalc>: ${op2} to ${dst}`)
@@ -330,7 +381,7 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
       const op1value: string = op1[0].toString()
       const dateMatch = op1value.match(dateRegexp)
       if (dateMatch === null) {
-        verbose(`DateCalc: ${op1} is not in correct date format.`)
+        verbose(`DateCalc: "${op1}" is not in correct date format.`, true)
         return false
       }
 
@@ -344,6 +395,7 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
       for (const target of op2) {
         const targetMatch = target.toString().match(dateRegexp)
         if (targetMatch === null) {
+          verbose(`DateCalc: "${target}" is not in correct date format.`, true)
           // 日付計算できない内容が含まれている場合は -1 を出力
           results.push('-1')
         } else {
@@ -451,6 +503,9 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
           break
         case 'Translation':
           result = translator(args[0], procedure.lookup || [['', '']])
+          break
+        case 'Sort':
+          sortarray(args[0], args[1], args[2])
           break
         case 'Period':
           result = dateCalc(parseArg(args[0]), parseArg(args[1]), args[2], args[3])
