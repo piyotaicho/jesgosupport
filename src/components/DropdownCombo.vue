@@ -7,6 +7,10 @@
       :minlength="props.minlength"
       :clearable="props.clearable"
       >
+      <template #suffix>
+        <el-icon class="el-input__icon" @click="showLargeInput = true" v-if="props.largetext"><EditPen/></el-icon>
+      </template>
+
       <template #append>
         <el-select v-model="value" placeholder=" "
           :disabled="props.disabled"
@@ -19,10 +23,21 @@
       </template>
     </el-input>
   </div>
+
+  <el-dialog v-if="props.largetext" v-model="showLargeInput"
+    :close-on-click-modal="false"
+    title="文字列を編集可能です"
+  >
+    <textarea class="largeinput" v-model="value"></textarea>
+    <template #footer>
+      <el-button type="primary" @click="showLargeInput = false">閉じる</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
-import { computed, WritableComputedRef } from 'vue'
+import { computed, ref, WritableComputedRef } from 'vue'
+import { EditPen } from '@element-plus/icons-vue'
 
 const props = withDefaults(defineProps<{
   modelValue: string,
@@ -33,7 +48,8 @@ const props = withDefaults(defineProps<{
   maxlength?: string|number,
   minlength?: number,
   clearable?: boolean,
-  placement?: string
+  placement?: string,
+  largetext?: boolean
 }>(),
 {
   disabled: false,
@@ -41,8 +57,11 @@ const props = withDefaults(defineProps<{
   effect: 'light',
   placeholder: 'Please input or select',
   clearable: false,
-  placement: 'bottom-start'
+  placement: 'bottom-start',
+  largetext: false
 })
+
+const showLargeInput = ref(false)
 
 const emits = defineEmits<{
   (e: 'update:modelValue', value: string): void
@@ -58,11 +77,20 @@ div.dropdown-combo-input .el-select {
   width: 2rem;
 }
 
-div.dropdown-combo-input .el-input-group__append {
-}
-
 div.dropdown-combo-input .el-select .el-input__wrapper {
   max-width: 14px;
   padding-left: 11px;
+}
+
+div.dropdown-combo-input > .el-input__inner {
+  text-overflow: ellipsis;
+}
+
+textarea.largeinput {
+  min-height: 5rem;
+  max-height: 80%;
+  width: 90%;
+  max-width: 99%;
+  overflow-y: auto;
 }
 </style>
