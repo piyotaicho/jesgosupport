@@ -13,7 +13,7 @@
           <ElDropdownItem command="Sets">集合演算</ElDropdownItem>
         </template>
       </ElDropdown>
-      <ElButton :color="BlockColorByType.Operators" round :icon="Plus" @click="addBlock('Operators')">条件</ElButton>
+      <ElButton :color="BlockColorByType.Operators" round :icon="Plus" @click="addBlock('Operators')">条件分岐</ElButton>
       <ElButton :color="BlockColorByType.Store" round :icon="Plus" @click="addBlock('Store')">割り当て</ElButton>
     </div>
     <div id="logicBlocks">
