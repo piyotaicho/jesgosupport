@@ -11,10 +11,10 @@
         <template v-if="props.block.type == 'Operators'">
         <!-- 条件分岐の操作 -->
           <div>
-            条件を設定します：
+            条件分岐を設定します：
           </div>
           <div>
-            <el-select v-model="argument1st" placeholder="変数を選択">
+            <el-select v-model="argument1st" placeholder="値を選択">
               <el-option v-for="(element, index) in optionsLabelValue" :key="index" :label="element.label" :value="element.value" />
             </el-select>
             の

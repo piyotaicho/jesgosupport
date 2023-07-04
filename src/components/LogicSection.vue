@@ -116,7 +116,7 @@ const description: WritableComputedRef<string> = computed({
 })
 
 /**
- * sources ルールセットのソース配列
+ * sources ルールのソース配列
  */
 const sources: WritableComputedRef<SourceBlock[]> = computed({
   get: () => {
@@ -167,7 +167,7 @@ async function createNewRule (): Promise<void> {
   try {
     do {
       // キャンセルは例外でループを抜ける.
-      const newSetName = (await ElMessageBox.prompt('新しいルールセットの名称を入力してください.', '', {
+      const newSetName = (await ElMessageBox.prompt('新しいルールの名称を入力してください.', '', {
         confirmButtonText: '作成',
         cancelButtonText: 'キャンセル',
         inputPattern: /\S/,
@@ -194,7 +194,7 @@ async function createNewRule (): Promise<void> {
 async function renameRule (): Promise<void> {
   try {
     if (currentRulesetTitleComputed.value) {
-      const newSetName = (await ElMessageBox.prompt('ルールセットの新しい名称を入力してください.', '', {
+      const newSetName = (await ElMessageBox.prompt('ルールの新しい名称を入力してください.', '', {
         confirmButtonText: '変更',
         cancelButtonText: 'キャンセル',
         inputPattern: /\S/,
@@ -225,7 +225,7 @@ async function deleteRule (): Promise<void> {
   try {
     if (
       currentRulesetTitleComputed.value &&
-      await ElMessageBox.confirm('現在編集中のルールセットを削除してよろしいですか', { confirmButtonText: '削除する', cancelButtonText: 'キャンセル' })
+      await ElMessageBox.confirm('現在編集中のルールを削除してよろしいですか', { confirmButtonText: '削除する', cancelButtonText: 'キャンセル' })
     ) {
       store.commit('removeFromRuleSet', currentRulesetTitleComputed.value)
     }
