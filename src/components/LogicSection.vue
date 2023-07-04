@@ -2,14 +2,13 @@
   <div class="logic-section">
     <div class="logic-section-ruleset">
       <div class="logic-section-ruleset-selector">
-        ルールの名称 :
+        <span>ルール :</span>
         <el-select v-model="currentRulesetTitle"
           placeholder="ルールを選択"
           no-data-text="選択可能なルールがありません"
           >
           <el-option v-for="(title, index) in ruleTitles" :key="index"
-            :value="title"
-            :label="title" />
+            :value="title" :label="title" />
         </el-select>
       </div>
       <div class="logic-section-ruleset-controller">
@@ -255,6 +254,7 @@ div.logic-section-ruleset {
 
 div.logic-section-ruleset-controller {
   padding-left: 1rem;
+  width: 6rem;
 }
 
 .logic-section-ruleset-selector .el-select {
