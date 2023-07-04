@@ -29,7 +29,7 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
     verbose(`Start ruleset ${ruleIndex}: ${rule.title}`)
 
     // ソースと変数はルールごとのスコープ
-    // ソースの数は将来の拡張に備えて不定とする(最大10)
+    // ソースの数は将来の拡張に備えて不定とする
     const sourceValues: (JsonObject|undefined)[][] = []
     // 変数は 1-9,0の10個と規程
     const variables: (JsonObject|undefined)[][] = [[], [], [], [], [], [], [], [], [], [], []]
@@ -62,7 +62,7 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
           return variables[index] as JsonObject[] || ['']
         }
 
-        // 文字列の場合はカンマ区切りで切り出して配列にする
+        // 文字列の場合はカンマもしくは空白文字区切りで切り出して配列にする
         const regex = /("[^"\\]*(?:\\.[^"\\]*)*"|\/(?:[^/\\]+|\\.)*\/[gimy]{0,4}|[^,\s]+)/g
         const removeQuotes = /^"((?:\\"|[^"])*)"$/
         return (arg.match(regex) || []).map(item => item.replace(removeQuotes, '$1'))
