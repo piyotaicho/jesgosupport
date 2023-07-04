@@ -22,17 +22,16 @@
         </el-select>
       </template>
     </el-input>
+    <el-dialog v-if="props.largetext" v-model="showLargeInput"
+      :close-on-click-modal="false"
+      title="文字列を編集可能です"
+    >
+      <textarea class="largeinput" v-model="value"></textarea>
+      <template #footer>
+        <el-button type="primary" @click="showLargeInput = false">閉じる</el-button>
+      </template>
+    </el-dialog>
   </div>
-
-  <el-dialog v-if="props.largetext" v-model="showLargeInput"
-    :close-on-click-modal="false"
-    title="文字列を編集可能です"
-  >
-    <textarea class="largeinput" v-model="value"></textarea>
-    <template #footer>
-      <el-button type="primary" @click="showLargeInput = false">閉じる</el-button>
-    </template>
-  </el-dialog>
 </template>
 
 <script setup lang="ts">

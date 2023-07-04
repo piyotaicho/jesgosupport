@@ -124,7 +124,7 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
 
     // プロセス実体
     // ファンクション：比較
-    function operators (op1: JsonObject[], op1type: string, op2: JsonObject[], oper: string): boolean {
+    function operators (op1: JsonObject[], op1type = 'value', op2: JsonObject[], oper = 'eq'): boolean {
       verbose(`Function <compare>: ${op1.join(',')}, ${op1type}, ${op2.join(',')}, ${oper}`)
 
       // 値1の値か数かを指定
