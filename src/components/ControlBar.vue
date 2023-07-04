@@ -19,7 +19,7 @@
     </div>
 
     <div>
-      <el-button type="primary" :icon="CaretRight" @click="performProcessing">実行</el-button>
+      <el-button type="primary" :icon="CaretRight" @click="performProcessing" :loading="processing" :disabled="processing">実行</el-button>
     </div>
 
     <input type="file" ref="inputFileJson" accept="*.json" style="display: none;" @input="loadJsonDocument($event)">
@@ -42,6 +42,7 @@ const inputFileJson = ref()
 const inputRule = ref()
 // const inputFileCsv = ref()
 
+const processing = ref(false)
 /**
  * loadJson inputFileJsonへのclickイベント発火
  */
@@ -205,7 +206,15 @@ function performProcessing (): void {
 function processDocument (index:number) {
   const hash = store.getters.documentRef(index)?.hash || ''
 
-  const returnObject: {csv: string[], errors: string[]}|undefined = processor(store.getters.documentRef(index), store.state.RuleSet)
+  let returnObject: {csv: string[], errors: string[]}|undefined
+  try {
+    processing.value = true
+    returnObject = processor(store.getters.documentRef(index), store.state.RuleSet)
+  } catch (e) {
+    console.error(e)
+  } finally {
+    processing.value = false
+  }
 
   // 処理済みデータを書き出し
   if (returnObject !== undefined) {

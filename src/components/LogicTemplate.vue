@@ -111,33 +111,17 @@
               <template v-for="(element, index) in optionsLabelValue" :key="index" >
                 <el-option v-if="element.label !== 'ハッシュ値'" :label="element.label" :value="element.value" />
               </template>
-              <el-option label="今日の日付" value="$now" />
             </DropdownCombo>
-
-            <!-- <el-select placeholder="基準を選択" v-model="argument1st">
-              <template v-for="(element, index) in optionsLabelValue" :key="index" >
-                <el-option v-if="element.label !== 'ハッシュ値'" :label="element.label" :value="element.value" />
-              </template>
-            </el-select> -->
             <span>と</span>
 
             <DropdownCombo
               placeholder="基準を入力もしくは選択"
               v-model="argument2ndTranslated"
             >
-              <!-- <el-option v-for="(element, index) in optionsLabelValue" :key="index" :label="element.label" :value="element.value" /> -->
               <template v-for="(element, index) in optionsLabelValue" :key="index" >
                 <el-option v-if="element.label !== 'ハッシュ値'" :label="element.label" :value="element.value" />
               </template>
-              <el-option label="今日の日付" value="$now" />
             </DropdownCombo>
-
-            <!-- <el-select v-model="argument2nd" placeholder="比較対象を選択">
-              <template v-for="(element, index) in optionsLabelValue" :key="index" >
-                <el-option v-if="element.label !== 'ハッシュ値'" :label="element.label" :value="element.value" />
-              </template>
-              <el-option label="今日の日付" value="$now" />
-            </el-select> -->
             <span>の差を</span>
           </div>
           <div style="display: flex; flex-direction: row;">
@@ -171,7 +155,7 @@
               v-model="argument1stTranslated"
             >
               <template v-for="(element, index) in optionsLabelValue" :key="index" >
-                <el-option v-if="element.label !== 'ハッシュ値'" :label="element.label" :value="element.value" />
+                <el-option v-if="element.label !== 'ハッシュ値' && element.label !== '今日の日付'" :label="element.label" :value="element.value" />
               </template>
             </DropdownCombo>
             <span>と</span>
@@ -180,7 +164,7 @@
               v-model="argument2ndTranslated"
             >
               <template v-for="(element, index) in optionsLabelValue" :key="index" >
-                <el-option v-if="element.label !== 'ハッシュ値'" :label="element.label" :value="element.value" />
+                <el-option v-if="element.label !== 'ハッシュ値' && element.label !== '今日の日付'" :label="element.label" :value="element.value" />
               </template>
             </DropdownCombo>
             <span>の</span>
@@ -203,6 +187,31 @@
           </div>
         </template>
 
+        <template v-if="props.block.type == 'Sort'">
+        <!-- 並び替え -->
+          <div>
+            値でソートします
+          </div>
+          <div>
+            <el-select placeholder="値の元を選択" v-model="argument1st">
+              <template v-for="(element, index) in optionsLabelValue" :key="index" >
+                <el-option v-if="element.label !== 'ハッシュ値' && element.label !== '今日の日付'" :label="element.label" :value="element.value" />
+              </template>
+            </el-select>
+            <span>の値を以下のJSONPathの値で</span>
+          </div>
+          <div>
+            <el-input placeholder="JSONPath文字列を入力(省略可)" clearable v-model="argument2nd" />
+          </div>
+          <div>
+            <el-select v-model="argument3rd" placeholder="並べ替えの方向">
+              <el-option label="昇順" value="asc"/>
+              <el-option label="降順" value="desc"/>
+            </el-select>
+            <span>に並べ替えます</span>
+          </div>
+        </template>
+
         <template v-if="props.block.type == 'Translation'">
         <!-- 値の置換 -->
           <div>
@@ -210,7 +219,9 @@
           </div>
           <div>
             <el-select placeholder="値の元を選択" v-model="argument1st">
-              <el-option v-for="(element, index) in optionsLabelValue" :key="index" :label="element.label" :value="element.value" />
+              <template v-for="(element, index) in optionsLabelValue" :key="index" >
+                <el-option v-if="element.label !== 'ハッシュ値' && element.label !== '今日の日付'" :label="element.label" :value="element.value" />
+              </template>
             </el-select>
             を以下のテーブルに従って変換します。
           </div>
@@ -232,7 +243,7 @@
         <template v-if="props.block.type == 'Store'">
         <!-- 出力 -->
           <div>
-            値をCSVのフィールドもしくは症例エラー出力に割り当てます
+            値を出力に割り当てます
           </div>
           <div style="display: flex; flex-direction: row;">
             <div style="flex: 1;">
@@ -297,7 +308,8 @@ const optionsLabelValue = [
   { label: '変数7', value: '$7' },
   { label: '変数8', value: '$8' },
   { label: '変数9', value: '$9' },
-  { label: '変数0', value: '$0' }
+  { label: '変数0', value: '$0' },
+  { label: '今日の日付', value: '$now' }
 ]
 
 const props = defineProps<{

@@ -166,8 +166,8 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
     }
 
     // ファンクション：代入
-    function vars (op1: JsonObject[], dst: string): boolean {
-      verbose(`Function <assign variables>: ${op1.join(',')}, ${dst}`)
+    function vars (op1: JsonObject[], dst = ''): boolean {
+      verbose(`Function <assign variables>: ${op1.join(',')} to "${dst}"`)
 
       if (dst !== '') {
         if (dst.charAt(0) === '@') {
@@ -183,13 +183,13 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
           return true
         }
       }
-      verbose(`Assigning vars failed to ${dst}.`, true)
+      verbose(`Failed assigning vars to "${dst}".`, true)
       return false
     }
 
     // ファンクション：抽出
-    function query (arg: JsonObject[], path: string, dst: string): boolean {
-      verbose(`Function <query>: ${arg.join(',')} by ${path} to ${dst}`)
+    function query (arg: JsonObject[], path = '', dst = ''): boolean {
+      verbose(`Function <query>: ${arg.join(',')} by ${path} to "${dst}"`)
 
       try {
         if (dst === '') {
@@ -208,18 +208,18 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
           return true
         }
       } catch {
-        verbose(`Assigning vars failed to ${dst}.`, true)
+        verbose(`Failed assigning vars to "${dst}".`, true)
       }
       return false
     }
 
     // ファンクション：置換
-    function translator (arg: string, table: string[][]): boolean {
+    function translator (arg = '', table: string[][]): boolean {
       verbose(`Function <translation>: ${arg}`)
 
       // 置換できない値が指定された場合はエラー
-      if (['$hash', '$his_id', '$name', '$now'].includes(arg)) {
-        verbose(`Translation: ${arg} is not tanslatable value.`, true)
+      if (['', '$hash', '$his_id', '$name', '$now'].includes(arg)) {
+        verbose(`Translation: "${arg}" is not tanslatable value.`, true)
         return false
       }
 
@@ -319,9 +319,49 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
       return result
     }
 
+    // ファンクション：ソート
+    function sortarray (arg = '', indexPath = '', mode = 'asc'): void {
+      verbose(`Function <sort>: Sort "${arg}" by "${indexPath}" (${mode})`)
+
+      // 置換できない値が指定された場合はなにもしない
+      if (['', '$hash', '$his_id', '$name', '$now'].includes(arg)) {
+        verbose(`Sort: "${arg}" is not changable value.`, true)
+        return
+      }
+
+      const source = parseArg(arg)
+      let result = []
+      if (indexPath.trim() === '' || indexPath.trim() === '$') {
+        // argの中身で単純にソートする
+        result = mode === 'desc'
+          ? source.map(item => JSON.stringify(item)).sort().reverse().map(item => JSON.parse(item))
+          : source.map(item => JSON.stringify(item)).sort().map(item => JSON.parse(item))
+      } else {
+        // argの中身に対してJsonpathで抽出された内容をkeyにしてソートする
+        // Jsonpathにエラーがあると全ての結果は '' になるので順列は変化しない
+        result = source.sort((a, b) => {
+          const keya = JSON.stringify(JSONPath({ path: indexPath, json: a }))
+          const keyb = JSON.stringify(JSONPath({ path: indexPath, json: b }))
+          return keya === keyb ? 0 : ((keya > keyb) ? 1 : -1)
+        })
+        if (mode === 'desc') {
+          result = result.reverse()
+        }
+      }
+
+      // 元のデータを書き換える
+      if (result && arg.charAt(0) === '@') {
+        const index = Number(arg.charAt(1)) - 1
+        sourceValues.splice(index, 1, result)
+      }
+      if (result && arg.charAt(0) === '$') {
+        const index = Number(arg.charAt(1))
+        variables.splice(index, 1, result)
+      }
+    }
     // ファンクション：日付計算
     function dateCalc (op1: JsonObject[], op2: JsonObject[], mode: string, dst: string): boolean {
-      verbose(`Function <dateCalc>: ${op2} to ${dst}`)
+      verbose(`Function <dateCalc>: ${op2} to "${dst}"`)
 
       // 日付フォーマットの確認
       const dateRegexp = /(?<year>\d{4})[-/](?<month>0?[1-9]|1[0-2])[-/](?<date>0?[1-9]|[12][0-9]|3[01])/
@@ -330,7 +370,7 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
       const op1value: string = op1[0].toString()
       const dateMatch = op1value.match(dateRegexp)
       if (dateMatch === null) {
-        verbose(`DateCalc: ${op1} is not in correct date format.`)
+        verbose(`DateCalc: "${op1}" is not in correct date format.`, true)
         return false
       }
 
@@ -344,6 +384,7 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
       for (const target of op2) {
         const targetMatch = target.toString().match(dateRegexp)
         if (targetMatch === null) {
+          verbose(`DateCalc: "${target}" is not in correct date format.`, true)
           // 日付計算できない内容が含まれている場合は -1 を出力
           results.push('-1')
         } else {
@@ -396,14 +437,14 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
         variables[index] = results
         return true
       } else {
-        verbose(`DateCals: ${dst} is not assinable.`)
+        verbose(`DateCals: "${dst}" is not assinable.`)
         return false
       }
     }
 
     // ファンクション：集合理論演算
-    function setOperation (op1: JsonObject[], op2: JsonObject[], mode: string, dst: string): void {
-      verbose(`Function <translation>: ${mode} of ${op1} and ${op2} into ${dst}`)
+    function setOperation (op1: JsonObject[], op2: JsonObject[], mode = 'add', dst = ''): void {
+      verbose(`Function <translation>: ${mode} of ${op1} and ${op2} into "${dst}"`)
 
       // 配列の要素を利用して理論演算を行うのでelementをJSON文字列に一度変換する
       const op1values:string[] = op1.map(element => JSON.stringify(element))
@@ -445,13 +486,13 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
         const index = Number(dst.charAt(1))
         variables[index] = results.map(item => JSON.parse(item))
       } else {
-        verbose(`DateCals: ${dst} is not assinable.`)
+        verbose(`DateCals: "${dst}" is not assinable.`)
       }
     }
 
     // ファンクション：出力
-    function assignvars (op1: JsonObject[], dst: string): boolean {
-      verbose(`Function <assign>: ${op1.join(',')} to ${dst}`)
+    function assignvars (op1: JsonObject[], dst = '$error'): boolean {
+      verbose(`Function <assign>: "${op1.join(',')}" to "${dst}"`)
 
       const xlcolToNum = (col: string): number => {
         let num = 0
@@ -499,6 +540,9 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
           break
         case 'Translation':
           result = translator(args[0], procedure.lookup || [['', '']])
+          break
+        case 'Sort':
+          sortarray(args[0], args[1], args[2])
           break
         case 'Period':
           result = dateCalc(parseArg(args[0]), parseArg(args[1]), args[2], args[3])
