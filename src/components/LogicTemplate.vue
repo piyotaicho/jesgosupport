@@ -247,20 +247,24 @@
             値を出力に割り当てます
           </div>
           <div style="display: flex; flex-direction: row;">
-            <div style="flex: 1;">
-              <DropdownCombo placeholder="値を入力もしくは選択"
-                v-model="argument1stTranslated">
-                <el-option v-for="(element, index) in optionsLabelValue" :key="index" :label="element.label" :value="element.value" />
-              </DropdownCombo>
-            </div>
-            <div style="flex: initial;">を</div>
-          </div>
-          <div style="display: flex; flex-direction: row;">
-            <DropdownCombo placeholder="CSVの桁表記を入力"
-              v-model.trim="argument2ndTranslated">
+            <DropdownCombo placeholder="値を入力もしくは選択" v-model="argument1stTranslated">
+              <el-option v-for="(element, index) in optionsLabelValue" :key="index" :label="element.label" :value="element.value" />
+            </DropdownCombo>
+            <span>を</span>
+            <DropdownCombo placeholder="CSVの桁表記を入力" v-model.trim="argument2ndTranslated">
               <el-option label="エラー出力" value="$error"/>
             </DropdownCombo>
-            に出力
+            <span>に出力</span>
+          </div>
+          <div style="display: flex; flex-direction: row;">
+            <span>配列データは</span>
+            <el-select placeholder="出力方法を指定" v-model="argument3rd">
+              <el-option label="最初の値のみを出力" value="first"/>
+              <el-option label="空白で区切って出力" value="whitespace"/>
+              <el-option label="カンマで区切って出力" value="comma"/>
+              <el-option label="セミコロンで区切って出力" value="semicolon"/>
+              <el-option label="コロンで区切って出力" value="colon"/>
+            </el-select>
           </div>
         </template>
       </div>

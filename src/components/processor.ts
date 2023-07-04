@@ -359,6 +359,7 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
         variables.splice(index, 1, result)
       }
     }
+
     // ファンクション：日付計算
     function dateCalc (op1: JsonObject[], op2: JsonObject[], mode: string, dst: string): boolean {
       verbose(`Function <dateCalc>: ${op2} to "${dst}"`)
@@ -491,7 +492,7 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
     }
 
     // ファンクション：出力
-    function assignvars (op1: JsonObject[], dst = '$error'): boolean {
+    function assignvars (op1: JsonObject[], dst = '$error', mode = 'semicolon'): boolean {
       verbose(`Function <assign>: "${op1.join(',')}" to "${dst}"`)
 
       const xlcolToNum = (col: string): number => {
@@ -504,7 +505,29 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
       }
 
       // Arrayはflattenされ、オブジェクトは除外して文字列化
-      const value = op1.flat(99).filter(item => item.toString() !== '[object Object]').toString()
+      const values = op1.flat(99).filter(item => item.toString() !== '[object Object]')
+      let value = ''
+      if (values.length > 1) {
+        switch (mode) {
+          case 'first':
+            value = values[0].toString()
+            break
+          case 'whitespace':
+            value = values.join(' ')
+            break
+          case 'colon':
+            value = values.join(':')
+            break
+          case 'comma':
+            value = values.join(',')
+            break
+          case 'semicolon':
+          default:
+            value = values.join(';')
+        }
+      } else {
+        value = values.toString()
+      }
 
       if (dst === '$error') {
         // エラーメッセージとして出力
@@ -515,9 +538,15 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
           const colindex = xlcolToNum(dst)
           csvRow[colindex] = value
         } else {
-          // 不正な指定
-          verbose(`Assign: illegal column name "${dst}".`, true)
-          return false
+          if (/^([1-9]|[1-9]+[0-9])$/.test(dst)) {
+            // 1～の数字で指定
+            const colindex = Number(dst) - 1
+            csvRow[colindex] = value
+          } else {
+            // 不正な指定
+            verbose(`Assign: illegal column name "${dst}".`, true)
+            return false
+          }
         }
       }
       return true
@@ -551,7 +580,7 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
           setOperation(parseArg(args[0]), parseArg(args[1]), args[2], args[3])
           break
         case 'Store':
-          assignvars(parseArg(args[0]), args[1] || '$error')
+          assignvars(parseArg(args[0]), args[1] || '$error', args[2])
       }
 
       // 結果からの分岐処理

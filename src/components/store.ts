@@ -54,7 +54,12 @@ export const store = createStore<State>({
           json: getters.jesgoDocumentRef(index),
           resultType: resultType
         })
+      } catch (e) {
+        console.error('Exception caught in parsing primary jsonpath')
+        console.error(e)
+      }
 
+      try {
         // サブパスはvalueの時だけ有効
         if (resultType === 'value' && Array.isArray(jsonpath) && (jsonpath[1] || '') !== '') {
           result = JSONPath({
@@ -63,9 +68,10 @@ export const store = createStore<State>({
           })
         }
       } catch (e) {
+        console.error('Exception caught in parsing secondary jsonpath')
         console.error(e)
       }
-      return result
+      return result || []
     },
     getRuleSetJson: (state) => JSON.stringify(state.RuleSet, null, 2)
   },
