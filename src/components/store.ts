@@ -108,6 +108,14 @@ export const store = createStore<State>({
         state.RuleSet.push(newValue)
       }
     },
+    changeRuleSetTitle (state, title: {old: string, new: string}) {
+      const index = state.RuleSet.findIndex(element => element.title === title.old)
+      if (index >= 0) {
+        const currentRuleSet = state.RuleSet[index]
+        currentRuleSet.title = title.new
+        state.RuleSet.splice(index, 1, currentRuleSet)
+      }
+    },
     setRuleSet (state, newRuleset: LogicRule[]) {
       state.RuleSet.splice(0, state.RuleSet.length, ...newRuleset)
     },

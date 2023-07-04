@@ -15,6 +15,7 @@
       <div class="logic-section-ruleset-controller">
         <el-button-group>
           <el-button type="primary" :icon="Plus" circle @click="createNewRule()"/>
+          <el-button type="primary" :icon="EditPen" circle @click="renameRule()"/>
           <el-button type="primary" :icon="Delete" circle @click="deleteRule()"/>
         </el-button-group>
       </div>
@@ -37,7 +38,7 @@
 
 <script setup lang="ts">
 import { ref, Ref, computed, ComputedRef, WritableComputedRef } from 'vue'
-import { Plus, Delete } from '@element-plus/icons-vue'
+import { Plus, EditPen, Delete } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 import { useStore } from './store'
 import { LogicBlock, SourceBlock, LogicRule } from './types'
@@ -184,6 +185,36 @@ async function createNewRule (): Promise<void> {
     while (true)
   } catch {
     // do nothing :)
+  }
+}
+
+/**
+ * renameRule 現在選択されているルールセットの名称を変更する
+ */
+async function renameRule (): Promise<void> {
+  try {
+    if (currentRulesetTitleComputed.value) {
+      const newSetName = (await ElMessageBox.prompt('ルールセットの新しい名称を入力してください.', '', {
+        confirmButtonText: '変更',
+        cancelButtonText: 'キャンセル',
+        inputPattern: /\S/,
+        inputErrorMessage: '正しく名称を入力してください',
+        inputValue: currentRulesetTitleComputed.value
+      })).value.trim()
+      if (newSetName !== undefined) {
+        if (newSetName !== currentRulesetTitleComputed.value) {
+          if (rules.value.find(element => element.title === newSetName)) {
+            await ElMessageBox.alert(`${newSetName}は既に存在しています.別の名称を入力してください.`)
+          } else {
+            currentRuleset.value.title = newSetName
+            store.commit('changeRuleSetTitle', { old: currentRulesetTitleComputed.value, new: newSetName })
+            currentRulesetTitleComputed.value = newSetName
+          }
+        }
+      }
+    }
+  } catch {
+    // do notning :)
   }
 }
 
