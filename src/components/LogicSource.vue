@@ -12,7 +12,7 @@
           パス:
         </div>
         <div>
-          <DropdownCombo v-model.lazy.trim="sourcePath" placeholder="JSONpathを入力もしくは予約語を選択" style="width: 90%; margin-right: 0.5rem;">
+          <DropdownCombo v-model.lazy.trim="sourcePath" clearable placeholder="JSONpathを入力もしくは予約語を選択" style="width: 90%; margin-right: 0.5rem;">
             <el-option value="$hash" label="ハッシュ値"/>
             <el-option value="$his_id" label="カルテ番号"/>
             <el-option value="$name" label="患者名"/>
@@ -31,7 +31,7 @@
           サブパス:
         </div>
         <div>
-          <el-input v-model.lazy.trim="sourceSubPath" placeholder="パスの結果に対するJSONpathを入力" :disabled="disableSubpath"/>
+          <el-input v-model.lazy.trim="sourceSubPath" clearable placeholder="パスの結果に対するJSONpathを入力" :disabled="disableSubpath"/>
         </div>
       </div>
     </div>

@@ -57,7 +57,8 @@
           <div style="display: flex; flex-direction: row;">
             <div style="flex: 1;">
               <DropdownCombo placeholder="値を入力もしくは選択"
-                v-model="argument1stTranslated">
+                v-model="argument1stTranslated"
+                largetext>
                 <el-option v-for="(element, index) in optionsLabelValue" :key="index" :label="element.label" :value="element.value" />
               </DropdownCombo>
             </div>
@@ -298,6 +299,10 @@ const optionsLabelValue = [
   { label: 'ソース2', value: '@2' },
   { label: 'ソース3', value: '@3' },
   { label: 'ソース4', value: '@4' },
+  { label: 'ソース5', value: '@5' },
+  { label: 'ソース6', value: '@6' },
+  { label: 'ソース7', value: '@7' },
+  { label: 'ソース8', value: '@8' },
   { label: 'ハッシュ値', value: '$hash' },
   { label: '変数1', value: '$1' },
   { label: '変数2', value: '$2' },

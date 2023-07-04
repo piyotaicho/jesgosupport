@@ -118,9 +118,18 @@ const description: WritableComputedRef<string> = computed({
  * sources ルールセットのソース配列
  */
 const sources: WritableComputedRef<SourceBlock[]> = computed({
-  get: () => currentRuleset.value?.source ||
-    // デフォルトとしてソース4つ
-    [{ path: '' }, { path: '' }, { path: '' }, { path: '' }],
+  get: () => {
+    const sourcelist = [...(currentRuleset.value?.source || [])]
+    for (let index = sourcelist.length; index > 0;) {
+      --index
+      if (sourcelist[index].path === '' && !sourcelist[index]?.subpath) {
+        sourcelist.splice(index, 1)
+      } else {
+        break
+      }
+    }
+    return [...sourcelist, { path: '' }].slice(0, 8) // 便宜上ソースは8個までとする
+  },
   set: (newSources: SourceBlock[]) => {
     const newRule = Object.assign(
       currentRuleset?.value || {},
