@@ -48,12 +48,12 @@ import LogicEditor from './LogicEditor.vue'
 const store = useStore()
 
 /**
- * rules ルールセットすべて
+ * rules ルールすべて
  */
 const rules = computed(() => store.state.RuleSet)
 
 /**
- * ruleTitles ルールセットのタイトル一覧
+ * ruleTitles ルールのタイトル一覧
  */
 const ruleTitles: ComputedRef<string[]> = computed(
   () => Array.isArray(rules.value)
@@ -62,8 +62,8 @@ const ruleTitles: ComputedRef<string[]> = computed(
 )
 
 /**
- * currentRulesetTitle 現在編集中のルールセットのタイトル
- * currentRulesetTitleComputed ルールセットの追加に対応
+ * currentRulesetTitle 現在編集中のルールのタイトル
+ * currentRulesetTitleComputed ルールの追加に対応
  */
 const currentRulesetTitle:Ref<string> = ref('')
 const currentRulesetTitleComputed: WritableComputedRef<string> = computed({
@@ -79,7 +79,7 @@ const currentRulesetTitleComputed: WritableComputedRef<string> = computed({
 })
 
 /**
- * currentRuleset 現在編集中のルールセット
+ * currentRuleset 現在編集中のルール
  */
 const currentRuleset:Ref<LogicRule> = computed(() => {
   if (rules?.value) {
@@ -94,7 +94,7 @@ const currentRuleset:Ref<LogicRule> = computed(() => {
 })
 
 /**
- * description ルールセットの説明 変更は適宜アップデートされる
+ * description ルールの説明 変更は適宜アップデートされる
  */
 const description: WritableComputedRef<string> = computed({
   get: () => {
