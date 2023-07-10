@@ -79,8 +79,32 @@ export const store = createStore<State>({
     setIndex (state, newValue) {
       state.currentIndex = newValue
     },
-    setJsonDocument (state, newValue) {
-      state.JsonDocument = newValue
+    setJsonDocument (state, jsonDocument) {
+      // 単独要素として null が存在するとき、状況に応じて情報を削除する: JESGO errata
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      function dropNullValues (sourceObject: any): any {
+        const sourceType = Object.prototype.toString.call(sourceObject)
+        if (sourceType === '[object Number]' || sourceType === '[object String]') {
+          return sourceObject
+        }
+        if (sourceType === '[object Array]') {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          return (sourceObject as any[])
+            .filter(item => Object.prototype.toString.call(item) !== '[object Null]')
+            .map(item => dropNullValues(item))
+        }
+        if (sourceType === '[object Object]') {
+          const properties = Object.keys(sourceObject as object)
+          const newObject: Record<string, string> = {}
+          for (const property of properties) {
+            if (Object.prototype.toString.call(sourceObject[property]) !== '[object Null]') {
+              newObject[property] = dropNullValues(sourceObject[property])
+            }
+          }
+          return newObject as object
+        }
+      }
+      state.JsonDocument = dropNullValues(jsonDocument)
     },
     setCsvDocument (state, newValue) {
       state.CsvDocument = newValue
