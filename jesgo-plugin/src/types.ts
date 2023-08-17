@@ -74,3 +74,5 @@ interface updateDocumentByCaseNo {
 }
 
 export type updateDocument = updateDocumentByHash | updateDocumentByCaseId | updateDocumentByCaseNo
+
+export type mainOutput = undefined|string|string[]|object|object[]

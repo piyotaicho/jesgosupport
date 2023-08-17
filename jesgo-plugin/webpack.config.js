@@ -6,7 +6,8 @@ module.exports = {
   entry: {
     // 'jesgo-supporttool-runtime': 'jesgo-plugin/src/index.ts',
     // 'error-importer': 'jesgo-plugin/src/error-importer.js',
-    'jesgo-exporter': './jesgo-plugin/src/jesgo-exporter.js'
+    'jesgo-exporter': './jesgo-plugin/src/jesgo-exporter.ts',
+    'jesgo-exporter-original': './jesgo-plugin/src/jesgo-exporter-original.js'
   },
   module: {
     rules: [
@@ -27,7 +28,12 @@ module.exports = {
             presets: [
               [
                 '@babel/preset-env',
-                { modules: 'commonjs' }
+                {
+                  modules: 'commonjs',
+                  targets: {
+                    node: 13
+                  }
+                }
               ]
             ]
 
