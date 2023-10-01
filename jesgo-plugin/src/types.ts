@@ -76,3 +76,66 @@ interface updateDocumentByCaseNo {
 export type updateDocument = updateDocumentByHash | updateDocumentByCaseId | updateDocumentByCaseNo
 
 export type mainOutput = undefined|string|string[]|object|object[]
+
+// JESGOドキュメント構造の抜粋interface
+export interface formatJESGOoperation {
+  術式: string
+}
+
+type JESGOAEcategory = '出血'|'術中手術操作'|'気腹・潅流操作'|'機器の不具合・破損'|'機器の誤操作'|'術中使用した薬剤'|'体腔内遺残'|'術後'
+type JESGOAEgrade = 'Grade 1: 正常な術後経過からの逸脱'|'Grade 2: 中等症 輸血および中心静脈栄養を要する場合を含む'|'Grade 3a: 全身麻酔を要さない治療介入を要する'|'Grade 3b: 全身麻酔下での治療介入を要する'|'Grade 4: ICU管理を要する、合併症により生命を脅かす状態'|'Grade 5: 死亡'
+export interface formatJESGOoperationAEs {
+  // Mapped to .Category
+  合併症の種別: JESGOAEcategory
+  // Mapped to .BloodCount
+  出血量?: string|number
+  // Mapped to .Title
+  発生した合併症?: string[]
+  // Mapped to .Cause
+  関連する機器?: string[]
+  // Mapped to .Cause
+  関連する薬剤?: string[]
+  // Mapped to .Title
+  遺残したもの?: string[]
+  // Mapped to .Location
+  発生部位?: string[]
+  // Mapped to .Title
+  合併症の内容?: string[]
+  // Mapped to .Grade
+  Grade: JESGOAEgrade
+  // Mapped to .Course
+  転帰: string[]
+}
+
+export interface formatJESGOOperationSection {
+  手術日: string,
+  手術時間?: string|number
+  出血量?: string|number
+  合併症の有無?: string
+  実施手術?: formatJESGOoperation[]
+  手術合併症?: formatJESGOoperationAEs[]
+}
+
+export interface formatJESGOtreatmentSection {
+  手術療法?: formatJESGOOperationSection[]
+  化学療法?: never
+  放射線療法?: never
+}
+
+export interface formatJESGOdaicho {
+  がん種: string,
+  初回治療開始日: string,
+  初回治療: formatJESGOtreatmentSection,
+  組織診断?: {
+    組織型?: string
+  },
+  診断所見?: {
+    子宮鏡?: {
+      検査実施日?: string
+    }
+  }
+}
+
+export interface formatJESGOdocument {
+  患者台帳: formatJESGOdaicho|formatJESGOdaicho[]
+}

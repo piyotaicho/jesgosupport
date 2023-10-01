@@ -43,4 +43,17 @@ export type LogicRule = {
   description ?: string,
   source ?: SourceBlock[],
   procedure ?: LogicBlock[]
+  global ?: [
+    {
+      filter?: string[],
+      assignpath?: string,
+      variable?: string,
+      defaultvalue: string
+    }
+  ]
+}
+
+export type documentFilter = {
+  filter: string[],
+  assignpath: string
 }

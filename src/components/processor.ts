@@ -1,65 +1,193 @@
-import { JsonObject, LogicRule, failableBlockTypes } from './types'
+import { isPropAbsent } from 'element-plus/es/utils'
+import { JsonObject, LogicRule, failableBlockTypes, documentFilter } from './types'
 import { JSONPath } from 'jsonpath-plus'
+import { valueEquals } from 'element-plus'
+import { tr } from 'element-plus/es/locale'
+
+// グローバル変数
+interface globalVariable {
+  name: string,
+  value?: (JsonObject|undefined)[],
+  reserved?: boolean
+}
+
+interface processorResult {
+  csv: string[],
+  errors: string[]
+}
+
+interface processorArgument {
+  hash?: string,
+  // eslint-disable-next-line camelcase
+  his_id?: string,
+  name?: string,
+  // eslint-disable-next-line camelcase
+  date_of_birth?: string,
+  documentList: JsonObject
+}
 
 /**
- * マクロ実行ユニット
- * @param {JsonObject} 1症例分のオブジェクト
+ * マクロ実行ユニット generator - 初回実行でマクロをコンパイル与えられたcontentを実行、nextでundefinedが与えられたら終了する.
+ * @param {content} 1症例分のオブジェクト nextでもこれを渡す
  * @param {LogicRule[]} ルールセット配列
  * @returns {csv: string[][], errors: string[]}
  */
 // eslint-disable-next-line camelcase
-export function processor (content: { hash?: string, his_id?: string, name?: string, date_of_birth?: string, documentList: JsonObject }, rules: LogicRule[]): undefined | { csv: string[], errors: string[] } {
-  const hash = content?.hash || ''
-  const hisid = content?.his_id || ''
-  const name = content?.name || ''
-  const dateOfBirth = content?.date_of_birth || ''
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const jesgoDocument = (content.documentList as JsonObject[]).filter(element => (element as any)?.患者台帳)
+export function * processor (content: processorArgument|undefined, rules: LogicRule[])
+ :Generator<processorResult|undefined> {
+  verbose('** JSON-CSV macro processor **')
+
+  // 無いとは思うがデータが無ければ終了
+  if (!content) {
+    return undefined
+  }
+
+  // ドキュメントフィルタ(デフォルト)
+  const documentFilter: documentFilter = {
+    filter: ['$.患者台帳'],
+    assignpath: '$.患者台帳'
+  }
+
+  // グローバル変数
+  const globalVariables: globalVariable[] = []
+
+  /**
+   * グローバル変数の更新
+   * @param name 変数名 $で始まる
+   * @param value 値はarray
+   * @param forceOverwrite boolean
+   */
+  function updateGlobalVariable (name: string, value: JsonObject[]|undefined, forceOverwrite = false) {
+    const index = globalVariables.findIndex(variable => variable.name === name)
+    if (index > -1) {
+      if (globalVariables[index]?.reserved !== true || forceOverwrite === true) {
+        globalVariables[index].value = value
+      } else {
+        throw new Error(`${name}は予約変数のため割り当てはできません.`)
+      }
+    } else {
+      throw new Error(`${name}に割り当てられた大域変数がありません.`)
+    }
+  }
+
+  // グローバル変数の予約
+  for (const variableName of ['$hash', '$his_id', '$name', '$date_of_birth', '$now']) {
+    globalVariables.push({
+      name: variableName,
+      reserved: true,
+      value: ['']
+    })
+  }
+
+  // アプリケーションレベルグローバル変数 $now - 今日の日付文字列
+  updateGlobalVariable(
+    '$now',
+    (() => {
+      const now = new Date()
+      const nowYear = now.getFullYear()
+      const nowMonth = (now.getMonth() + 1).toString().padStart(2, '0')
+      const nowDate = (now.getDate() + 1).toString().padStart(2, '0')
+      return [`${nowYear}-${nowMonth}-${nowDate}`]
+    })(),
+    true
+  )
+
+  // ルールセットのグローバル宣言(グローバル変数の定義、ドキュメントマスターフィルター)を取得・実行
+  // グローバル宣言はrulesの先頭に置く
+  if (rules[0]?.global) {
+    const globalParameters = rules[0].global
+    rules.shift()
+
+    // globalParameterの逐次解析
+    // filters @string[] jsonpathフィルタを逐次行い合致したものを assignpath にアサインする
+    // assignpath @string オブジェクトパス
+    // variable @string グローバル変数の名称を定義 [a-zA-Z][a-zA-Z0-9]*
+    // defaultvalue @string グローバル変数のデフォルト値を設定(JSON文字列で記載)
+    globalParameters.forEach(parameter => {
+      const defaultvalue = parameter?.defaultvalue || '[]'
+      if (parameter?.filter && parameter?.assignpath) {
+        // ドキュメントフィルタの設定
+        documentFilter.filter = parameter.filter
+        documentFilter.assignpath = parameter.assignpath
+      } else if (parameter?.variable) {
+        // グローバル変数の設定
+        let variableName = parameter.variable
+        if (variableName.charAt(0) !== '$') {
+          variableName = '$' + variableName
+        }
+
+        if (!/^\$[a-zA-Z_][a-zA-Z0-9_]*/.test(variableName)) {
+          throw new Error(`${variableName}はグローバル変数の命名規則に違反しています.`)
+        } else {
+          const test = globalVariables.findIndex(variable => variable.name === variableName)
+          if (test > -1) {
+            if (globalVariables[test]?.reserved) {
+              throw new Error(`${variableName} は予約語のため設定できません.`)
+            } else {
+              throw new Error(`${variableName}の宣言が重複しています.`)
+            }
+          } else {
+            globalVariables.push({
+              name: variableName,
+              value: [...(JSON.parse(defaultvalue) as string[])]
+            })
+          }
+        }
+      }
+    })
+  }
+
+  // Yieldループ
+
+  // ドキュメントレベルグローバル変数の設定
+  updateGlobalVariable('$hash', [content?.hash || ''], true)
+  updateGlobalVariable('$his_id', [content?.his_id || ''], true)
+  updateGlobalVariable('$name', [content?.name || ''], true)
+  updateGlobalVariable('$date_of_birth', [content?.date_of_birth || ''], true)
+
+  // ドキュメントのフィルタとマッピング
+  // eslint-disable-next-li ne @typescript-eslint/no-explicit-any
+  const sourceDocument = (content.documentList as JsonObject[]).filter(element => (element as any)?.患者台帳)
 
   // 結果バッファ
   const csvRow: string[] = []
   const errorMessages: string[] = []
 
-  verbose('** JSON-CSV macro processor **')
-
   // ルールセットの逐次解析
   for (let ruleIndex = 0; ruleIndex < rules.length; ruleIndex++) {
     const rule = rules[ruleIndex]
-
     verbose(`Start ruleset ${ruleIndex}: ${rule.title}`)
 
-    // ソースと変数はルールごとのスコープ
+    // ソースとレジスタ変数はルールごとのスコープ
     // ソースの数は将来の拡張に備えて不定とする
     const sourceValues: (JsonObject|undefined)[][] = []
-    // 変数は 1-9,0の10個と規程
+    // レジスタ変数は 1-9,0の10個
     const variables: (JsonObject|undefined)[][] = [[], [], [], [], [], [], [], [], [], [], []]
-
+ 
     // 引数の実値への展開
     function parseArg (arg: string): JsonObject[] {
       if (arg !== undefined && arg !== null) {
         // @ソース値
         if (arg.charAt(0) === '@') {
-          const index = Number(arg.charAt(1)) - 1
-          return sourceValues[index] as JsonObject[] || ['']
+          const sourceIndex = Number(arg.charAt(1)) - 1
+          return sourceValues[sourceIndex] as JsonObject[] || ['']
         }
 
         // $変数
         if (arg.charAt(0) === '$') {
-          if (arg === '$hash') {
-            return [hash]
+          // レジスタ変数
+          if (arg.length === 2) {
+            const registerIndex = Number(arg.charAt(1))
+            if (!isNaN(registerIndex)) {
+              return variables[registerIndex] as JsonObject[] || ['']
+            }
           }
 
-          if (arg === '$now') {
-            const now = new Date()
-            const nowYear = now.getFullYear()
-            const nowMonth = (now.getMonth() + 1).toString().padStart(2, '0')
-            const nowDate = (now.getDate() + 1).toString().padStart(2, '0')
-            return [`${nowYear}-${nowMonth}-${nowDate}`]
+          // グローバル変数
+          const globalvarsIndex = globalVariables.findIndex(variable => variable.name === arg)
+          if (globalvarsIndex > -1) {
+            return globalVariables[globalvarsIndex].value as JsonObject[]
           }
-
-          // $number - 変数
-          const index = Number(arg.charAt(1))
-          return variables[index] as JsonObject[] || ['']
         }
 
         // 文字列の場合はカンマもしくは空白文字区切りで切り出して配列にする
@@ -80,7 +208,7 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
         const primarypath: string = Array.isArray(jsonpath) ? jsonpath[0] : jsonpath
         result = JSONPath({
           path: primarypath,
-          json: jesgoDocument
+          json: sourceDocument
         })
 
         // サブパスがあれば続いて処理する
@@ -103,16 +231,10 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
         if (path !== '') {
           switch (path) {
             case '$hash':
-              sourceValues.splice(sourceIndex, 1, [hash])
-              break
             case '$his_id':
-              sourceValues.splice(sourceIndex, 1, [hisid])
-              break
             case '$name':
-              sourceValues.splice(sourceIndex, 1, [name])
-              break
             case '$date_of_birth':
-              sourceValues.splice(sourceIndex, 1, [dateOfBirth])
+              sourceValues.splice(sourceIndex, 1, globalVariables.find(variable => variable.name === path)?.value || [''])
               break
             default:
               sourceValues.splice(sourceIndex, 1, parseJesgo(path))

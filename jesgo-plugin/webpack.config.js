@@ -7,7 +7,8 @@ module.exports = {
     // 'jesgo-supporttool-runtime': 'jesgo-plugin/src/index.ts',
     // 'error-importer': 'jesgo-plugin/src/error-importer.js',
     'jesgo-exporter': './jesgo-plugin/src/jesgo-exporter.ts',
-    'jesgo-exporter-original': './jesgo-plugin/src/jesgo-exporter-original.js'
+    // 'jesgo-exporter-original': './jesgo-plugin/src/jesgo-exporter-original.js',
+    'export-to-joed': './jesgo-plugin/src/export-to-joed.ts'
   },
   module: {
     rules: [
@@ -40,6 +41,10 @@ module.exports = {
           }
         },
         exclude: /node_modules/
+      },
+      {
+        test: /\.html$/i,
+        loader: 'html-loader'
       }
     ]
   },

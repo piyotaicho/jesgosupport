@@ -111,6 +111,15 @@ export function createElement (tag: string, elementClass = ''): Element {
   return newElement
 }
 
+/**
+ * html文字列からELements(DocumentFragment)を生成する
+ * @param html HTML文字列
+ * @returns DocumentFragments
+ */
+export function createElementFromHtml (html: string): DocumentFragment {
+  return document.createRange().createContextualFragment(html.trim())
+}
+
 type buttonStyles = 'btn-primary'|'btn-secondary'|'btn-success'|'btn-danger'|'btn-warning'|'btn-info'|'btn-light'|'btn-dark'
 type buttonSize = 'large'|'small'
 interface buttonOptions {

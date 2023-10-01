@@ -8,7 +8,7 @@
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createButton = exports.showModalDialog = exports.showModalMessageBox = void 0;
+exports.createFormInput = exports.createButton = exports.createElementFromHtml = exports.createElement = exports.showModalDialog = exports.showModalMessageBox = void 0;
 /**
  * モーダルメッセージダイアログを表示する
  * @param message 表示するメッセージ文字列
@@ -105,6 +105,16 @@ function createElement(tag, elementClass = '') {
     }
     return newElement;
 }
+exports.createElement = createElement;
+/**
+ * html文字列からELements(DocumentFragment)を生成する
+ * @param html HTML文字列
+ * @returns DocumentFragments
+ */
+function createElementFromHtml(html) {
+    return document.createRange().createContextualFragment(html.trim());
+}
+exports.createElementFromHtml = createElementFromHtml;
 function createButton(label, id = '', options) {
     // オプションの規定値を設定
     const style = (options === null || options === void 0 ? void 0 : options.style) || 'btn-primary';
@@ -119,6 +129,36 @@ function createButton(label, id = '', options) {
     return buttonElement;
 }
 exports.createButton = createButton;
+function createFormInput(label, id = '', options) {
+    const size = ((options === null || options === void 0 ? void 0 : options.size) || 'normal') === 'large'
+        ? 'form-control-lg'
+        : ((options === null || options === void 0 ? void 0 : options.size) || 'normal') === 'small' ? 'form-control-sm' : '';
+    const type = (options === null || options === void 0 ? void 0 : options.type) === 'file' ? 'file' : 'text';
+    const disabled = (options === null || options === void 0 ? void 0 : options.disabled) || false;
+    const readonly = (options === null || options === void 0 ? void 0 : options.readonly) || false;
+    const inputElement = createElement('input', ['form-control', ...size].join(' '));
+    inputElement.type = type;
+    inputElement.disabled = disabled;
+    inputElement.readOnly = readonly;
+    if (id !== '') {
+        inputElement.id = id;
+    }
+    if (label !== '') {
+        const divBox = createElement('div');
+        const labelElement = createElement('label', 'form-label');
+        labelElement.innerText = label;
+        if (id !== '') {
+            labelElement.htmlFor = id;
+        }
+        divBox.appendChild(labelElement);
+        divBox.appendChild(inputElement);
+        return divBox;
+    }
+    else {
+        return inputElement;
+    }
+}
+exports.createFormInput = createFormInput;
 
 
 /***/ })
