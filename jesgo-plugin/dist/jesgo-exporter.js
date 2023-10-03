@@ -61,7 +61,7 @@ async function showModalDialog(contentCreator, eventHandler) {
     // イベント処理コールバック関数が指定された場合はraceでCloseButtonと並列動作させる
     if (eventHandler && typeof eventHandler === 'function') {
         return Promise.race([
-            eventHandler,
+            eventHandler(),
             new Promise(resolve => closeButton.addEventListener('click', () => {
                 if (loadingElement && loadingDisplayStyle !== '') {
                     loadingElement.style.display = loadingDisplayStyle;
@@ -112,7 +112,12 @@ exports.createElement = createElement;
  * @returns DocumentFragments
  */
 function createElementFromHtml(html) {
-    return document.createRange().createContextualFragment(html.trim());
+    if (html) {
+        return document.createRange().createContextualFragment(html.trim());
+    }
+    else {
+        return document.createDocumentFragment();
+    }
 }
 exports.createElementFromHtml = createElementFromHtml;
 function createButton(label, id = '', options) {

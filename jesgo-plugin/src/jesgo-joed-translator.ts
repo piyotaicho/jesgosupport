@@ -311,6 +311,11 @@ export function convertDaichoToJOED (
     const otherOperationRecords = []
     let isRobotOperation = false
 
+    // 実施数の登録が無ければスキップ
+    if (!operation?.実施手術 || !Array.isArray(operation.実施手術) || operation.実施手術.length === 0) {
+      break
+    }
+
     const operationTitles = operation.実施手術.map(item => item.術式)
     for (const operationTitle of operationTitles) {
       if (operationTitlesToExtract.includes(operationTitle)) {

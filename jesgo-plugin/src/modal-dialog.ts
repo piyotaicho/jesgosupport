@@ -58,7 +58,7 @@ export async function showModalDialog (contentCreator:(bodyElement:Element) => v
   // イベント処理コールバック関数が指定された場合はraceでCloseButtonと並列動作させる
   if (eventHandler && typeof eventHandler === 'function') {
     return Promise.race([
-      eventHandler,
+      eventHandler(),
       new Promise<void>(resolve => closeButton.addEventListener(
         'click',
         () => {
@@ -117,7 +117,11 @@ export function createElement (tag: string, elementClass = ''): Element {
  * @returns DocumentFragments
  */
 export function createElementFromHtml (html: string): DocumentFragment {
-  return document.createRange().createContextualFragment(html.trim())
+  if (html) {
+    return document.createRange().createContextualFragment(html.trim())
+  } else {
+    return document.createDocumentFragment()
+  }
 }
 
 type buttonStyles = 'btn-primary'|'btn-secondary'|'btn-success'|'btn-danger'|'btn-warning'|'btn-info'|'btn-light'|'btn-dark'
