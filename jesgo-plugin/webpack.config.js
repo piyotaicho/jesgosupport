@@ -7,6 +7,7 @@ module.exports = {
     // 'jesgo-supporttool-runtime': 'jesgo-plugin/src/index.ts',
     // 'error-importer': 'jesgo-plugin/src/error-importer.js',
     'jesgo-exporter': './jesgo-plugin/src/jesgo-exporter.ts',
+    'jesgo-single-exporter': './jesgo-plugin/src/jesgo-exporter-single.ts',
     // 'jesgo-exporter-original': './jesgo-plugin/src/jesgo-exporter-original.js',
     'export-to-joed': './jesgo-plugin/src/export-to-joed.ts'
   },

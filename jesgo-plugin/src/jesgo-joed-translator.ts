@@ -1,7 +1,7 @@
 //
 // JESGOの各種情報をJOEDの内容にマップする
 //
-import { formatJESGOdaicho } from './types'
+import { formatJESGOOperationSection, formatJESGOdaicho, formatJESGOrelapse } from './types'
 
 // JOED5ドキュメント構造定義
 export interface formatJOEDdiagnosis {
@@ -214,12 +214,14 @@ const operationTitlesToExtract = Object.keys(operationTranslation)
  * @param patientName string 患者名
  * @param patientDOB string 患者誕生日
  * @param JESGOdaicho JESGO台帳
+ * @param filterYear 抽出する年次
  */
 export function convertDaichoToJOED (
   patientId: string|undefined,
   patientName: string|undefined,
   patientDOB: string|undefined,
-  JESGOdaicho: formatJESGOdaicho): formatJOED[]|undefined {
+  JESGOdaicho: formatJESGOdaicho|formatJESGOrelapse,
+  filterYear = 'ALL'): formatJOED[]|undefined {
   const returnValues = []
   const diagnosis:formatJOEDdiagnosis = { Text: '' }
   const caseNotification: string[] = []
@@ -230,49 +232,81 @@ export function convertDaichoToJOED (
   }
 
   // 台帳のparse
-  const dateOfStartTreatment = JESGOdaicho?.初回治療開始日
-  if (!JESGOdaicho?.初回治療?.手術療法) {
-    // 手術療法がないだけならなにもしない
-    return undefined
-  }
+  let dateOfStartTreatment = ''
+  let operationSection:formatJESGOOperationSection[] = []
+  // 初回治療の台帳部分をparse
+  if ((JESGOdaicho as formatJESGOdaicho)?.初回治療) {
+    const promaryTreatment = JESGOdaicho as formatJESGOdaicho
+    dateOfStartTreatment = promaryTreatment?.初回治療開始日
+    if (promaryTreatment?.初回治療?.手術療法) {
+      operationSection = promaryTreatment.初回治療.手術療法 || []
 
-  // 診断の設定
-  switch (JESGOdaicho?.がん種) {
-    case '子宮頸がん':
-      diagnosis.Text = '子宮頸癌'
-      break
-    case '子宮体がん':
-      diagnosis.Text = '子宮体癌'
-      break
-    case '卵巣がん':
-      // JESGOの卵巣がんには境界悪性腫瘍が含まれるが、それは組織型を参照しないとわからない
-      if (JESGOdaicho?.組織診断 && JESGOdaicho.組織診断?.組織型) {
-        if (JESGOdaicho.組織診断.組織型.includes('境界悪性腫瘍')) {
-          diagnosis.Text = '境界悪性卵巣腫瘍'
-        } else {
-          diagnosis.Text = '卵巣癌(卵管癌,腹膜癌含む)'
-        }
-      } else {
-        diagnosis.Text = '卵巣癌(卵管癌,腹膜癌含む)'
-        diagnosis.UserTyped = true
-        caseNotification.push('組織診断が未入力のため境界悪性の判断ができませんでした.')
+      // 診断の解析と設定
+      switch (promaryTreatment?.がん種) {
+        case '子宮頸がん':
+          diagnosis.Text = '子宮頸癌'
+          break
+        case '子宮体がん':
+          diagnosis.Text = '子宮体癌'
+          break
+        case '卵巣がん':
+          // JESGOの卵巣がんには境界悪性腫瘍が含まれるが、それは組織型を参照しないとわからない
+          if (promaryTreatment?.組織診断 && promaryTreatment.組織診断?.組織型) {
+            if (promaryTreatment.組織診断.組織型.includes('境界悪性腫瘍')) {
+              diagnosis.Text = '境界悪性卵巣腫瘍'
+            } else {
+              diagnosis.Text = '卵巣癌(卵管癌,腹膜癌含む)'
+            }
+          } else {
+            diagnosis.Text = '卵巣癌(卵管癌,腹膜癌含む)'
+            diagnosis.UserTyped = true
+            caseNotification.push('組織診断が未入力のため境界悪性の判断ができませんでした.')
+          }
+          break
+        default:
+          // 翻訳対象外のがん種
+          diagnosis.Text = promaryTreatment?.がん種
+          diagnosis.UserTyped = true
+          caseNotification.push('診断名の自動判別の対象外です.')
       }
+    } else {
+      // 手術療法がないだけならなにもしない
+      return undefined
+    }
+  }
+  // 再発治療の台帳部分をparse
+  if ((JESGOdaicho as formatJESGOrelapse)?.再発治療) {
+    const relapseTreatment = JESGOdaicho as formatJESGOrelapse
+    if (relapseTreatment?.再発治療?.手術療法) {
+      operationSection = relapseTreatment.再発治療.手術療法 || []
 
-      break
-    default:
-      // 翻訳対象外のがん種
-      diagnosis.Text = JESGOdaicho?.がん種
-      diagnosis.UserTyped = true
-      caseNotification.push('診断名の自動判別の対象外です.')
+      // 診断の解析と設定
+      switch (relapseTreatment?.再発したがん種) {
+        case '子宮頸がん':
+          diagnosis.Text = '子宮頸癌'
+          break
+        case '子宮体がん':
+          diagnosis.Text = '子宮体癌'
+          break
+        case '卵巣がん':
+          diagnosis.Text = '卵巣癌(卵管癌,腹膜癌含む)'
+          diagnosis.UserTyped = true
+          caseNotification.push('再発診断では境界悪性の判断ができませんでした.')
+          break
+        default:
+          // 翻訳対象外のがん種
+          diagnosis.Text = relapseTreatment?.再発したがん種 || '再発癌'
+          diagnosis.UserTyped = true
+          caseNotification.push('診断名の自動判別の対象外です.')
+      }
+    } else {
+      return undefined
+    }
   }
   diagnosis.Chain = ['腹腔鏡悪性']
 
   // 手術療法の抽出
-  for (const operation of JESGOdaicho.初回治療.手術療法) {
-    if (!operation.実施手術 || operation.実施手術.length === 0) {
-      break
-    }
-
+  for (const operation of operationSection) {
     const JOEDrecord:formatJOED = {
       PatientId: patientId.toString(),
       DateOfProcedure: '',
@@ -284,13 +318,27 @@ export function convertDaichoToJOED (
     }
     const recordNotification:string[] = []
 
+    // 空白のレコードだと困るので実施手術の有無を確認
+    if (!operation.実施手術 || operation.実施手術.length === 0) {
+      continue
+    }
+
     // 診断を設定
     // 手術日が設定されていたら手術日から、そうでなければ初回治療開始日から年齢を計算
-    const dateOfOperation = operation?.手術日 ? operation.手術日 : dateOfStartTreatment
+    const dateOfOperation = operation?.手術日 || dateOfStartTreatment
     if (dateOfOperation === '' || dateOfOperation === undefined) {
       // 手術日は必須項目
       throw new Error('手術日(初回治療開始日)は必須項目です.')
     }
+
+    // 抽出年次に一致しなければ次へ
+    if (filterYear !== 'ALL') {
+      const operationYear = dateOfOperation.substring(0, 4)
+      if (operationYear !== filterYear) {
+        continue
+      }
+    }
+
     JOEDrecord.DateOfProcedure = dateOfOperation
 
     // 年齢は患者の生年月日と手術日から計算

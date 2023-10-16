@@ -136,6 +136,14 @@ export interface formatJESGOdaicho {
   }
 }
 
+export interface formatJESGOrelapse {
+  再発したがん種: string,
+  再発治療: {
+    手術療法?: formatJESGOOperationSection[]
+  }
+}
+
 export interface formatJESGOdocument {
-  患者台帳: formatJESGOdaicho|formatJESGOdaicho[]
+  患者台帳?: formatJESGOdaicho|formatJESGOdaicho[],
+  再発?: formatJESGOrelapse|formatJESGOrelapse[]
 }

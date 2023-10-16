@@ -30,7 +30,7 @@ export async function showModalDialog (contentCreator:(bodyElement:Element) => v
 
   (contentHeader.appendChild(createElement('span', '')) as HTMLSpanElement).innerText = 'プラグイン'
 
-  // コールバックでbody部分を実装
+  // コールバックでcontentBody部分を実装
   if (contentCreator) {
     contentCreator(contentBody)
   } else {
@@ -55,11 +55,17 @@ export async function showModalDialog (contentCreator:(bodyElement:Element) => v
   modal.style.display = 'block'
   const modalElement = body.appendChild(modal)
 
-  // イベント処理コールバック関数が指定された場合はraceでCloseButtonと並列動作させる
+  // イベント処理コールバック関数が指定された場合はCloseButtonと並列動作させる
   if (eventHandler && typeof eventHandler === 'function') {
-    return Promise.race([
-      eventHandler(),
-      new Promise<void>(resolve => closeButton.addEventListener(
+    let closeButtonBehavior = false
+    return await Promise.all([
+      eventHandler()
+        // 処理の終了を通知する
+        .then(value => {
+          closeButtonBehavior = true
+          return value
+        }),
+      new Promise<void>((resolve, reject) => closeButton.addEventListener(
         'click',
         () => {
           if (loadingElement && loadingDisplayStyle !== '') {
@@ -67,15 +73,26 @@ export async function showModalDialog (contentCreator:(bodyElement:Element) => v
           }
           modal.style.display = 'none'
           body.removeChild(modalElement)
-          resolve()
+          // 他のルーチンが動作中(closeButtonBehavior)に閉じるが押された場合はPromise.allをrejectで終了させる
+          if (closeButtonBehavior) {
+            resolve()
+          } else {
+            // eslint-disable-next-line prefer-promise-reject-errors
+            reject()
+          }
         },
         {
           once: true
         }
       ))
     ])
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      .then(values => values[0])
+      // rejectで閉じるボタンで強制終了
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      .catch(_ => undefined)
   } else {
-    return new Promise<void>(resolve => closeButton.addEventListener(
+    return await new Promise<void>(resolve => closeButton.addEventListener(
       'click',
       () => {
         if (loadingElement && loadingDisplayStyle !== '') {
@@ -83,7 +100,7 @@ export async function showModalDialog (contentCreator:(bodyElement:Element) => v
         }
         modal.style.display = 'none'
         body.removeChild(modalElement)
-        resolve()
+        resolve(undefined)
       },
       {
         once: true
@@ -93,7 +110,7 @@ export async function showModalDialog (contentCreator:(bodyElement:Element) => v
 }
 
 /**
- * DOMを作成する
+ * Elementを作成する
  * @param tag 新規作成するHTMLエレメントのタグ名
  * @param elementClass タグに指定するクラス名称
  * @returns HTMLElement
