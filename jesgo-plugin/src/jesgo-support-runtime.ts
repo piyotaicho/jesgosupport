@@ -6,19 +6,19 @@ import { createBaseVNode } from 'vue'
 export async function init ():Promise<scriptInfo> {
   return {
     plugin_name: 'JESGO-supportランタイム',
-    plugin_version: (process.env.npm_package_version) || '0.0.1',
+    plugin_version: '0.1',
     all_patient: true,
     attach_patient_info: true,
     show_upload_dialog: false,
-    update_db: false,
-    explain: 'JESGOsupportで作成されたスクリプトを実行してCSVファイルとエラー出力を取得します.'
+    update_db: true,
+    explain: 'JESGOsupport(version <1.0)で作成されたスクリプトを実行してCSVファイルを作成、エラーを書き戻します.'
   }
 }
 
-export async function main (docData: getterPluginArgument, apifunction: (docData: getterPluginArgument) => string): Promise<mainOutput> {
+export async function main (docData: getterPluginArgument, apifunction: (docData: getterPluginArgument, mode: boolean) => string): Promise<mainOutput> {
   if (docData.caseList) {
-    // APIでドキュメントを取得
-    const documentJSON = await apifunction(docData)
+    // APIでドキュメントを取得(取得モード)
+    const documentJSON = await apifunction(docData, true)
     let documents:pulledDocument[]
     try {
       documents = JSON.parse(documentJSON) as pulledDocument[]
@@ -79,6 +79,9 @@ async function loadScript() {
   return scriptbody
 }
 
+async function downloadCSV(data:anny[]) {
+
+}
 async function handler (data: pulledDocument[]): Promise<string[]> {
   // データ無し
   if (data.length === 0 ) {
