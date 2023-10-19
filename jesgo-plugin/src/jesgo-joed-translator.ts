@@ -16,6 +16,10 @@ export interface formatJOEDprocedure {
   Chain?: string[]
   Description?: string[]
   UserTyped?: boolean
+  additionalProcedure?: {
+    Text: string
+    Description?: string[]
+  }
 }
 
 type JOEDAEcategory = '出血'|'術中手術操作'|'気腹・潅流操作'|'機器の不具合・破損'|'機器の誤操作'|'術中使用した薬剤'|'体腔内遺残'|'術後'
@@ -65,7 +69,7 @@ interface translationTable {
 const operationTranslation: translationTable = {
   // 腹腔鏡手術
   // 子宮摘出
-  '腹腔鏡下単純子宮全摘出術(筋膜内)': { Text: '子宮全摘出術(TLH,LH)', Chain: ['腹腔鏡悪性'] },
+  '腹腔鏡下単純子宮全摘出術(筋膜内)': { Text: '子宮全摘出術(TLH,LH)', Chain: ['腹腔鏡'] },
   '腹腔鏡下単純子宮全摘出術(筋膜外)': { Text: '腹腔鏡下単純子宮全摘出術', Chain: ['腹腔鏡悪性'] },
   腹腔鏡下準広汎子宮全摘出術: { Text: '腹腔鏡下準広汎子宮全摘出術', Chain: ['腹腔鏡悪性'] },
   腹腔鏡下広汎子宮全摘出術: { Text: '腹腔鏡下広汎子宮全摘出術', Chain: ['腹腔鏡悪性'] },
@@ -227,7 +231,7 @@ export function convertDaichoToJOED (
   const caseNotification: string[] = []
 
   if (!patientId) {
-    // 患者IDは必須
+    // 患者IDだけは必須(JESGOで入力が無いことはあり得ないから念のため)
     throw new Error('患者IDは必須項目です.')
   }
 
@@ -236,13 +240,13 @@ export function convertDaichoToJOED (
   let operationSection:formatJESGOOperationSection[] = []
   // 初回治療の台帳部分をparse
   if ((JESGOdaicho as formatJESGOdaicho)?.初回治療) {
-    const promaryTreatment = JESGOdaicho as formatJESGOdaicho
-    dateOfStartTreatment = promaryTreatment?.初回治療開始日
-    if (promaryTreatment?.初回治療?.手術療法) {
-      operationSection = promaryTreatment.初回治療.手術療法 || []
+    const primaryTreatment = JESGOdaicho as formatJESGOdaicho
+    dateOfStartTreatment = primaryTreatment?.初回治療開始日
+    if (primaryTreatment?.初回治療?.手術療法) {
+      operationSection = primaryTreatment.初回治療.手術療法 || []
 
       // 診断の解析と設定
-      switch (promaryTreatment?.がん種) {
+      switch (primaryTreatment?.がん種) {
         case '子宮頸がん':
           diagnosis.Text = '子宮頸癌'
           break
@@ -251,8 +255,8 @@ export function convertDaichoToJOED (
           break
         case '卵巣がん':
           // JESGOの卵巣がんには境界悪性腫瘍が含まれるが、それは組織型を参照しないとわからない
-          if (promaryTreatment?.組織診断 && promaryTreatment.組織診断?.組織型) {
-            if (promaryTreatment.組織診断.組織型.includes('境界悪性腫瘍')) {
+          if (primaryTreatment?.組織診断 && primaryTreatment.組織診断?.組織型) {
+            if (primaryTreatment.組織診断.組織型.includes('境界悪性腫瘍')) {
               diagnosis.Text = '境界悪性卵巣腫瘍'
             } else {
               diagnosis.Text = '卵巣癌(卵管癌,腹膜癌含む)'
@@ -265,7 +269,7 @@ export function convertDaichoToJOED (
           break
         default:
           // 翻訳対象外のがん種
-          diagnosis.Text = promaryTreatment?.がん種
+          diagnosis.Text = primaryTreatment?.がん種
           diagnosis.UserTyped = true
           caseNotification.push('診断名の自動判別の対象外です.')
       }
@@ -323,12 +327,14 @@ export function convertDaichoToJOED (
       continue
     }
 
-    // 診断を設定
     // 手術日が設定されていたら手術日から、そうでなければ初回治療開始日から年齢を計算
-    const dateOfOperation = operation?.手術日 || dateOfStartTreatment
+    let dateOfOperation = operation?.手術日 || dateOfStartTreatment
     if (dateOfOperation === '' || dateOfOperation === undefined) {
-      // 手術日は必須項目
-      throw new Error('手術日(初回治療開始日)は必須項目です.')
+      // 手術日がない場合はJOEDの提出データインポートに準じて自動生成
+      recordNotification.push('手術日の取得ができませんでした、適当な日付を自動生成します.')
+      const dummyDate = ('0' + (returnValues.length + 1).toString()).substring(0, 2)
+      const dummyYear = filterYear === 'ALL' ? (new Date().getFullYear() - 1).toString() : filterYear
+      dateOfOperation = `${dummyYear}-01-${dummyDate}`
     }
 
     // 抽出年次に一致しなければ次へ
@@ -343,7 +349,7 @@ export function convertDaichoToJOED (
 
     // 年齢は患者の生年月日と手術日から計算
     if (patientDOB) {
-      const age = dateCalc(patientDOB, dateOfOperation)
+      const age = dateCalc(patientDOB, JOEDrecord.DateOfProcedure)
       if (age) {
         JOEDrecord.Age = Number(age)
       }
@@ -354,9 +360,11 @@ export function convertDaichoToJOED (
       JOEDrecord.ProcedureTime = encodeProcedureTime(Number(operation.手術時間))
     }
 
+    //
     // 手術術式を抽出して鏡視下手術を抽出
-    const operationRecords = []
-    const otherOperationRecords = []
+    //
+    const operationRecords:formatJOEDprocedure[]|translationObject[] = []
+    const otherOperationRecords:formatJOEDprocedure[] = []
     let isRobotOperation = false
 
     // 実施数の登録が無ければスキップ
@@ -395,7 +403,7 @@ export function convertDaichoToJOED (
     // 手術情報を重複を処理して集約
     for (const currentIndex of Object.keys(operationRecords).map(element => Number(element)).reverse()) {
       if (currentIndex > 0) {
-        const operation = operationRecords[currentIndex]
+        const operation = (operationRecords as translationObject[])[currentIndex]
         let needsplice = false
         for (let index = 0; index < currentIndex; index++) {
           // 重複の処理
@@ -412,22 +420,39 @@ export function convertDaichoToJOED (
           // 重複内容を消去
           operationRecords.splice(currentIndex, 1)
         } else {
-          // 余計な情報を削除
+          // 余計な情報を削除してJOEDの情報に変換
           if (operation?.attachedTo) {
-            delete operationRecords[currentIndex].attachedTo
+            delete (operationRecords as translationObject[])[currentIndex].attachedTo
           }
           if (operation?.preexisthandler) {
-            delete operationRecords[currentIndex].preexisthandler
+            delete (operationRecords as translationObject[])[currentIndex].preexisthandler
           }
         }
       }
     }
+
+    // 子宮全摘手術とリンパ節郭清が併施されている場合子宮全摘のadditional procedureにリンパ節郭清を組み込む
+    const hysterectomyIndex = operationRecords.findIndex(item => (item?.Chain || [])[0] === '腹腔鏡悪性' && item.Text.includes('子宮全摘出術'))
+    if (hysterectomyIndex >= 0) {
+      const lymphonodectomyIndex = operationRecords.findIndex(item => (item?.Chain || [])[0] === '腹腔鏡悪性' && item.Text.includes('リンパ節'))
+      if (lymphonodectomyIndex >= 0) {
+        (operationRecords as formatJOEDprocedure[])[hysterectomyIndex].additionalProcedure = {
+          Text: operationRecords[lymphonodectomyIndex].Text,
+          Description: operationRecords[lymphonodectomyIndex].Description
+        }
+        // リンパ節郭清のレコードを削除
+        operationRecords.splice(lymphonodectomyIndex, 1)
+      }
+    }
+
     operationRecords.push(...otherOperationRecords)
 
     JOEDrecord.TypeOfProcedure = isRobotOperation ? 'ロボット悪性' : '腹腔鏡悪性'
     JOEDrecord.Procedures = operationRecords as formatJOEDprocedure[]
 
+    //
     // 合併症の抽出
+    //
     const adverseEvents = []
     if (operation?.手術合併症) {
       for (const event of operation.手術合併症) {
@@ -486,7 +511,6 @@ export function convertDaichoToJOED (
                 const foundIndex = searchString.indexOf(value)
                 if (foundIndex >= 0) {
                   original[index] = replaceTo[foundIndex]
-                  console.log(`Replace Title: ${value} to ${replaceTo[foundIndex]}`)
                 }
               })
             }
@@ -537,7 +561,7 @@ function dateCalc (base: string, date: string): string|undefined {
   // 基準日
   const baseMatch = base.match(dateRegexp)
   if (baseMatch === null) {
-    throw new Error('基準日の書式に問題があります.')
+    throw new Error(`基準日の書式に問題があります.${base}`)
   }
   const baseDate = new Date(
     Number(baseMatch.groups?.year || '1970'),
@@ -548,7 +572,7 @@ function dateCalc (base: string, date: string): string|undefined {
   // 対象
   const dateMatch = date.match(dateRegexp)
   if (dateMatch === null) {
-    throw new Error('日付の書式に問題があります.')
+    throw new Error(`基準日の書式に問題があります.${date}`)
   }
   const targetDate = new Date(
     Number(dateMatch.groups?.year || '1970'),

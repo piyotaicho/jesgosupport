@@ -121,7 +121,6 @@ async function handler (docData: pulledDocument[]) {
     }
     const statusline2 = document.getElementById('plugin-statusline2')
     if (statusline2) {
-      console.dir(JOEDdocuments)
       statusline2.innerText = `${JOEDdocuments.length}件の鏡視下手術情報を抽出しました.`
     }
 
