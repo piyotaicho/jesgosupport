@@ -1,7 +1,7 @@
 import { mainOutput, scriptInfo, getterPluginArgument, pulledDocument } from './types'
 import { showModalDialog, createElement, createButton, createFormInput } from './modal-dialog'
 import { processor } from '../../src/components/processor'
-import { createBaseVNode } from 'vue'
+import Papa from 'papaparse'
 
 export async function init ():Promise<scriptInfo> {
   return {
@@ -79,8 +79,13 @@ async function loadScript() {
   return scriptbody
 }
 
-async function downloadCSV(data:anny[]) {
+async function saveCSV(data:any[]) {
+  if (data) {
+    const papa = new Papa()
+    papa.add(data)
+    const blob = new Blob([papa.toCSV()], { type: 'text/csv'})
 
+  }
 }
 async function handler (data: pulledDocument[]): Promise<string[]> {
   // データ無し
