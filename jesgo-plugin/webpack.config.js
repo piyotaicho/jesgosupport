@@ -4,7 +4,7 @@ module.exports = {
   mode: 'development',
   devtool: false,
   entry: {
-    // 'jesgo-supporttool-runtime': 'jesgo-plugin/src/index.ts',
+    'jesgo-supporttool-runtime': './jesgo-plugin/src/jesgo-support-runtime.ts',
     // 'error-importer': 'jesgo-plugin/src/error-importer.js',
     'jesgo-exporter': './jesgo-plugin/src/jesgo-exporter.ts',
     'jesgo-single-exporter': './jesgo-plugin/src/jesgo-exporter-single.ts',
@@ -44,6 +44,13 @@ module.exports = {
         exclude: /node_modules/
       },
       {
+        test: /\.json$/i,
+        use: {
+          loader: 'raw-loader'
+        },
+        exclude: /node_modules/
+      },
+      {
         test: /\.html$/i,
         use: {
           loader: 'html-loader'
@@ -54,7 +61,7 @@ module.exports = {
   },
   resolve: {
     extensions: [
-      '.js', '.ts'
+      '.js', '.ts', '.json', '.html'
     ]
   },
   experiments: {
