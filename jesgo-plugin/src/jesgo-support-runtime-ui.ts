@@ -1,4 +1,4 @@
-export default `
+export const dialogHTML = `
 <div>
     <h1 style="font-size: 1.6rem;">JESGOサポートツールランタイム</h1>
     <hr/>
@@ -28,14 +28,14 @@ export default `
                 <span id="plugin-statusline2">データを抽出・変換中です</span>
             </div>
             <div class="progress">
-                <div class="progress-bar" role="progressbar" id="pligin-progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="0">処理中</div>
+                <div class="progress-bar" role="progressbar" id="plugin-progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="0">処理中</div>
             </div>    
         </div>
         <div class="container text-center">
             <button id="plugin-download" class="btn btn-primary" disabled>出力データをダウンロード</button>
         </div>
         <div class="container text-center">
-            <span id="plugin-statusline3">※ダイアログを閉じたらエラーの登録画面に遷移します※</span>
+            <span id="plugin-statusline3" style="display: none;">※ダイアログを閉じたらエラーの登録画面に遷移します※</span>
         </div>
     </div>
 </div>

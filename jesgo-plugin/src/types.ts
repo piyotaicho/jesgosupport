@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+// プラグイン関連interface
 export interface scriptInfo {
   plugin_name: string
   plugin_version: string
@@ -12,6 +13,7 @@ export interface scriptInfo {
   explain?:string
 }
 
+// 取得系でシステムから提供される情報
 export interface caseList {
   case_id: number
   date_of_birth?: string
@@ -26,6 +28,7 @@ export interface caseList {
   sex?: 'F'|'M'
 }
 
+// 取得系APIリクエスト
 export interface getterPluginArgument {
   caseList: caseList[]
   targetDocument?: number
@@ -33,6 +36,7 @@ export interface getterPluginArgument {
   filterQuery?: null|undefined|string
 }
 
+// 取得系APIレスポンス
 export interface pulledDocument {
   decline: boolean
   documentList: object[]
@@ -42,6 +46,7 @@ export interface pulledDocument {
   name?: string
 }
 
+// 設定系でシステムから提供される情報
 export interface setterPluginArgument {
   case_id: number
   document_id: number
@@ -49,6 +54,7 @@ export interface setterPluginArgument {
   document: object
 }
 
+// 設定系APIリクエスト
 interface updateDocumentByHash {
   hash: string
   case_id?: number
@@ -73,11 +79,22 @@ interface updateDocumentByCaseNo {
   target: object
 }
 
-export type updateDocument = updateDocumentByHash | updateDocumentByCaseId | updateDocumentByCaseNo
+interface updateDocumentByDocumentId {
+  hash?: string
+  case_id?: number
+  case_no?: string
+  document_id: number
+  target: object
+}
 
+export type updateDocument = updateDocumentByHash | updateDocumentByCaseId | updateDocumentByCaseNo | updateDocumentByDocumentId
+
+// プラグイン main() の出力（取得系のみ有効）
 export type mainOutput = undefined|string|string[]|object|object[]
 
+//
 // JESGOドキュメント構造の抜粋interface
+//
 export interface formatJESGOoperation {
   術式: string
 }
