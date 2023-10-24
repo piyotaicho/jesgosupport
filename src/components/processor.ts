@@ -5,7 +5,7 @@ import { JSONPath } from 'jsonpath-plus'
  * マクロ実行ユニット
  * @param {JsonObject} 1症例分のオブジェクト
  * @param {LogicRule[]} ルールセット配列
- * @returns {csv: string[][], errors: string[]}
+ * @returns {csv: string[], errors: string[]}
  */
 // eslint-disable-next-line camelcase
 export function processor (content: { hash?: string, his_id?: string, name?: string, date_of_birth?: string, documentList: JsonObject }, rules: LogicRule[]): undefined | { csv: string[], errors: string[] } {

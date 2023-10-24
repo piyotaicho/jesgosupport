@@ -9,8 +9,8 @@ import { mainOutput, scriptInfo, getterPluginArgument, pulledDocument } from './
 import { showModalMessageBox } from './modal-dialog'
 
 const script_info: scriptInfo = {
-  plugin_name: 'JESGO-support用出力(byTS&webpack)',
-  plugin_version: '0.1',
+  plugin_name: 'JESGOサポートツール用データ出力',
+  plugin_version: '0.2',
   all_patient: true,
   attach_patient_info: true,
   update_db: false,
