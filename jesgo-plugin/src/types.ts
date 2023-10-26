@@ -26,6 +26,8 @@ export interface caseList {
   name?: string
   registrant?: number
   sex?: 'F'|'M'
+  // 以下は特殊用途(取得系からのcaseList生成)
+  document_id?: number
 }
 
 // 取得系APIリクエスト
@@ -46,7 +48,7 @@ export interface pulledDocument {
   name?: string
 }
 
-// 設定系でシステムから提供される情報
+// 更新系でシステムから提供される情報
 export interface setterPluginArgument {
   case_id: number
   document_id: number
@@ -54,7 +56,12 @@ export interface setterPluginArgument {
   document: object
 }
 
-// 設定系APIリクエスト
+// 更新系APIリクエスト
+export interface updateGetRequest {
+  caseList: caseList[]
+  targetDocument: number
+}
+
 interface updateDocumentByHash {
   hash: string
   case_id?: number
@@ -87,7 +94,7 @@ interface updateDocumentByDocumentId {
   target: object
 }
 
-export type updateDocument = updateDocumentByHash | updateDocumentByCaseId | updateDocumentByCaseNo | updateDocumentByDocumentId
+export type updateDocument = updateDocumentByHash | updateDocumentByCaseId | updateDocumentByCaseNo | updateDocumentByDocumentId | updateGetRequest
 
 // プラグイン main() の出力（取得系のみ有効）
 export type mainOutput = undefined|string|string[]|object|object[]

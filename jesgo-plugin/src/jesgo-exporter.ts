@@ -23,6 +23,7 @@ export async function init () {
 }
 
 export async function main (docData: getterPluginArgument, apifunc: (docData: getterPluginArgument) => string): Promise<mainOutput> {
+  console.dir(docData)
   if (docData.caseList) {
     const apiresult = await apifunc(docData)
     let documents:pulledDocument[]

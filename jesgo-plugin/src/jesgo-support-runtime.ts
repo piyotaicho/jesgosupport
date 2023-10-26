@@ -1,9 +1,9 @@
-import { mainOutput, scriptInfo, getterPluginArgument, pulledDocument, updateDocument } from './types'
+import { mainOutput, scriptInfo, getterPluginArgument, pulledDocument, updateDocument, setterPluginArgument, caseList, updateGetRequest } from './types'
 import { showModalDialog, createElementFromHtml } from './modal-dialog'
 import { dialogHTML } from './jesgo-support-runtime-ui'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { processor } from '../../src/components/processor'
-import Papa from 'papaparse'
+import { unparse as papaUnparse } from 'papaparse'
 import { LogicRule } from '../../src/components/types'
 
 type ScriptTypeFormat = 'loadscript'|'CC'|'EM'|'OV'
@@ -16,24 +16,48 @@ export async function init ():Promise<scriptInfo> {
     attach_patient_info: true,
     show_upload_dialog: false,
     update_db: true,
+    target_schema_id_string: '',
     explain: 'JESGOsupport(version <1.0)で作成されたスクリプトを実行してCSVファイルを作成、エラーを書き戻します.'
   }
 }
 
-export async function main (docData: getterPluginArgument, apifunction: (docData: getterPluginArgument|updateDocument[], mode: boolean) => string): Promise<mainOutput> {
-  if (docData.caseList) {
+export async function main (docData: setterPluginArgument[], apifunction: (docData: getterPluginArgument|updateDocument|updateDocument[], mode: boolean) => string): Promise<mainOutput> {
+  if (docData) {
     // APIでドキュメントを取得(取得モード)
-    const documentJSON = await apifunction(docData, true)
-    let documents:pulledDocument[]
+    const request:updateDocument[] = []
+    for (const item of docData) {
+      const caseId = item.case_id
+      if (item.schema_id.includes('/root')) {
+        if (!request.find(element => (element as updateGetRequest)?.caseList[0]?.case_id === caseId)) {
+          request.push({
+            caseList: [{
+              case_id: caseId
+            }],
+            targetDocument: 0 // magic number - item.document_id
+          })
+        }
+      }
+    }
+
+    let documents:pulledDocument[] = []
     try {
+      verbose('API(GET) request', request)
+      const documentJSON = await apifunction(request[0], true) // 1リクエストにつき1ドキュメントしか取得できない。対応を考える！
+      verbose('API(GET) returns', documentJSON)
+
       documents = JSON.parse(documentJSON) as pulledDocument[]
-    } catch {
+      if (documents.length === 0) {
+        throw new Error('データがありません.')
+      }
+    } catch (e) {
       window.alert('APIの返り値が異常です.')
+      console.error(e)
       return undefined
     }
 
     // 実際の処理へ handlerはちゃんと処理したらupdateDocumentを返す
     const values: unknown = await handler(documents)
+    verbose('handler returnd', values)
 
     // APIで返り値ドキュメントを処理(書き戻しモード)
     if (values && Array.isArray(values) && values.length > 0) {
@@ -48,13 +72,25 @@ export async function finalize (): Promise<void> {
 }
 
 /**
+ * メッセージログとデータダンプを表示
+ * @param message
+ * @param item
+ */
+function verbose (message = '', item:unknown) {
+  if (message !== '') {
+    console.log(message)
+  }
+  console.dir(item)
+}
+
+/**
  * saveCSV dataURLを使ってファイルにダウンロードさせる(CSV専用)
  * @param data CSVテーブルの2次元配列
  */
 function saveCSV (data:unknown[]) {
   if (data && Array.isArray(data) && data.length > 0) {
     const blob = new Blob([
-      Papa.unparse(
+      papaUnparse(
         data,
         {
           header: false,
