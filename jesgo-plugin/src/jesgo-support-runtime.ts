@@ -21,13 +21,28 @@ export async function init ():Promise<scriptInfo> {
   }
 }
 
-export async function main (docData: setterPluginArgument[], apifunction: (docData: getterPluginArgument|updateDocument|updateDocument[], mode: boolean) => string): Promise<mainOutput> {
+/**
+ * プラグインmainルーチン
+ * @param docData
+ *  - 取得系 症例リスト
+ *  - 更新系(uploadなし) 表示されている全てのドキュメント
+ *  - 更新系(uploadあり) uploadされたデータ
+ * @param apicall APIcallback
+ * @returns
+ *  - 取得系 ビューアに渡すデータ(JSON, array or string)
+ *  - 取得系 void
+ */
+export async function main (docData: setterPluginArgument[], apicall: (docData: getterPluginArgument|updateDocument|updateDocument[], mode: boolean) => string): Promise<mainOutput> {
+  // 更新モードなのでdocDataには表示されている全てのドキュメントが入っている
+  const getterAPIcall = async (request: getterPluginArgument) => await apicall(request, true)
+  const setterAPIcall = async (request: updateDocument[]) => await apicall(request, false)
+
   if (docData) {
     // APIでドキュメントを取得(取得モード)
     const request:updateDocument[] = []
     for (const item of docData) {
       const caseId = item.case_id
-      if (item.schema_id.includes('/root')) {
+      if (item.schema_id.split('/').indexOf('root') >= 0) {
         if (!request.find(element => (element as updateGetRequest)?.caseList[0]?.case_id === caseId)) {
           request.push({
             caseList: [{
@@ -42,7 +57,7 @@ export async function main (docData: setterPluginArgument[], apifunction: (docDa
     let documents:pulledDocument[] = []
     try {
       verbose('API(GET) request', request)
-      const documentJSON = await apifunction(request[0], true) // 1リクエストにつき1ドキュメントしか取得できない。対応を考える！
+      const documentJSON = await getterAPIcall(request[0]) // 1リクエストにつき1ドキュメントしか取得できない。対応を考える！
       verbose('API(GET) returns', documentJSON)
 
       documents = JSON.parse(documentJSON) as pulledDocument[]
@@ -62,7 +77,7 @@ export async function main (docData: setterPluginArgument[], apifunction: (docDa
     // APIで返り値ドキュメントを処理(書き戻しモード)
     if (values && Array.isArray(values) && values.length > 0) {
       const updateValues = values as updateDocument[]
-      await apifunction(updateValues, false)
+      await setterAPIcall(updateValues)
     }
   }
 }
@@ -162,11 +177,13 @@ function extractDocumentId (documentList: any[], extractType: ScriptTypeFormat =
 /**
  * 実行ハンドラ
  * @param APIからの返り値
+ * @param getterAPIcall 取得系API
  * @returns 更新系APIに渡す更新オブジェクトの配列
  */
-async function handler (data: pulledDocument[]): Promise<updateDocument[]|undefined> {
+async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: getterPluginArgument) => string): Promise<updateDocument[]|undefined> {
   // データ無し
-  if (data.length === 0) {
+  const dataLength = data.length
+  if (dataLength === 0) {
     return undefined
   }
 
@@ -299,7 +316,59 @@ async function handler (data: pulledDocument[]): Promise<updateDocument[]|undefi
 
     dialogPage1.style.display = 'none'
 
-    // ページ2 - 変換処理
+    // 取得ドキュメントリストの整理
+    const targets:getterPluginArgument[] = []
+    let targetSchemaIdString = ''
+
+    // 抽出する台帳スキーマの指定
+    // プラグイン全般は全ドキュメントをパックして取得する
+    switch (scriptType) {
+      case 'CC':
+        targetSchemaIdString = '/schema/CC/root'
+        break
+      case 'EM':
+        targetSchemaIdString = '/schema/EM/root'
+        break
+      case 'OV':
+        targetSchemaIdString = '/schema/OV/root'
+        break
+    }
+
+    for (let index = 0; index < dataLength; index++) {
+      if (targets.map(item => item.caseList[0].case_id).indexOf(data[index].case_id) < 0) {
+        const schemaIdString = data[index].schema_id
+        if (targetSchemaIdString === '') {
+          // スクリプトロードの場合はドキュメント全てを取得
+          targets.push({
+            caseList: [{
+              case_id: data[index].case_id
+            }],
+            targetDocument: 0
+          })
+        } else {
+          // 台帳指定は台帳のみ取得
+          const schemaIdStringArray:string[] = schemaIdString.split('/')
+          const targetSchemaIdStringArray:string[] = targetSchemaIdString.split('/')
+
+          let compareIndex = 0
+          for (; compareIndex < targetSchemaIdStringArray.length; compareIndex++) {
+            if (schemaIdStringArray[compareIndex] !== targetSchemaIdStringArray[compareIndex]) {
+              break
+            }
+          }
+          if (compareIndex === targetSchemaIdStringArray.length) {
+            targets.push({
+              caseList: [{
+                case_id: data[index].case_id
+              }],
+              targetDocument: data[index].document_id
+            })
+          }
+        }
+      }
+    }
+
+    // ページ2 - 変換処理開始
     dialogPage2.style.display = ''
 
     // イベントハンドラ
@@ -329,7 +398,7 @@ async function handler (data: pulledDocument[]): Promise<updateDocument[]|undefi
 
     // 症例数ステータスの更新
     if (statusline1) {
-      statusline1.innerText = `JESGOから出力された症例数は${data.length}症例です.`
+      statusline1.innerText = `対象症例数は ${targets.length} 症例です.`
     }
 
     if (progressbar) {
@@ -337,11 +406,12 @@ async function handler (data: pulledDocument[]): Promise<updateDocument[]|undefi
     }
 
     // データの逐次処理
-    for (const index in data) {
-      const caseData = data[index]
-
+    for (let index = 0; index < targets.length; index++) {
       // プログレスバーの更新
-      progressbar.style.width = `${(Number(index) + 1) / data.length}%`
+      progressbar.style.width = `${(Number(index) + 1) / targets.length}%`
+
+      // ドキュメントの取得
+      const caseData:pulledDocument = getterAPIcall ? JSON.parse(getterAPIcall(targets[index])) : []
 
       // 言語処理プロセッサの起動
       type processorOutputFormat = {
