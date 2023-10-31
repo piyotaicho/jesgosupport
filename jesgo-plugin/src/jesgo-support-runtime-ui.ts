@@ -13,7 +13,6 @@ export const dialogHTML = `
                 </select>        
             </div>
             <div class="col">
-                <input type="file" style="display: none;" id="plugin-input-file"/>
                 <button id="plugin-process-script" class="btn btn-primary">実行</button>        
             </div>
         </div>

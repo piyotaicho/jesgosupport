@@ -1,10 +1,11 @@
-import { mainOutput, scriptInfo, getterPluginArgument, pulledDocument, updateDocument, setterPluginArgument, caseList, updateGetRequest } from './types'
+import { mainOutput, scriptInfo, getterPluginArgument, pulledDocument, updateDocument, setterPluginArgument } from './types'
 import { showModalDialog, createElementFromHtml } from './modal-dialog'
 import { dialogHTML } from './jesgo-support-runtime-ui'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { processor } from '../../src/components/processor'
 import { unparse as papaUnparse } from 'papaparse'
 import { LogicRule } from '../../src/components/types'
+import { tr } from 'element-plus/es/locale'
 
 type ScriptTypeFormat = 'loadscript'|'CC'|'EM'|'OV'
 
@@ -34,44 +35,12 @@ export async function init ():Promise<scriptInfo> {
  */
 export async function main (docData: setterPluginArgument[], apicall: (docData: getterPluginArgument|updateDocument|updateDocument[], mode: boolean) => string): Promise<mainOutput> {
   // 更新モードなのでdocDataには表示されている全てのドキュメントが入っている
-  const getterAPIcall = async (request: getterPluginArgument) => await apicall(request, true)
-  const setterAPIcall = async (request: updateDocument[]) => await apicall(request, false)
+  const getterAPIcall = (request: getterPluginArgument) => apicall(request, true)
+  const setterAPIcall = (request: updateDocument[]) => apicall(request, false)
 
   if (docData) {
-    // APIでドキュメントを取得(取得モード)
-    const request:updateDocument[] = []
-    for (const item of docData) {
-      const caseId = item.case_id
-      if (item.schema_id.split('/').indexOf('root') >= 0) {
-        if (!request.find(element => (element as updateGetRequest)?.caseList[0]?.case_id === caseId)) {
-          request.push({
-            caseList: [{
-              case_id: caseId
-            }],
-            targetDocument: 0 // magic number - item.document_id
-          })
-        }
-      }
-    }
-
-    let documents:pulledDocument[] = []
-    try {
-      verbose('API(GET) request', request)
-      const documentJSON = await getterAPIcall(request[0]) // 1リクエストにつき1ドキュメントしか取得できない。対応を考える！
-      verbose('API(GET) returns', documentJSON)
-
-      documents = JSON.parse(documentJSON) as pulledDocument[]
-      if (documents.length === 0) {
-        throw new Error('データがありません.')
-      }
-    } catch (e) {
-      window.alert('APIの返り値が異常です.')
-      console.error(e)
-      return undefined
-    }
-
     // 実際の処理へ handlerはちゃんと処理したらupdateDocumentを返す
-    const values: unknown = await handler(documents)
+    const values: unknown = await handler(docData, getterAPIcall)
     verbose('handler returnd', values)
 
     // APIで返り値ドキュメントを処理(書き戻しモード)
@@ -80,6 +49,7 @@ export async function main (docData: setterPluginArgument[], apicall: (docData: 
       await setterAPIcall(updateValues)
     }
   }
+  return undefined
 }
 
 export async function finalize (): Promise<void> {
@@ -191,7 +161,7 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
   const createDialogContent = (parent:Element) => parent.appendChild(createElementFromHtml(dialogHTML))
 
   // ダイアログ内での処理
-  const script: unknown[] = []
+  let script: unknown[] = []
   const csvBuffer: string[][] = []
 
   type typeErrorBuffer = {
@@ -209,21 +179,26 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
   const loadScriptByRunButton = async (): Promise<string> => {
     // selectの判定
     const scriptSelection = document.getElementById('plugin-selection-mode') as HTMLSelectElement
-    const inputFileElement = document.getElementById('plugin-input-file') as HTMLInputElement
 
-    if (!scriptSelection || !inputFileElement) {
+    if (!scriptSelection) {
       // DOM展開エラーかしら？
       return ''
     }
     scriptType = scriptSelection.value as ScriptTypeFormat
 
+    verbose('loadScroptByRunButton:', `Script type : ${scriptType}`)
+
     switch (scriptType) {
       case 'loadscript':
         // input type="file" を発火させてスクリプトを取得する
         return await new Promise((resolve) => {
+          const inputFile = document.createElement('input') as HTMLInputElement
+          inputFile.type = 'file'
+
           // FileReaderをセットアップ
           const reader = new FileReader()
           reader.addEventListener('load', () => {
+            verbose('FileReader loaded:', reader.result)
             resolve(reader.result as string)
           },
           {
@@ -231,28 +206,24 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
           })
 
           // input type="file"のセットアップ
-          inputFileElement.addEventListener('change', () => {
-            if (inputFileElement.files) {
-              const file = inputFileElement.files[0]
-              reader.readAsText(file)
-
-              // hack
-              inputFileElement.value = file.name
-            } else {
-              // キャンセルだと思う
-              resolve('')
+          const changeEvent = () => {
+            const files = inputFile.files
+            if (files && files.length > 0) {
+              verbose('Invoke FileReader', files[0])
+              reader.readAsText(files[0])
             }
-          },
-          {
-            once: true
-          })
-
-          inputFileElement.onchange = () => {
-            // キャンセルだと思う
+          }
+          const cancelEvent = () => {
+            verbose('InputFile:', 'dialog cancelled.')
+            inputFile.removeEventListener('change', changeEvent)
             resolve('')
           }
 
-          inputFileElement.click()
+          inputFile.addEventListener('change', changeEvent, { once: true })
+          inputFile.addEventListener('cancel', cancelEvent, { once: true })
+
+          // inputFile発火
+          inputFile.click()
         })
       case 'CC':
         // 未実装
@@ -268,26 +239,28 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
     }
   }
 
-  // ダイアログ1ページ目のスクリプト
-  const loadScript = async () => await new Promise<void>(resolve => {
+  // ダイアログボタンイベント
+  const loadScript = async () => await new Promise<unknown[]>(resolve => {
     // DOMイベントを設定
     const runButton = document.getElementById('plugin-process-script') as HTMLButtonElement
     if (runButton) {
       runButton.addEventListener('click', async () => {
         const JSONstring = await loadScriptByRunButton()
+        verbose('Script loaded as string', JSONstring)
         if (JSONstring !== '') {
           try {
-            script.splice(0, script.length, ...JSON.parse(JSONstring))
-            resolve()
+            resolve(JSON.parse(JSONstring))
           } catch (e) {
             window.alert('スクリプトが正しいJSONフォーマットではありません.')
           }
+        } else {
+          script.splice(0, script.length)
         }
-        script.splice(0, script.length)
       })
     }
   })
 
+  // ダイアログのスクリプト
   const dialogProcedure = async () => {
     // ページのセットアップ
     const dialogPage1 = document.getElementById('plugin-settings')
@@ -296,14 +269,15 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
       window.alert('DOMエラーです')
       throw new Error('DOM ERROR')
     }
-
     // dialogPage1.style.display = 'none'
     dialogPage2.style.display = 'none'
 
     // ページ1 - スクリプトのロード
     dialogPage1.style.display = ''
 
-    await loadScript()
+    script = await loadScript()
+
+    verbose('Loaded script', script)
 
     if (script.length === 0) {
       window.alert('スクリプトがロードされませんでした、プラグインの処理を終了します.')
@@ -312,9 +286,8 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
       if (runButton) {
         runButton.disabled = true
       }
+      return
     }
-
-    dialogPage1.style.display = 'none'
 
     // 取得ドキュメントリストの整理
     const targets:getterPluginArgument[] = []
@@ -368,7 +341,10 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
       }
     }
 
-    // ページ2 - 変換処理開始
+    verbose('Documents are followings:', targets)
+
+    // ページ2 - セットアップ
+    dialogPage1.style.display = 'none'
     dialogPage2.style.display = ''
 
     // イベントハンドラ
@@ -391,6 +367,9 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
       script.shift()
     }
 
+    verbose('Script vaersion is', scriptVersion)
+
+    // 2ページ目のDOM取得
     const statusline1 = document.getElementById('plugin-statusline1') as HTMLSpanElement
     const statusline2 = document.getElementById('plugin-statusline2') as HTMLSpanElement
     const progressbar = document.getElementById('plugin-progressbar') as HTMLDivElement
@@ -411,7 +390,13 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
       progressbar.style.width = `${(Number(index) + 1) / targets.length}%`
 
       // ドキュメントの取得
-      const caseData:pulledDocument = getterAPIcall ? JSON.parse(getterAPIcall(targets[index])) : []
+      const documentId = targets[index].targetDocument
+      const caseData:pulledDocument[] = getterAPIcall ? JSON.parse(await getterAPIcall(targets[index])) : []
+
+      if (!Array.isArray(caseData)) {
+        continue
+      }
+      verbose(`Process document ${documentId}:`, caseData[0])
 
       // 言語処理プロセッサの起動
       type processorOutputFormat = {
@@ -419,31 +404,55 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
         errors: string[]
       }
 
-      const processorEvent = async (caseData: pulledDocument, script: LogicRule[]):Promise<processorOutputFormat|undefined> => new Promise((resolve) => {
-        setTimeout(() => {
-          if (scriptVersion > '0') {
-            resolve(processor(caseData, script))
-          }
-        },
-        0)
+      // const processorEvent = async (caseData: pulledDocument, script: LogicRule[]):Promise<processorOutputFormat|undefined> => new Promise((resolve) => {
+      //   setTimeout(() => {
+      //     // まだスクリプトバージョンは0しかない
+      //     if (scriptVersion >= '0') {
+      //       resolve(processor(caseData, script))
+      //     }
+      //   },
+      //   0)
+      // })
+      const result = await new Promise<processorOutputFormat|undefined>(resolve => {
+        if (scriptVersion >= '0') {
+          setTimeout(async () => {
+            const processorResult = await processor(caseData[0], script as LogicRule[])
+            resolve(processorResult)
+          }, 0)
+        }
       })
-      const result = await processorEvent(caseData, script as LogicRule[])
+      // processorEvent(caseData, script as LogicRule[])
+
+      verbose('Process result', result)
 
       if (result) {
-        csvBuffer.push(result.csv)
-        if (result.errors.length > 0) {
-          const documentId = extractDocumentId(caseData.documentList, scriptType)
-          if (documentId !== -1) {
+        // 結果
+        if (result?.csv && result.csv.length > 0) {
+          csvBuffer.push(result.csv)
+        }
+
+        // エラー
+        if (result?.errors && result.errors.length > 0) {
+          if (documentId !== 0) {
             errorBuffer.push({
-              hash: caseData.hash,
+              hash: caseData[0].hash,
               documentId: documentId,
               errors: result.errors
             })
           } else {
-            errorBuffer.push({
-              hash: caseData.hash,
-              errors: result.errors
-            })
+            const extractedDocumentId = extractDocumentId(caseData[0].documentList, scriptType)
+            if (extractedDocumentId !== -1) {
+              errorBuffer.push({
+                hash: caseData[0].hash,
+                documentId: extractedDocumentId,
+                errors: result.errors
+              })
+            } else {
+              errorBuffer.push({
+                hash: caseData[0].hash,
+                errors: result.errors
+              })
+            }
           }
         }
       }
@@ -454,6 +463,8 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
     if (statusline2) {
       statusline2.innerText = '変換終了'
     }
+
+    // CSVのデータがあればダウンロードボタンをenable
     if (csvBuffer.length > 0) {
       downloadButton.disabled = false
       statusline3.style.display = ''
