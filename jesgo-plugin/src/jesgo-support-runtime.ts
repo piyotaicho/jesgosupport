@@ -5,7 +5,6 @@ import { dialogHTML } from './jesgo-support-runtime-ui'
 import { processor } from '../../src/components/processor'
 import { unparse as papaUnparse } from 'papaparse'
 import { LogicRule } from '../../src/components/types'
-import { tr } from 'element-plus/es/locale'
 
 type ScriptTypeFormat = 'loadscript'|'CC'|'EM'|'OV'
 
@@ -69,14 +68,62 @@ function verbose (message = '', item:unknown) {
 }
 
 /**
+ * JSONファイルをInput type="FILE"とFileReaderで読み込む
+ * @returns string
+ */
+async function loadJSONfile (): Promise<string> {
+  return await new Promise(resolve => {
+    const inputFile = document.createElement('input') as HTMLInputElement
+    inputFile.type = 'file'
+    inputFile.accept = '.json,application/json'
+
+    // FileReaderをセットアップ
+    const reader = new FileReader()
+    reader.addEventListener('load', () => {
+      verbose('loadJSONfile - FileReader loaded:', reader.result)
+      resolve(reader.result as string)
+    },
+    {
+      once: true
+    })
+
+    // input type="file"のセットアップ
+    const changeEvent = () => {
+      const files = inputFile.files
+      if (files && files.length > 0) {
+        verbose('loadJSONfile - Invoke FileReader', files[0])
+        reader.readAsText(files[0])
+      }
+    }
+    const cancelEvent = () => {
+      verbose('loadJSONfile', 'dialog cancelled.')
+      inputFile.removeEventListener('change', changeEvent)
+      resolve('')
+    }
+
+    inputFile.addEventListener('change', changeEvent, { once: true })
+    inputFile.addEventListener('cancel', cancelEvent, { once: true })
+
+    // inputFile発火
+    inputFile.click()
+  })
+}
+
+/**
  * saveCSV dataURLを使ってファイルにダウンロードさせる(CSV専用)
  * @param data CSVテーブルの2次元配列
  */
-function saveCSV (data:unknown[]) {
+function saveCSV (data:unknown[], offset = 0, filename = 'JESGO出力データ.csv') {
   if (data && Array.isArray(data) && data.length > 0) {
+    const offsettedData = []
+    for (let count = 0; count < offset; count++) {
+      offsettedData.push([])
+    }
+    offsettedData.push(...data)
+
     const blob = new Blob([
       papaUnparse(
-        data,
+        offsettedData,
         {
           header: false,
           delimiter: ',',
@@ -87,7 +134,7 @@ function saveCSV (data:unknown[]) {
     const url = URL.createObjectURL(blob)
     const anchorElement = document.createElement('A') as HTMLAnchorElement
     anchorElement.href = url
-    anchorElement.download = 'JESGO出力データ.csv'
+    anchorElement.download = filename
     anchorElement.click()
   }
 }
@@ -190,41 +237,7 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
 
     switch (scriptType) {
       case 'loadscript':
-        // input type="file" を発火させてスクリプトを取得する
-        return await new Promise((resolve) => {
-          const inputFile = document.createElement('input') as HTMLInputElement
-          inputFile.type = 'file'
-
-          // FileReaderをセットアップ
-          const reader = new FileReader()
-          reader.addEventListener('load', () => {
-            verbose('FileReader loaded:', reader.result)
-            resolve(reader.result as string)
-          },
-          {
-            once: true
-          })
-
-          // input type="file"のセットアップ
-          const changeEvent = () => {
-            const files = inputFile.files
-            if (files && files.length > 0) {
-              verbose('Invoke FileReader', files[0])
-              reader.readAsText(files[0])
-            }
-          }
-          const cancelEvent = () => {
-            verbose('InputFile:', 'dialog cancelled.')
-            inputFile.removeEventListener('change', changeEvent)
-            resolve('')
-          }
-
-          inputFile.addEventListener('change', changeEvent, { once: true })
-          inputFile.addEventListener('cancel', cancelEvent, { once: true })
-
-          // inputFile発火
-          inputFile.click()
-        })
+        return await loadJSONfile()
       case 'CC':
         // 未実装
         return ''
