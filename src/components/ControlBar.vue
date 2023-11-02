@@ -192,24 +192,24 @@ function userDownload (data: string, filename: string): void {
   URL.revokeObjectURL(url)
 }
 
-function performProcessing (): void {
+async function performProcessing (): Promise<void> {
   if (store.getters.documentLength > 0 && store.state.RuleSet.length > 0) {
     // ドキュメントとルールセットがないと実行しない
     store.commit('clearCsvDocument')
     store.commit('clearErrorDocument')
     for (let index = 0; index < store.getters.documentLength; index++) {
-      processDocument(index)
+      await processDocument(index)
     }
   }
 }
 
-function processDocument (index:number) {
+async function processDocument (index:number) {
   const hash = store.getters.documentRef(index)?.hash || ''
 
   let returnObject: {csv: string[], errors: string[]}|undefined
   try {
     processing.value = true
-    returnObject = processor(store.getters.documentRef(index), store.state.RuleSet)
+    returnObject = await processor(store.getters.documentRef(index), store.state.RuleSet)
   } catch (e) {
     console.error(e)
   } finally {
