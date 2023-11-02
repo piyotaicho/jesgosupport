@@ -12,7 +12,7 @@ import { dialogHTMLstrings } from './export-to-joed-ui'
 
 const script_info: scriptInfo = {
   plugin_name: 'JOED5用インポートデータの作成',
-  plugin_version: '0.4',
+  plugin_version: '1.0',
   all_patient: true,
   attach_patient_info: true,
   update_db: false,
