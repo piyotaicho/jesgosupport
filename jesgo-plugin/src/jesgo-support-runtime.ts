@@ -5,13 +5,15 @@ import { dialogHTML } from './jesgo-support-runtime-ui'
 import { processor } from '../../src/components/processor'
 import { unparse as papaUnparse } from 'papaparse'
 import { LogicRule } from '../../src/components/types'
+// eslint-disable-next-line import/no-named-default
+import { scriptEM } from './support-scripts/scripts'
 
 type ScriptTypeFormat = 'loadscript'|'CC'|'EM'|'OV'
 
 export async function init ():Promise<scriptInfo> {
   return {
     plugin_name: 'JESGO-supportランタイム',
-    plugin_version: '0.1',
+    plugin_version: '1.0',
     all_patient: true,
     attach_patient_info: true,
     show_upload_dialog: false,
@@ -45,6 +47,7 @@ export async function main (docData: setterPluginArgument[], apicall: (docData: 
     // APIで返り値ドキュメントを処理(書き戻しモード)
     if (values && Array.isArray(values) && values.length > 0) {
       const updateValues = values as updateDocument[]
+      verbose('Update database', updateValues)
       await setterAPIcall(updateValues)
     }
   }
@@ -242,8 +245,7 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
         // 未実装
         return ''
       case 'EM':
-        // 未実装
-        return ''
+        return JSON.stringify(scriptEM)
       case 'OV':
         // 未実装
         return ''
@@ -282,12 +284,11 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
       window.alert('DOMエラーです')
       throw new Error('DOM ERROR')
     }
-    // dialogPage1.style.display = 'none'
+
+    dialogPage1.style.display = 'flex'
     dialogPage2.style.display = 'none'
 
     // ページ1 - スクリプトのロード
-    dialogPage1.style.display = ''
-
     script = await loadScript()
 
     verbose('Loaded script', script)
@@ -358,49 +359,64 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
 
     // ページ2 - セットアップ
     dialogPage1.style.display = 'none'
-    dialogPage2.style.display = ''
+    dialogPage2.style.display = 'flex'
+
+    // 2ページ目のDOM取得
+    const statusline1 = document.getElementById('plugin-statusline1') as HTMLSpanElement
+    const statusline2 = document.getElementById('plugin-statusline2') as HTMLSpanElement
+    const inputCsvOffset = document.getElementById('plugin-offset-value') as HTMLInputElement
+    const downloadButton = document.getElementById('plugin-download') as HTMLButtonElement
+    const statusline3 = document.getElementById('plugin-statusline3') as HTMLSpanElement
 
     // イベントハンドラ
-    const downloadButton = document.getElementById('plugin-download') as HTMLButtonElement
+    let csvOffset = 0
+
     downloadButton.addEventListener('click', () => {
       if (csvBuffer.length > 0) {
-        saveCSV(csvBuffer)
+        if (csvOffset === 0) {
+          csvOffset = Number(inputCsvOffset.value) || 0
+        }
+        saveCSV(csvBuffer, csvOffset)
       }
     })
 
     // サポートツールの言語バージョンチェック
     type scriptHeader = {
-      scriptVersion: string
+      processorVersion: string
+      csvOffset?: number
     }
     let scriptVersion = '0'
-    if ((script[0] as scriptHeader)?.scriptVersion) {
-      const scriptVersionString = (script[0] as scriptHeader).scriptVersion
+    if ((script[0] as scriptHeader)?.processorVersion) {
+      const scriptHeaderValue = script[0] as scriptHeader
+      const scriptVersionString = scriptHeaderValue.processorVersion
       scriptVersion = scriptVersionString.substring(0, (scriptVersionString + ' ').indexOf(' ')).split('.')[0]
 
+      if (scriptHeaderValue?.csvOffset !== undefined) {
+        csvOffset = scriptHeaderValue.csvOffset || 0
+      }
+      // splice scriptHeader
       script.shift()
     }
 
     verbose('Script vaersion is', scriptVersion)
-
-    // 2ページ目のDOM取得
-    const statusline1 = document.getElementById('plugin-statusline1') as HTMLSpanElement
-    const statusline2 = document.getElementById('plugin-statusline2') as HTMLSpanElement
-    const progressbar = document.getElementById('plugin-progressbar') as HTMLDivElement
-    const statusline3 = document.getElementById('plugin-statusline3') as HTMLSpanElement
 
     // 症例数ステータスの更新
     if (statusline1) {
       statusline1.innerText = `対象症例数は ${targets.length} 症例です.`
     }
 
-    if (progressbar) {
-      progressbar.style.width = '0%'
-    }
-
     // データの逐次処理
     for (let index = 0; index < targets.length; index++) {
+      const progressbar = document.getElementById('plugin-progressbar') as HTMLDivElement
+
       // プログレスバーの更新
-      progressbar.style.width = `${(Number(index) + 1) / targets.length}%`
+      if (progressbar) {
+        progressbar.style.width = `${(Number(index) + 1) / targets.length}%`
+      } else {
+        // ダイアログのDOMが消失した = modalがcloseされた と判断して処理を中止する
+        verbose(undefined, 'Plugin-aborted by dialog closure.')
+        return
+      }
 
       // ドキュメントの取得
       const documentId = targets[index].targetDocument
@@ -417,23 +433,7 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
         errors: string[]
       }
 
-      // const processorEvent = async (caseData: pulledDocument, script: LogicRule[]):Promise<processorOutputFormat|undefined> => new Promise((resolve) => {
-      //   setTimeout(() => {
-      //     // まだスクリプトバージョンは0しかない
-      //     if (scriptVersion >= '0') {
-      //       resolve(processor(caseData, script))
-      //     }
-      //   },
-      //   0)
-      // })
-      const result = await new Promise<processorOutputFormat|undefined>(resolve => {
-        if (scriptVersion >= '0') {
-          setTimeout(async () => {
-            const processorResult = await processor(caseData[0], script as LogicRule[])
-            resolve(processorResult)
-          }, 0)
-        }
-      })
+      const result = scriptVersion >= '0' ? (await processor(caseData[0], script as LogicRule[])) as processorOutputFormat : undefined
       // processorEvent(caseData, script as LogicRule[])
 
       verbose('Process result', result)
@@ -472,16 +472,30 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
     }
 
     // ステータスの更新とダウンロードの有効化
-    progressbar.style.width = '100%'
+    const progressbar = document.getElementById('plugin-progressbar') as HTMLDivElement
+    if (progressbar) {
+      progressbar.style.width = '100%'
+    }
     if (statusline2) {
       statusline2.innerText = '変換終了'
     }
 
-    // CSVのデータがあればダウンロードボタンをenable
-    if (csvBuffer.length > 0) {
-      downloadButton.disabled = false
-      statusline3.style.display = ''
-    }
+    await new Promise<void>(resolve => setTimeout(() => {
+      // CSVのデータがあればダウンロード関係をenable
+      if (csvBuffer.length > 0) {
+        statusline2.innerText = 'CSVファイルをダウンロードできます.'
+        downloadButton.disabled = false
+        if (csvOffset === 0) {
+          inputCsvOffset.disabled = false
+        }
+      }
+      // エラーがあれば閉じるでエラーが出る旨を表示
+      if (errorBuffer.length > 0) {
+        statusline3.style.display = ''
+      }
+      resolve()
+    },
+    500))
   }
 
   // ダイアログでの処理へ
