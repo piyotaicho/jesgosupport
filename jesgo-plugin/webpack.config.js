@@ -43,8 +43,16 @@ module.exports = {
       },
       {
         test: /\.json$/i,
+        type: 'javascript/auto',
         use: {
-          loader: 'raw-loader'
+          loader: 'json-loader',
+          options: {
+            json: 'string'
+          }
+          // ,
+          // options: {
+          //   esModule: false
+          // }
         },
         exclude: /node_modules/
       },
