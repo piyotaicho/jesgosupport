@@ -59,7 +59,10 @@ module.exports = {
       {
         test: /\.html$/i,
         use: {
-          loader: 'html-loader'
+          loader: 'raw-loader',
+          options: {
+            esModule: false
+          }
         },
         exclude: /node_modules/
       }

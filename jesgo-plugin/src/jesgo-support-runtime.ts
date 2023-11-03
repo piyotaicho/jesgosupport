@@ -1,14 +1,10 @@
 import { mainOutput, scriptInfo, getterPluginArgument, pulledDocument, updateDocument, setterPluginArgument } from './types'
 import { showModalDialog, createElementFromHtml } from './modal-dialog'
 import { dialogHTML } from './jesgo-support-runtime-ui'
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { processor } from '../../src/components/processor'
 import { unparse as papaUnparse } from 'papaparse'
 import { LogicRule } from '../../src/components/types'
-// eslint-disable-next-line import/no-named-default
 import { scriptEM } from './support-scripts/scripts'
-
-type ScriptTypeFormat = 'loadscript'|'CC'|'EM'|'OV'
 
 export async function init ():Promise<scriptInfo> {
   return {
@@ -42,12 +38,11 @@ export async function main (docData: setterPluginArgument[], apicall: (docData: 
   if (docData) {
     // 実際の処理へ handlerはちゃんと処理したらupdateDocumentを返す
     const values: unknown = await handler(docData, getterAPIcall)
-    verbose('handler returnd', values)
 
     // APIで返り値ドキュメントを処理(書き戻しモード)
     if (values && Array.isArray(values) && values.length > 0) {
       const updateValues = values as updateDocument[]
-      verbose('Update database', updateValues)
+      verbose('Update database:', updateValues)
       await setterAPIcall(updateValues)
     }
   }
@@ -78,12 +73,11 @@ async function loadJSONfile (): Promise<string> {
   return await new Promise(resolve => {
     const inputFile = document.createElement('input') as HTMLInputElement
     inputFile.type = 'file'
-    inputFile.accept = '.json,application/json'
+    inputFile.accept = 'application/json'
 
     // FileReaderをセットアップ
     const reader = new FileReader()
     reader.addEventListener('load', () => {
-      verbose('loadJSONfile - FileReader loaded:', reader.result)
       resolve(reader.result as string)
     },
     {
@@ -94,12 +88,10 @@ async function loadJSONfile (): Promise<string> {
     const changeEvent = () => {
       const files = inputFile.files
       if (files && files.length > 0) {
-        verbose('loadJSONfile - Invoke FileReader', files[0])
         reader.readAsText(files[0])
       }
     }
     const cancelEvent = () => {
-      verbose('loadJSONfile', 'dialog cancelled.')
       inputFile.removeEventListener('change', changeEvent)
       resolve('')
     }
@@ -107,7 +99,7 @@ async function loadJSONfile (): Promise<string> {
     inputFile.addEventListener('change', changeEvent, { once: true })
     inputFile.addEventListener('cancel', cancelEvent, { once: true })
 
-    // inputFile発火
+    // input type=file発火
     inputFile.click()
   })
 }
@@ -141,6 +133,8 @@ function saveCSV (data:unknown[], offset = 0, filename = 'JESGO出力データ.c
     anchorElement.click()
   }
 }
+
+type ScriptTypeFormat = 'loadscript'|'CC'|'EM'|'OV'
 
 /**
  * JESGOドキュメントから jesgo:document_id の値を抽出する
@@ -210,10 +204,7 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
   // ダイアログの表示
   const createDialogContent = (parent:Element) => parent.appendChild(createElementFromHtml(dialogHTML))
 
-  // ダイアログ内での処理
-  let script: unknown[] = []
-  const csvBuffer: string[][] = []
-
+  // ダイアログ内の変数
   type typeErrorBuffer = {
     // eslint-disable-next-line camelcase
     his_id?: string
@@ -222,38 +213,13 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
     documentId?: number
     errors: string[]
   }
-  const errorBuffer:typeErrorBuffer[] = []
 
+  let script: unknown[] = []
   let scriptType:ScriptTypeFormat = 'loadscript'
-
-  // 実行ボタンのイベントハンドラ - スクリプトのロード
-  const loadScriptByRunButton = async (): Promise<string> => {
-    // selectの判定
-    const scriptSelection = document.getElementById('plugin-selection-mode') as HTMLSelectElement
-
-    if (!scriptSelection) {
-      // DOM展開エラーかしら？
-      return ''
-    }
-    scriptType = scriptSelection.value as ScriptTypeFormat
-
-    verbose('loadScroptByRunButton:', `Script type : ${scriptType}`)
-
-    switch (scriptType) {
-      case 'loadscript':
-        return await loadJSONfile()
-      case 'CC':
-        // 未実装
-        return ''
-      case 'EM':
-        return JSON.stringify(scriptEM)
-      case 'OV':
-        // 未実装
-        return ''
-      default:
-        return ''
-    }
-  }
+  let targetSchemaIdString = ''
+  const csvBuffer: string[][] = []
+  const errorBuffer:typeErrorBuffer[] = []
+  let csvOffset = 0
 
   // ダイアログボタンイベント
   const loadScript = async () => await new Promise<unknown[]>(resolve => {
@@ -261,22 +227,53 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
     const runButton = document.getElementById('plugin-process-script') as HTMLButtonElement
     if (runButton) {
       runButton.addEventListener('click', async () => {
-        const JSONstring = await loadScriptByRunButton()
-        verbose('Script loaded as string', JSONstring)
-        if (JSONstring !== '') {
-          try {
-            resolve(JSON.parse(JSONstring))
-          } catch (e) {
-            window.alert('スクリプトが正しいJSONフォーマットではありません.')
-          }
-        } else {
-          script.splice(0, script.length)
+        // スクリプトの選択を確認
+        const scriptSelection = document.getElementById('plugin-selection-mode') as HTMLSelectElement
+        if (!scriptSelection) {
+          window.alert('プラグイン内部エラーです.')
+          throw new Error('DOM ERROR')
+        }
+        scriptType = scriptSelection.value as ScriptTypeFormat
+
+        // 処理プリセットの設定
+        switch (scriptType) {
+          case 'loadscript':
+            // eslint-disable-next-line no-case-declarations
+            const JSONstring = await loadJSONfile()
+            try {
+              if (JSONstring === '') {
+                throw new Error(undefined)
+              }
+              resolve(JSON.parse(JSONstring))
+            } catch (e) {
+              window.alert('スクリプトが正しいJSONフォーマットではありません.')
+            }
+            break
+          case 'CC':
+            // 未実装
+            targetSchemaIdString = '/schema/CC/root'
+            csvOffset = 6
+            resolve([])
+            break
+          case 'EM':
+            targetSchemaIdString = '/schema/EM/root'
+            csvOffset = 6
+            resolve(scriptEM)
+            break
+          case 'OV':
+            // 未実装
+            targetSchemaIdString = '/schema/OV/root'
+            csvOffset = 6
+            resolve([])
+            break
+          default:
+            throw new Error('SELECTから不正な値が取得されました.')
         }
       })
     }
   })
 
-  // ダイアログのスクリプト
+  // ダイアログ内処理
   const dialogProcedure = async () => {
     // ページのセットアップ
     const dialogPage1 = document.getElementById('plugin-settings')
@@ -292,8 +289,6 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
     // ページ1 - スクリプトのロード
     script = await loadScript()
 
-    verbose('Loaded script', script)
-
     if (script.length === 0) {
       window.alert('スクリプトがロードされませんでした、プラグインの処理を終了します.')
 
@@ -306,21 +301,6 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
 
     // 取得ドキュメントリストの整理
     const targets:getterPluginArgument[] = []
-    let targetSchemaIdString = ''
-
-    // 抽出する台帳スキーマの指定
-    // プラグイン全般は全ドキュメントをパックして取得する
-    switch (scriptType) {
-      case 'CC':
-        targetSchemaIdString = '/schema/CC/root'
-        break
-      case 'EM':
-        targetSchemaIdString = '/schema/EM/root'
-        break
-      case 'OV':
-        targetSchemaIdString = '/schema/OV/root'
-        break
-    }
 
     for (let index = 0; index < dataLength; index++) {
       if (targets.map(item => item.caseList[0].case_id).indexOf(data[index].case_id) < 0) {
@@ -336,16 +316,6 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
         } else {
           // スキーマidの一致を確認 - 継承スキーマ対応のためdepthを揃える
           const regulatedSchemaIdString = schemaIdString.split('/').splice(0, targetSchemaIdString.split('/').length).join('/')
-          // const schemaIdStringArray:string[] = schemaIdString.split('/')
-          // const targetSchemaIdStringArray:string[] = targetSchemaIdString.split('/')
-
-          // let compareIndex = 0
-          // for (; compareIndex < targetSchemaIdStringArray.length; compareIndex++) {
-          //   if (schemaIdStringArray[compareIndex] !== targetSchemaIdStringArray[compareIndex]) {
-          //     break
-          //   }
-          // }
-          // if (compareIndex === targetSchemaIdStringArray.length) {
           if (regulatedSchemaIdString === targetSchemaIdString) {
             targets.push({
               caseList: [{
@@ -358,21 +328,20 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
       }
     }
 
-    verbose('Documents are followings:', targets)
-
     // ページ2 - セットアップ
     dialogPage1.style.display = 'none'
     dialogPage2.style.display = 'flex'
 
-    // 2ページ目のDOM取得
+    // 2ページ目のDOM取得と設定
     const statusline1 = document.getElementById('plugin-statusline1') as HTMLSpanElement
     const statusline2 = document.getElementById('plugin-statusline2') as HTMLSpanElement
     const inputCsvOffset = document.getElementById('plugin-offset-value') as HTMLInputElement
     const downloadButton = document.getElementById('plugin-download') as HTMLButtonElement
     const statusline3 = document.getElementById('plugin-statusline3') as HTMLSpanElement
 
-    // イベントハンドラ
-    let csvOffset = 0
+    if (csvOffset !== 0 && inputCsvOffset) {
+      inputCsvOffset.value = csvOffset.toString()
+    }
 
     downloadButton.addEventListener('click', () => {
       if (csvBuffer.length > 0) {
@@ -401,11 +370,10 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
       script.shift()
     }
 
-    verbose('Script vaersion is', scriptVersion)
-
     // 症例数ステータスの更新
-    if (statusline1) {
-      statusline1.innerText = `対象症例数は ${targets.length} 症例です.`
+    if (statusline1 && statusline2) {
+      statusline1.innerText = `抽出対象症例数は ${targets.length} 症例です.`
+      statusline2.innerText = 'データを抽出・変換処理中です'
     }
 
     // データの逐次処理
@@ -417,7 +385,7 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
         progressbar.style.width = `${(Number(index) + 1) / targets.length}%`
       } else {
         // ダイアログのDOMが消失した = modalがcloseされた と判断して処理を中止する
-        verbose(undefined, 'Plugin-aborted by dialog closure.')
+        verbose(undefined, 'Plugin-aborted by closing the dialog.')
         return
       }
 
@@ -428,7 +396,6 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
       if (!Array.isArray(caseData)) {
         continue
       }
-      verbose(`Process document ${documentId}:`, caseData[0])
 
       // 言語処理プロセッサの起動
       type processorOutputFormat = {
@@ -437,9 +404,6 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
       }
 
       const result = scriptVersion >= '0' ? (await processor(caseData[0], script as LogicRule[])) as processorOutputFormat : undefined
-      // processorEvent(caseData, script as LogicRule[])
-
-      verbose('Process result', result)
 
       if (result) {
         // 結果
@@ -485,8 +449,9 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
     if (progressbar) {
       progressbar.style.width = '100%'
     }
-    if (statusline2) {
+    if (statusline1 && statusline2) {
       statusline2.innerText = '変換終了'
+      statusline1.innerText = `${targets.length}症例から${csvBuffer.length}症例のデータを抽出しました.`
     }
 
     await new Promise<void>(resolve => setTimeout(() => {

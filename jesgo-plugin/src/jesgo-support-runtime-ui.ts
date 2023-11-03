@@ -10,7 +10,7 @@ export const dialogHTML = `
                 <span style="font-size: 1.6rem;">JESGOサポートツールランタイム</span>
             </div>
             <div>
-                <span style="font-size: 0.8rem;">Version 1.0.0 Copyright &copy; 2023 by P4mohnet</span>
+                <span style="font-size: 0.8rem;">Version 0.9.0 Copyright &copy; 2023 by P4mohnet</span>
             </div>
         </div>
     </div>
@@ -19,7 +19,7 @@ export const dialogHTML = `
             <select id="plugin-selection-mode" class="form-control">
                 <option value="loadscript" selected>スクリプトファイルを指定して実行</option>
                 <option value="CC" disabled>腫瘍登録子宮頸がんプリセット</option>
-                <option value="EM">腫瘍登録子宮体がんプリセット</option>
+                <option value="EM">2022年腫瘍登録子宮体がんプリセット</option>
                 <option value="OV" disabled>腫瘍登録卵巣がんプリセット</option>
             </select>        
         </div>
@@ -29,10 +29,10 @@ export const dialogHTML = `
     </div>
     <div id="plugin-processing" style="display: flex; flex-direction: column; justify-content: center;">
         <div style="width: 90%; text-align: center; margin-bottom: 0.6rem;">
-            <span id="plugin-statusline1">JESGOから出力された症例数は0症例です.</span>
+            <span id="plugin-statusline1">**出力症例数**</span>
         </div>
         <div style="width: 90%; text-align: center; margin-bottom: 0.6rem;">
-            <span id="plugin-statusline2">データを抽出・変換中です</span>
+            <span id="plugin-statusline2">**ステータス**</span>
         </div>
         <div style="width: 90%; text-align: center; margin-bottom: 0.6rem;">
             <div class="progress">
@@ -64,7 +64,7 @@ export const dialogHTML = `
             <button id="plugin-download" class="btn btn-primary" disabled>CSVファイルをダウンロード</button>
         </div>
         <div style="width: 90%; text-align: center;">
-            <span id="plugin-statusline3" style="display: none;">※ダイアログを閉じたらエラーの登録画面に遷移します※</span>
+            <span id="plugin-statusline3" style="display: none;">※ダイアログを閉じたらエラーの登録確認画面に遷移します※</span>
         </div>
     </div>
 </div>
