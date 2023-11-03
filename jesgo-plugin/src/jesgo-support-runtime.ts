@@ -13,7 +13,7 @@ type ScriptTypeFormat = 'loadscript'|'CC'|'EM'|'OV'
 export async function init ():Promise<scriptInfo> {
   return {
     plugin_name: 'JESGO-supportランタイム',
-    plugin_version: '1.0',
+    plugin_version: '0.9',
     all_patient: true,
     attach_patient_info: true,
     show_upload_dialog: false,
@@ -217,6 +217,7 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
   type typeErrorBuffer = {
     // eslint-disable-next-line camelcase
     his_id?: string
+    name?: string
     hash?: string
     documentId?: number
     errors: string[]
@@ -333,17 +334,19 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
             targetDocument: 0
           })
         } else {
-          // 台帳指定は台帳のみ取得
-          const schemaIdStringArray:string[] = schemaIdString.split('/')
-          const targetSchemaIdStringArray:string[] = targetSchemaIdString.split('/')
+          // スキーマidの一致を確認 - 継承スキーマ対応のためdepthを揃える
+          const regulatedSchemaIdString = schemaIdString.split('/').splice(0, targetSchemaIdString.split('/').length).join('/')
+          // const schemaIdStringArray:string[] = schemaIdString.split('/')
+          // const targetSchemaIdStringArray:string[] = targetSchemaIdString.split('/')
 
-          let compareIndex = 0
-          for (; compareIndex < targetSchemaIdStringArray.length; compareIndex++) {
-            if (schemaIdStringArray[compareIndex] !== targetSchemaIdStringArray[compareIndex]) {
-              break
-            }
-          }
-          if (compareIndex === targetSchemaIdStringArray.length) {
+          // let compareIndex = 0
+          // for (; compareIndex < targetSchemaIdStringArray.length; compareIndex++) {
+          //   if (schemaIdStringArray[compareIndex] !== targetSchemaIdStringArray[compareIndex]) {
+          //     break
+          //   }
+          // }
+          // if (compareIndex === targetSchemaIdStringArray.length) {
+          if (regulatedSchemaIdString === targetSchemaIdString) {
             targets.push({
               caseList: [{
                 case_id: data[index].case_id
@@ -449,6 +452,8 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
           if (documentId !== 0) {
             errorBuffer.push({
               hash: caseData[0].hash,
+              his_id: caseData[0]?.his_id,
+              name: caseData[0]?.name,
               documentId: documentId,
               errors: result.errors
             })
@@ -457,12 +462,16 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
             if (extractedDocumentId !== -1) {
               errorBuffer.push({
                 hash: caseData[0].hash,
+                his_id: caseData[0]?.his_id,
+                name: caseData[0]?.name,
                 documentId: extractedDocumentId,
                 errors: result.errors
               })
             } else {
               errorBuffer.push({
                 hash: caseData[0].hash,
+                his_id: caseData[0]?.his_id,
+                name: caseData[0]?.name,
                 errors: result.errors
               })
             }
@@ -509,7 +518,7 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
         {
           document_id: errorItem.documentId,
           target: {
-            'jesgo:error': errorItem.errors
+            '/jesgo:error': errorItem.errors
           }
         }
       )
