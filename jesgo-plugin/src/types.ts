@@ -31,12 +31,21 @@ export interface caseList {
 }
 
 // 取得系APIリクエスト
-export interface getterPluginArgument {
+interface getterPluginArgumentByDocumentId {
+  caseList: caseList[]
+  targetDocument: number
+  targetSchemas?: number[]
+  filterQuery?: string
+}
+
+interface getterPluginArgumentBySchemaIds {
   caseList: caseList[]
   targetDocument?: number
-  schema_id?: number[]
-  filterQuery?: null|undefined|string
+  targetSchemas: number[]
+  filterQuery?: string
 }
+
+export type getterPluginArgument = getterPluginArgumentByDocumentId | getterPluginArgumentBySchemaIds
 
 // 取得系APIレスポンス
 export interface pulledDocument {
