@@ -1,6 +1,36 @@
 import { JsonObject, LogicRule, failableBlockTypes } from './types'
 import { JSONPath } from 'jsonpath-plus'
 
+
+/**
+ * JSONPathラッパー
+ * @param data 
+ * @param jsonpath 
+ * @returns [any]
+ */
+function applyJsonpath (data: any, jsonpath: string|string[]): any[] {
+  let result: any[] = []
+  if (data) {
+    // 基本的にソースはすべて配列として扱うので非配列は配列化する
+    const source =  Array.isArray(data) ? data : [data]
+    if (jsonpath) {
+      // 変数から配列としてjsonpathが渡った場合に対応
+      let path = Array.isArray(jsonpath) ? jsonpath[0] : jsonpath
+      if (path !== '') {
+        // ソースは配列だが、それを意識しないで利用できるようにパスを修正する
+        if (path.substring(0,2) !== '$[' && path.substring(0, 3) !== '$.[') {
+          path = '$[0]' + path.substring(1)
+        }
+        result = JSONPath({
+          path: path,
+          json: source
+        })
+      }
+    }
+  }
+  return result
+}
+
 /**
  * マクロ実行ユニット
  * @param {JsonObject} 1症例分のオブジェクト
@@ -73,26 +103,25 @@ export async function processor (content: { hash?: string, his_id?: string, name
     }
 
     // JSONパスでJESGOドキュメントから値を取得
-    function parseJesgo (jsonpath: string | string[]) {
+    function extractFromDocument (jsonpath: string | string[]): any[] {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let result: any
+      let result: any[] = []
       try {
-        // jsonpathが配列の場合は[0]がメイン
-        const primarypath: string = Array.isArray(jsonpath) ? jsonpath[0] : jsonpath
-        result = JSONPath({
-          path: primarypath,
-          json: jesgoDocument
-        })
+        // ソースの指定ではjsonpath[0]がメインパス、jsonpath[1]がサブパス
+        // 後方互換でjsonpathが配列でない場合はメインパスのみ
+        if (Array.isArray(jsonpath)) {
+          const primarypath: string = jsonpath[0]
+          const secondarypath: string = jsonpath[1] || ''
 
-        // サブパスがあれば続いて処理する
-        if (Array.isArray(jsonpath) && (jsonpath[1] || '') !== '') {
-          result = JSONPath({
-            path: jsonpath[1],
-            json: result
-          })
+          result = applyJsonpath(jesgoDocument, primarypath)
+          if (secondarypath !== '' && result.length > 0) {
+            result = applyJsonpath(result, secondarypath)
+          }
+        } else {
+          result = applyJsonpath(jesgoDocument, jsonpath)
         }
       } catch (e) {
-        verbose(`parseJesgo: JSONPath exception : ${e}`, true)
+        verbose(`extractFromDocument: JSONPath exception : ${e}`, true)
       }
       return result
     }
@@ -104,20 +133,23 @@ export async function processor (content: { hash?: string, his_id?: string, name
         if (path !== '') {
           switch (path) {
             case '$hash':
-              sourceValues.splice(sourceIndex, 1, [hash])
+              sourceValues.push([hash])
               break
             case '$his_id':
-              sourceValues.splice(sourceIndex, 1, [hisid])
+              sourceValues.push([hisid])
               break
             case '$name':
-              sourceValues.splice(sourceIndex, 1, [name])
+              sourceValues.push([name])
               break
             case '$date_of_birth':
-              sourceValues.splice(sourceIndex, 1, [dateOfBirth])
+              sourceValues.push([dateOfBirth])
               break
             default:
-              sourceValues.splice(sourceIndex, 1, parseJesgo(path))
+              sourceValues.push(extractFromDocument(path))
           }
+        } else {
+          // sourceアレイに空白は許容されないがもしもに備える
+          sourceValues.push([])
         }
         console.log(`Parse source[${sourceIndex}], assigned ${JSON.stringify(sourceValues[sourceIndex])}.`)
       }
