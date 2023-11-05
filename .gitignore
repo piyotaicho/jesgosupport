@@ -1,7 +1,8 @@
 .DS_Store
 node_modules
-/dist
-/testdata
+dist
+testdata
+jesgo-plugin/dist
 
 # local env files
 .env.local

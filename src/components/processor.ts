@@ -5,10 +5,10 @@ import { JSONPath } from 'jsonpath-plus'
  * マクロ実行ユニット
  * @param {JsonObject} 1症例分のオブジェクト
  * @param {LogicRule[]} ルールセット配列
- * @returns {csv: string[][], errors: string[]}
+ * @returns {csv: string[], errors: string[]}
  */
 // eslint-disable-next-line camelcase
-export function processor (content: { hash?: string, his_id?: string, name?: string, date_of_birth?: string, documentList: JsonObject }, rules: LogicRule[]): undefined | { csv: string[], errors: string[] } {
+export async function processor (content: { hash?: string, his_id?: string, name?: string, date_of_birth?: string, documentList: JsonObject }, rules: LogicRule[]): Promise<undefined | { csv: string[], errors: string[] }> {
   const hash = content?.hash || ''
   const hisid = content?.his_id || ''
   const name = content?.name || ''
@@ -23,7 +23,8 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
   verbose('** JSON-CSV macro processor **')
 
   // ルールセットの逐次解析
-  for (let ruleIndex = 0; ruleIndex < rules.length; ruleIndex++) {
+  const rulesetLength = rules.length
+  for (let ruleIndex = 0; ruleIndex < rulesetLength; ruleIndex++) {
     const rule = rules[ruleIndex]
 
     verbose(`Start ruleset ${ruleIndex}: ${rule.title}`)
@@ -552,64 +553,97 @@ export function processor (content: { hash?: string, his_id?: string, name?: str
       return true
     }
 
+    //
     // マクロを逐次実行
-    for (let step = 0; step < (rule.procedure || []).length;) {
+    //
+    const macroCodes = rule?.procedure || []
+    const macroCodeLength = macroCodes.length
+    // eslint-disable-next-line no-labels
+    steploop: for (let step = 0; step < macroCodeLength;) {
       const procedure = (rule.procedure || [])[step]
       let result = true
       const args = procedure.arguments
-      switch (procedure.type) {
+      let procedureFunction: () => boolean
+      // eslint-disable-next-line no-labels
+      operator: switch (procedure.type) {
         case 'Operators': // 条件分岐
-          result = operators(parseArg(args[0]), args[1] || 'value', parseArg(args[2]), args[3])
-          break
+          procedureFunction = () => operators(parseArg(args[0]), args[1] || 'value', parseArg(args[2]), args[3])
+          // eslint-disable-next-line no-labels
+          break operator
         case 'Variables':
-          vars(parseArg(args[0]), args[1])
-          break
+          procedureFunction = () => {
+            vars(parseArg(args[0]), args[1])
+            return (true)
+          }
+          // eslint-disable-next-line no-labels
+          break operator
         case 'Query':
-          query(parseArg(args[0]), args[1], args[2])
-          break
+          procedureFunction = () => {
+            query(parseArg(args[0]), args[1], args[2])
+            return (true)
+          }
+          // eslint-disable-next-line no-labels
+          break operator
         case 'Translation':
-          result = translator(args[0], procedure.lookup || [['', '']])
-          break
+          procedureFunction = () => translator(args[0], procedure.lookup || [['', '']])
+          // eslint-disable-next-line no-labels
+          break operator
         case 'Sort':
-          sortarray(args[0], args[1], args[2])
-          break
+          procedureFunction = () => {
+            sortarray(args[0], args[1], args[2])
+            return (true)
+          }
+          // eslint-disable-next-line no-labels
+          break operator
         case 'Period':
-          result = dateCalc(parseArg(args[0]), parseArg(args[1]), args[2], args[3])
-          break
+          procedureFunction = () => dateCalc(parseArg(args[0]), parseArg(args[1]), args[2], args[3])
+          // eslint-disable-next-line no-labels
+          break operator
         case 'Sets':
-          setOperation(parseArg(args[0]), parseArg(args[1]), args[2], args[3])
-          break
+          procedureFunction = () => {
+            setOperation(parseArg(args[0]), parseArg(args[1]), args[2], args[3])
+            return (true)
+          }
+          // eslint-disable-next-line no-labels
+          break operator
         case 'Store':
-          assignvars(parseArg(args[0]), args[1] || '$error', args[2])
+          procedureFunction = () => assignvars(parseArg(args[0]), args[1] || '$error', args[2])
+          // eslint-disable-next-line no-labels
+          break operator
       }
+      result = await new Promise(resolve => setTimeout(() => resolve(procedureFunction()), 0))
 
       // 結果からの分岐処理
       if (result) {
         // 正常終了
         if (procedure.trueBehavior === 'Abort') {
-          step = (rule.procedure || []).length // 処理ループから抜ける
+          // eslint-disable-next-line no-labels
+          break steploop // 現在のルールの処理を終了
         } else {
-          if (typeof procedure.trueBehavior === 'number') {
+          if (typeof Number(procedure.trueBehavior) === 'number') {
             console.log(`Proceed next ${procedure.trueBehavior} steps.`)
             // move steps forward
-            step += procedure.trueBehavior
+            step += procedure.trueBehavior || 1
           } else {
             step++
           }
         }
       } else {
-        // eslint-disable-next-line no-labels
+        // 不成功時の対応が設定できる動作であるかを確認
         if (failableBlockTypes.indexOf(procedure.type) !== -1) {
           if (procedure.falseBehavior === 'Exit') {
             // 症例に対する処理の中止
             return undefined
           }
           if (procedure.falseBehavior === 'Abort') {
-            step = (rule.procedure || []).length // 処理ループから抜ける
+            // eslint-disable-next-line no-labels
+            break steploop // 現在のルールの処理を終了
           }
-          if (typeof procedure.falseBehavior === 'number') {
+          if (typeof Number(procedure.falseBehavior) === 'number') {
             // move steps forward
-            step += procedure.falseBehavior
+            step += procedure.falseBehavior || 1
+          } else {
+            step++
           }
         } else {
           step++
