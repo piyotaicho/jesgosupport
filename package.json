@@ -1,12 +1,13 @@
 {
   "name": "jesgosupport",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "private": true,
   "description": "JESGO向けJSONからCSVへの変換ルール設計ユーティリティとJESGOプラグイン",
   "author": {
     "name": "Yasuhiro Yamamoto",
     "email": "mohyama@mohnet.com"
   },
+  "license": "MIT",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
