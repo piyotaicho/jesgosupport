@@ -1,14 +1,21 @@
 export type JsonObject = number|string|number[]|string[]|object|object[]
 export type CsvObject = string[][]
 export type ErrorObject = {
-  hash: string,
-  type?: string,
+  hash: string
+  his_id?: string
+  type?: string
   errors: string[]
 }
 
+export type ScriptHeader = {
+  title?: string
+  processorVersion?: string
+  csvOffset?: number
+  description?: string
+}
+
 export type SourceBlock = {
-  path: string,
-  subpath?: string
+  path: string|string[]
 }
 
 export type BlockType = 'Operators'|'Variables'|'Query'|'Translation'|'Sort'|'Period'|'Sets'|'Store'
@@ -23,12 +30,18 @@ export const BlockColorByType = {
   Store: '#4c97ff'
 }
 
+export type StepExpiression = 'Exit'|'Abort'|number
+
 export type LogicBlock = {
   type: BlockType,
-  arguments: string[],
-  lookup?: string[][],
-  trueBehavior: 'Abort'|number,
-  falseBehavior?: 'Exit'|'Abort'|number
+  arguments: string[]
+  trueBehavior: StepExpiression
+  falseBehavior?: StepExpiression
+}
+
+export type LogicResult = {
+  success: boolean
+  step: StepExpiression
 }
 
 export const failableBlockTypes = [
@@ -43,17 +56,4 @@ export type LogicRule = {
   description ?: string,
   source ?: SourceBlock[],
   procedure ?: LogicBlock[]
-  global ?: [
-    {
-      filter?: string[],
-      assignpath?: string,
-      variable?: string,
-      defaultvalue: string
-    }
-  ]
-}
-
-export type documentFilter = {
-  filter: string[],
-  assignpath: string
 }

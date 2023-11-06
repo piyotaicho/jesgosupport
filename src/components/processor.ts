@@ -1,34 +1,101 @@
 import { JsonObject, LogicRule, failableBlockTypes } from './types'
 import { JSONPath } from 'jsonpath-plus'
 
+class ProcessorVariable {
+  // properties
+  protected variableName: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  protected variableValues: any[]
+  protected constant = false
+
+  // methods
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  constructor (name: string, values: any[], constant = false) {
+    if (!name) {
+      throw new TypeError('Proper name is required.')
+    }
+    this.variableName = name
+    this.variableValues = this.arraiseValues(values)
+    this.constant = constant
+  }
+
+  get name (): string {
+    return this.variableName
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  get value (): any[] {
+    return this.variableValues
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  set value (newValue: any[]) {
+    if (this.constant) {
+      throw new TypeError(`Assignment to constant variable ${this.name}`)
+    } else {
+      this.variableValues = this.arraiseValues(newValue)
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  protected arraiseValues (newValue: any[]): any[] {
+    // perform deepcopy
+    if (Array.isArray(newValue)) {
+      return JSON.parse(JSON.stringify(newValue))
+    } else {
+      return JSON.parse(JSON.stringify([newValue]))
+    }
+  }
+
+  public toString (): string {
+    return this.name
+  }
+
+  public isWriteable (): boolean {
+    return !this.constant
+  }
+}
 
 /**
  * JSONPathラッパー
- * @param data 
- * @param jsonpath 
+ * @param data
+ * @param jsonpath
  * @returns [any]
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function applyJsonpath (data: any, jsonpath: string|string[]): any[] {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let result: any[] = []
   if (data) {
     // 基本的にソースはすべて配列として扱うので非配列は配列化する
-    const source =  Array.isArray(data) ? data : [data]
+    const source = Array.isArray(data) ? data : [data]
     if (jsonpath) {
       // 変数から配列としてjsonpathが渡った場合に対応
       let path = Array.isArray(jsonpath) ? jsonpath[0] : jsonpath
       if (path !== '') {
         // ソースは配列だが、それを意識しないで利用できるようにパスを修正する
-        if (path.substring(0,2) !== '$[' && path.substring(0, 3) !== '$.[') {
+        if (path.substring(0, 2) !== '$[' && path.substring(0, 3) !== '$.[') {
           path = '$[0]' + path.substring(1)
         }
         result = JSONPath({
-          path: path,
+          path,
           json: source
         })
       }
     }
   }
   return result
+}
+
+/**
+ * 文字列を区切り文字(,もしくはwhitespance)で区切る、連続した区切り文字は一つと数える.ダブルクオートでエスケープ可能
+ * @param string
+ * @returns string[]
+ */
+function stringSplitter (source: string): stgring[] {
+  const regex = /("[^"\\]*(?:\\.[^"\\]*)*"|\/(?:[^/\\]+|\\.)*\/[gimy]{0,4}|[^,\s]+)/g
+  const removeQuotes = /^"((?:\\"|[^"])*)"$/
+  return (source.match(regex) || []).map(item => item.replace(removeQuotes, '$1'))
 }
 
 /**
@@ -52,6 +119,21 @@ export async function processor (content: { hash?: string, his_id?: string, name
 
   verbose('** JSON-CSV macro processor **')
 
+  // 文書グローバル変数
+  const globalVariables: ProcessorVariable[] = []
+
+  globalVariables.push(new ProcessorVariable('$hash', [hash], true))
+  globalVariables.push(new ProcessorVariable('$his_id', [hisid], true))
+  globalVariables.push(new ProcessorVariable('$name', [name], true))
+  globalVariables.push(new ProcessorVariable('$date_of_birth', [dateOfBirth], true))
+  globalVariables.push(new ProcessorVariable('$now', (() => {
+    const now = new Date()
+    const nowYear = now.getFullYear()
+    const nowMonth = (now.getMonth() + 1).toString().padStart(2, '0')
+    const nowDate = (now.getDate() + 1).toString().padStart(2, '0')
+    return [`${nowYear}-${nowMonth}-${nowDate}`]
+  })(), true))
+
   // ルールセットの逐次解析
   const rulesetLength = rules.length
   for (let ruleIndex = 0; ruleIndex < rulesetLength; ruleIndex++) {
@@ -60,65 +142,111 @@ export async function processor (content: { hash?: string, his_id?: string, name
     verbose(`Start ruleset ${ruleIndex}: ${rule.title}`)
 
     // ソースと変数はルールごとのスコープ
-    // ソースの数は将来の拡張に備えて不定とする
-    const sourceValues: (JsonObject|undefined)[][] = []
-    // 変数は 1-9,0の10個と規程
-    const variables: (JsonObject|undefined)[][] = [[], [], [], [], [], [], [], [], [], [], []]
+    const variables: ProcessorVariable[] = []
 
-    // 引数の実値への展開
-    function parseArg (arg: string): JsonObject[] {
-      if (arg !== undefined && arg !== null) {
-        // @ソース値
-        if (arg.charAt(0) === '@') {
-          const index = Number(arg.charAt(1)) - 1
-          return sourceValues[index] as JsonObject[] || ['']
+    /**
+     * 変数名を列挙
+     * @returns string[]
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    function enumVariableNames (): string[] {
+      const globals = globalVariables.map(item => item.name)
+      const locals = variables.map(item => item.name)
+      return [...globals, ...locals]
+    }
+
+    /**
+     * 変数の値を抽出
+     * @param string 変数名
+     * @returns JsonObject[]
+     */
+    function getVariableValueByName (name: string): JsonObject[] {
+      if (name !== undefined && name !== null) {
+        let index = globalVariables.findIndex(item => item.name === name)
+        if (index >= 0) {
+          return globalVariables[index].value
         }
 
-        // $変数
-        if (arg.charAt(0) === '$') {
-          if (arg === '$hash') {
-            return [hash]
-          }
-
-          if (arg === '$now') {
-            const now = new Date()
-            const nowYear = now.getFullYear()
-            const nowMonth = (now.getMonth() + 1).toString().padStart(2, '0')
-            const nowDate = (now.getDate() + 1).toString().padStart(2, '0')
-            return [`${nowYear}-${nowMonth}-${nowDate}`]
-          }
-
-          // $number - 変数
-          const index = Number(arg.charAt(1))
-          return variables[index] as JsonObject[] || ['']
+        index = variables.findIndex(item => item.name === name)
+        if (index >= 0) {
+          return variables[index].value
         }
+      }
+      return ['']
+    }
 
-        // 文字列の場合はカンマもしくは空白文字区切りで切り出して配列にする
-        const regex = /("[^"\\]*(?:\\.[^"\\]*)*"|\/(?:[^/\\]+|\\.)*\/[gimy]{0,4}|[^,\s]+)/g
-        const removeQuotes = /^"((?:\\"|[^"])*)"$/
-        return (arg.match(regex) || []).map(item => item.replace(removeQuotes, '$1'))
+    /**
+     * 文字列の値か変数名かで適当な値を返す
+     * @param string
+     * @return JsonObject[]
+     */
+    function getArgumentValues (str: string): JsonObject[] {
+      if (str.charAt(0) === '@' || str.charAt(0) === '$') {
+        return getVariableValueByName(str)
       } else {
-        return ['']
+        return stringSplitter(str)
       }
     }
 
-    // JSONパスでJESGOドキュメントから値を取得
-    function extractFromDocument (jsonpath: string | string[]): any[] {
+    /**
+     * 変数に値を設定
+     * @param string 変数名
+     * @param JsonObject[] 値
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function setVariableValueByName (name: string, values: JsonObject[]) {
+      if (name !== undefined && name !== null && name !== '') {
+        let newValues: JsonObject[] = []
+        if (values.length === 1 && typeof values[0] === 'string') {
+          // 値が単独の文字列の場合はカンマもしくは空白文字区切りで切り出して配列にする
+          newValues = stringSplitter(values[0] as string)
+        } else {
+          newValues = values
+        }
+
+        let index = -1
+        // ローカル変数 $[0-9]
+        if (/^\$\d$/.test(name)) {
+          index = variables.findIndex(item => item.name === name)
+          if (index === -1) {
+            variables.push(new ProcessorVariable(name, newValues))
+          } else {
+            variables[index].value = values
+          }
+          return
+        }
+
+        index = globalVariables.findIndex(item => item.name === name)
+        if (index >= 0) {
+          globalVariables[index].value = newValues
+          return
+        }
+
+        // 基本的にあり得ないが例外を発生するために用意
+        index = variables.findIndex(item => item.name === name)
+        if (index >= 0) {
+          variables[index].value = newValues
+          return
+        }
+
+        throw new TypeError(`Invalid variable name ${name}.`)
+      }
+    }
+
+    // JSONパスでJESGOドキュメントから値を抽出
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function extractFromDocument (jsonpath: string[], source = jesgoDocument): any[] {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let result: any[] = []
       try {
         // ソースの指定ではjsonpath[0]がメインパス、jsonpath[1]がサブパス
         // 後方互換でjsonpathが配列でない場合はメインパスのみ
-        if (Array.isArray(jsonpath)) {
-          const primarypath: string = jsonpath[0]
-          const secondarypath: string = jsonpath[1] || ''
+        const primarypath: string = jsonpath[0]
+        const secondarypath: string = jsonpath[1] || ''
 
-          result = applyJsonpath(jesgoDocument, primarypath)
-          if (secondarypath !== '' && result.length > 0) {
-            result = applyJsonpath(result, secondarypath)
-          }
-        } else {
-          result = applyJsonpath(jesgoDocument, jsonpath)
+        result = applyJsonpath(source, primarypath)
+        if (secondarypath !== '' && result.length > 0) {
+          result = applyJsonpath(result, secondarypath)
         }
       } catch (e) {
         verbose(`extractFromDocument: JSONPath exception : ${e}`, true)
@@ -126,64 +254,85 @@ export async function processor (content: { hash?: string, his_id?: string, name
       return result
     }
 
-    // ソースを解析して値を設定する
+    //
+    // ルールセットセットアップ
+    //
+
+    // ソース(変更できない)を解析して値を設定する
     if (rule.source) {
       for (let sourceIndex = 0; sourceIndex < rule.source.length; sourceIndex++) {
-        const path = rule.source[sourceIndex as number].path || ''
-        if (path !== '') {
-          switch (path) {
-            case '$hash':
-              sourceValues.push([hash])
-              break
-            case '$his_id':
-              sourceValues.push([hisid])
-              break
-            case '$name':
-              sourceValues.push([name])
-              break
-            case '$date_of_birth':
-              sourceValues.push([dateOfBirth])
-              break
-            default:
-              sourceValues.push(extractFromDocument(path))
-          }
+        let path: string[]
+        if (Array.isArray(rule.source[sourceIndex as number].path)) {
+          path = [...rule.source[sourceIndex as number].path]
         } else {
-          // sourceアレイに空白は許容されないがもしもに備える
-          sourceValues.push([])
+          path = [rule.source[sourceIndex as number].path as string || '']
         }
-        console.log(`Parse source[${sourceIndex}], assigned ${JSON.stringify(sourceValues[sourceIndex])}.`)
+        switch (path[0]) {
+          // グローバル変数にも設定されているが後方互換として残す
+          case '$hash':
+            variables.push(new ProcessorVariable(`@${sourceIndex}`, [hash], true))
+            break
+          case '$his_id':
+            variables.push(new ProcessorVariable(`@${sourceIndex}`, [hisid], true))
+            break
+          case '$name':
+            variables.push(new ProcessorVariable(`@${sourceIndex}`, [name], true))
+            break
+          case '$date_of_birth':
+            variables.push(new ProcessorVariable(`@${sourceIndex}`, [dateOfBirth], true))
+            break
+          // ドキュメントのパース path = '' はパースする必要がないので定数で返す
+          case '':
+            variables.push(new ProcessorVariable(`@${sourceIndex}`, [''], true))
+            break
+          default:
+            variables.push(new ProcessorVariable(`@${sourceIndex}`, extractFromDocument(path), true))
+        }
       }
     }
 
+    //
     // プロセス実体
-    // ファンクション：比較
-    function operators (op1: JsonObject[], op1type = 'value', op2: JsonObject[], oper = 'eq'): boolean {
-      verbose(`Function <compare>: ${op1.join(',')}, ${op1type}, ${op2.join(',')}, ${oper}`)
+    //
 
-      // 値1の値か数かを指定
-      const op1value = op1type === 'value' ? op1 : [op1.length.toString()]
+    /**
+     * ファンクション：比較
+     * @param op1 変数名か値
+     * @param op1type op1の値抽出タイプ
+     * @param op2 変数名か値
+     * @param oper 演算子
+     * @returns boolean
+     */
+    function operators (op1: string, op1type = 'value', op2: string, oper = 'eq'): boolean {
+      verbose(`Function <compare>: ${op1}, ${op1type}, ${op2}, ${oper}`)
+
+      // 値の設定
+      const op1value = op1type === 'value'
+        ? getArgumentValues(op1)
+        : [getArgumentValues(op1).length.toString()]
+      const op2value = getArgumentValues(op2)
 
       switch (oper) {
         // 単純な比較演算子は先頭の要素のみ
         case 'eq':
           // eslint-disable-next-line eqeqeq
-          return op1value[0] == op2[0]
+          return op1value[0] == op2value[0]
         case 'gt':
-          return op1value[0] > op2[0]
+          return op1value[0] > op2value[0]
         case 'ge':
-          return op1value[0] >= op2[0]
+          return op1value[0] >= op2value[0]
         case 'lt':
-          return op1value[0] < op2[0]
+          return op1value[0] < op2value[0]
         case 'le':
-          return op1value[0] <= op2[0]
+          return op1value[0] <= op2value[0]
         // 集合演算
         case 'in':
-          return op1value.some(item => op2.includes(item))
+          return op1value.some(item => op2value.includes(item))
         case 'incl':
-          return op2.some(item => op1value.includes(item))
+          return op2value.some(item => op1value.includes(item))
         case 'regexp':
           return op1value.some(item => {
-            const expression = op2[0].toString()
+            const expression = op2value[0].toString()
             // /.../オプション 形式の正規表現にも対応、ただしgは使用できない
             const patternMatch = expression.match(/^\/((?:[^/\\]+|\\.)*)\/([gimy]{0,4})$/)
             if (patternMatch) {
@@ -198,67 +347,56 @@ export async function processor (content: { hash?: string, his_id?: string, name
       }
     }
 
-    // ファンクション：代入
-    function vars (op1: JsonObject[], dst = ''): boolean {
-      verbose(`Function <assign variables>: ${op1.join(',')} to "${dst}"`)
-
-      if (dst !== '') {
-        if (dst.charAt(0) === '@') {
-          // 宛先にソースを指定
-          const index = Number(dst.charAt(1)) - 1
-          sourceValues[index] = op1
-          return true
-        }
-        if (dst.charAt(0) === '$') {
-          // 宛先に変数を指定
-          const index = Number(dst.charAt(1))
-          variables[index] = op1
-          return true
-        }
-      }
-      verbose(`Failed assigning vars to "${dst}".`, true)
-      return false
-    }
-
-    // ファンクション：抽出
-    function query (arg: JsonObject[], path = '', dst = ''): boolean {
-      verbose(`Function <query>: ${arg.join(',')} by ${path} to "${dst}"`)
+    /**
+     * ファンクション：代入
+     * @param src 元の値(変数名もしくは実の値)
+     * @param dst 保存先の名前
+     * @returns boolean
+     */
+    function vars (src: string, dst: string): boolean {
+      verbose(`Function <assign variables>: ${src} to "${dst}"`)
 
       try {
-        if (dst === '') {
-          throw new Error()
-        }
+        setVariableValueByName(dst, getArgumentValues(src))
+        return true
+      } catch (e) {
+        verbose(`Failed assigning vars to "${dst}".`, true)
+        return false
+      }
+    }
 
-        const returnValue:JsonObject[] = JSONPath({
-          path: path,
-          json: arg
-        })
+    /**
+     * ファンクション：抽出
+     * @param src 元の値(変数名もしくは実の値)
+     * @param path 指定パス
+     * @param dst 保存先の名前
+     * @returns boolean
+     */
+    function query (src: JsonObject[], path = '', dst = ''): boolean {
+      verbose(`Function <query>: ${src} by ${path} to "${dst}"`)
 
-        if (dst.charAt(0) === '$') {
-          // 宛先は変数のみ
-          const index = Number(dst.charAt(1))
-          variables[index] = returnValue
-          return true
-        }
+      try {
+        setVariableValueByName(dst, extractFromDocument([path], src))
+        return true
       } catch {
         verbose(`Failed assigning vars to "${dst}".`, true)
       }
       return false
     }
 
-    // ファンクション：置換
-    function translator (arg = '', table: string[][]): boolean {
-      verbose(`Function <translation>: ${arg}`)
+    /**
+     * ファンクション：置換 - 元の値はstring[]である事が必須
+     * @param src 元の値(変数名もしくは実の値)
+     * @param table 置換テーブル 2列複数行の二次元配列
+     * @returns boolean
+     */
+    function translator (src = '', table: string[][]): boolean {
+      verbose(`Function <translation>: ${src}`)
 
-      // 置換できない値が指定された場合はエラー
-      if (['', '$hash', '$his_id', '$name', '$now'].includes(arg)) {
-        verbose(`Translation: "${arg}" is not tanslatable value.`, true)
-        return false
-      }
+      const originalValues = getArgumentValues(src)
 
-      const originalValues:JsonObject[] = parseArg(arg)
-      if (originalValues.toString() === '[object Object]') {
-        verbose(`Translation: failure : ${arg} is object.`, true)
+      if (originalValues.findIndex(item => typeof item !== 'string') >= 0) {
+        verbose(`Translation: failure : ${src} contains other than strings.`, true)
         return false
       }
 
@@ -340,16 +478,14 @@ export async function processor (content: { hash?: string, his_id?: string, name
       }
 
       // 全て置換できたら元のデータを書き換える
-      if (result && arg.charAt(0) === '@') {
-        const index = Number(arg.charAt(1)) - 1
-        sourceValues.splice(index, 1, newValues)
+      try {
+        if (result) {
+          setVariableValueByName(src, newValues)
+        }
+        return result
+      } catch {
+        return false
       }
-      if (result && arg.charAt(0) === '$') {
-        const index = Number(arg.charAt(1))
-        variables.splice(index, 1, newValues)
-      }
-
-      return result
     }
 
     // ファンクション：ソート
@@ -362,7 +498,7 @@ export async function processor (content: { hash?: string, his_id?: string, name
         return
       }
 
-      const source = parseArg(arg)
+      const source = getVariableValueByName(arg)
       let result = []
       if (indexPath.trim() === '' || indexPath.trim() === '$') {
         // argの中身で単純にソートする
@@ -599,19 +735,19 @@ export async function processor (content: { hash?: string, his_id?: string, name
       // eslint-disable-next-line no-labels
       operator: switch (procedure.type) {
         case 'Operators': // 条件分岐
-          procedureFunction = () => operators(parseArg(args[0]), args[1] || 'value', parseArg(args[2]), args[3])
+          procedureFunction = () => operators(getVariableValueByName(args[0]), args[1] || 'value', getVariableValueByName(args[2]), args[3])
           // eslint-disable-next-line no-labels
           break operator
         case 'Variables':
           procedureFunction = () => {
-            vars(parseArg(args[0]), args[1])
+            vars(getVariableValueByName(args[0]), args[1])
             return (true)
           }
           // eslint-disable-next-line no-labels
           break operator
         case 'Query':
           procedureFunction = () => {
-            query(parseArg(args[0]), args[1], args[2])
+            query(getVariableValueByName(args[0]), args[1], args[2])
             return (true)
           }
           // eslint-disable-next-line no-labels
@@ -628,18 +764,18 @@ export async function processor (content: { hash?: string, his_id?: string, name
           // eslint-disable-next-line no-labels
           break operator
         case 'Period':
-          procedureFunction = () => dateCalc(parseArg(args[0]), parseArg(args[1]), args[2], args[3])
+          procedureFunction = () => dateCalc(getVariableValueByName(args[0]), getVariableValueByName(args[1]), args[2], args[3])
           // eslint-disable-next-line no-labels
           break operator
         case 'Sets':
           procedureFunction = () => {
-            setOperation(parseArg(args[0]), parseArg(args[1]), args[2], args[3])
+            setOperation(getVariableValueByName(args[0]), getVariableValueByName(args[1]), args[2], args[3])
             return (true)
           }
           // eslint-disable-next-line no-labels
           break operator
         case 'Store':
-          procedureFunction = () => assignvars(parseArg(args[0]), args[1] || '$error', args[2])
+          procedureFunction = () => assignvars(getVariableValueByName(args[0]), args[1] || '$error', args[2])
           // eslint-disable-next-line no-labels
           break operator
       }
@@ -689,6 +825,10 @@ export async function processor (content: { hash?: string, his_id?: string, name
     csv: csvRow,
     errors: errorMessages
   }
+}
+
+function controlUnit () {
+
 }
 
 function verbose (message: string, isError = false): void {
