@@ -122,8 +122,12 @@ export interface formatJESGOoperationAEs {
   合併症の種別: JESGOAEcategory
   // Mapped to .BloodCount
   出血量?: string|number
-  // Mapped to .Title
+  // Mapped to .Title -schema version <1.4
   発生した合併症?: string[]
+  操作により発生した合併症?: string[]
+  上記により発生した合併症?: string[]
+  '気腹・潅流操作の合併症'?: string[]
+  薬剤により発生した合併症?: string[]
   // Mapped to .Cause
   関連する機器?: string[]
   // Mapped to .Cause

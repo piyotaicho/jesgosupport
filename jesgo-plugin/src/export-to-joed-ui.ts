@@ -8,7 +8,7 @@ export const dialogHTMLstrings = `
             />
         </div>
         <div>
-            <span style="font-size: 0.8rem;">Version 1.0.0</span>
+            <span style="font-size: 0.8rem;">Version 1.0.1</span>
         </div>
         <div>
             <span style="font-size: 0.8rem;">Copyright &copy; 2023 by P4mohnet</span>
