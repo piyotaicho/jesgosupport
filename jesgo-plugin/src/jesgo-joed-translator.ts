@@ -83,6 +83,7 @@ const operationTranslation: translationTable = {
   腹腔鏡下右付属器摘出術: { Text: '腹腔鏡下付属器摘出術', Chain: ['腹腔鏡悪性'], Description: ['[大網切除・生検]なし'] },
   腹腔鏡下左付属器摘出術: { Text: '腹腔鏡下付属器摘出術', Chain: ['腹腔鏡悪性'], Description: ['[大網切除・生検]なし'] },
   腹腔鏡下両付属器摘出術: { Text: '腹腔鏡下付属器摘出術', Chain: ['腹腔鏡悪性'], Description: ['[大網切除・生検]なし'] },
+  // eslint-disable-next-line quote-props
   '腹腔鏡下病変生検・審査腹腔鏡': {
     Text: '腹腔鏡下病変生検・審査腹腔鏡',
     Chain: ['腹腔鏡悪性'],
@@ -494,13 +495,15 @@ export function convertDaichoToJOED (
               }
             }
             break
-          case '術後':
-            if (event.合併症の内容) {
-              JOEDAE.Title = event.合併症の内容
+          case '術中手術操作':
+            JOEDAE.Title = event.操作により発生した合併症
+            if (event.発生部位) {
+              JOEDAE.Location = event.発生部位
             }
             break
-          default:
+          case '気腹・潅流操作':
             if (event.発生した合併症) {
+              // スキーマ1.3以前
               JOEDAE.Title = event.発生した合併症
               // 気腹・潅流操作のSchema 1.0 と JOED2022 マスタ更新に伴う変更を吸収する
               // 検索対象
@@ -513,18 +516,48 @@ export function convertDaichoToJOED (
                   original[index] = replaceTo[foundIndex]
                 }
               })
+            } else {
+              // minItems = 1
+              JOEDAE.Title = event['気腹・潅流操作の合併症']
             }
-            if (event.遺残したもの) {
-              JOEDAE.Title = event.遺残したもの
+            if (event.発生部位) {
+              JOEDAE.Location = event.発生部位
+            }
+            break
+          case '機器の不具合・破損':
+          case '機器の誤操作':
+            if (event.発生した合併症) {
+              // スキーマ1.3以前
+              JOEDAE.Title = event.発生した合併症
+            } else if (event.上記により発生した合併症) {
+              JOEDAE.Title = event.上記により発生した合併症
             }
             if (event.関連する機器) {
               JOEDAE.Cause = event.関連する機器
             }
+            if (event.発生部位) {
+              JOEDAE.Location = event.発生部位
+            }
+            break
+          case '術中使用した薬剤':
+            if (event.発生した合併症) {
+              // スキーマ1.3以前
+              JOEDAE.Title = event.発生した合併症
+            } else if (event.薬剤により発生した合併症) {
+              JOEDAE.Title = event.薬剤により発生した合併症
+            }
             if (event.関連する薬剤) {
               JOEDAE.Cause = event.関連する薬剤
             }
-            if (event.発生部位) {
-              JOEDAE.Location = event.発生部位
+            break
+          case '体腔内遺残':
+            if (event.遺残したもの) {
+              JOEDAE.Title = event.遺残したもの
+            }
+            break
+          case '術後':
+            if (event.合併症の内容) {
+              JOEDAE.Title = event.合併症の内容
             }
             break
         }
