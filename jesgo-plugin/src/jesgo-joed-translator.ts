@@ -83,6 +83,7 @@ const operationTranslation: translationTable = {
   腹腔鏡下右付属器摘出術: { Text: '腹腔鏡下付属器摘出術', Chain: ['腹腔鏡悪性'], Description: ['[大網切除・生検]なし'] },
   腹腔鏡下左付属器摘出術: { Text: '腹腔鏡下付属器摘出術', Chain: ['腹腔鏡悪性'], Description: ['[大網切除・生検]なし'] },
   腹腔鏡下両付属器摘出術: { Text: '腹腔鏡下付属器摘出術', Chain: ['腹腔鏡悪性'], Description: ['[大網切除・生検]なし'] },
+  // eslint-disable-next-line quote-props
   '腹腔鏡下病変生検・審査腹腔鏡': {
     Text: '腹腔鏡下病変生検・審査腹腔鏡',
     Chain: ['腹腔鏡悪性'],
@@ -139,9 +140,11 @@ const operationTranslation: translationTable = {
   },
   // 大網摘出
   腹腔鏡下に大網生検: {
-    Text: '腹腔鏡下病変生検・審査腹腔鏡',
+    Text: '腹腔鏡下大網生検',
+    UserTyped: true,
     Chain: ['腹腔鏡悪性'],
-    Description: ['[生検]あり']
+    attachedTo: '腹腔鏡下付属器摘出術',
+    Description: ['[大網切除・生検]あり']
   },
   腹腔鏡下に大網部分切除: {
     Text: '大網部分切除',
