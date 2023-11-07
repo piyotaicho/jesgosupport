@@ -498,7 +498,11 @@ export function convertDaichoToJOED (
             }
             break
           case '術中手術操作':
-            JOEDAE.Title = event.操作により発生した合併症
+            if (event.発生した合併症) {
+              JOEDAE.Title = event.発生した合併症
+            } else {
+              JOEDAE.Title = event.操作により発生した合併症
+            }
             if (event.発生部位) {
               JOEDAE.Location = event.発生部位
             }
