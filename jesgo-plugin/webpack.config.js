@@ -5,6 +5,7 @@ module.exports = {
   devtool: false,
   entry: {
     'jesgo-supporttool-runtime': './jesgo-plugin/src/jesgo-support-runtime.ts',
+    'jesgo-supporttool-runtime-for-singlecase': './jesgo-plugin/src/jesgo-support-runtime-for-single.ts',
     'jesgo-exporter': './jesgo-plugin/src/jesgo-exporter.ts',
     'jesgo-single-exporter': './jesgo-plugin/src/jesgo-exporter-single.ts',
     'export-to-joed': './jesgo-plugin/src/export-to-joed.ts'
