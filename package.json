@@ -1,17 +1,21 @@
 {
   "name": "jesgosupport",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "private": true,
   "description": "JESGO向けJSONからCSVへの変換ルール設計ユーティリティとJESGOプラグイン",
   "author": {
     "name": "Yasuhiro Yamamoto",
     "email": "mohyama@mohnet.com"
   },
+  "license": "MIT",
   "scripts": {
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
+    "build": "vue-cli-service build --mode development",
+    "build-production": "vue-cli-service build",
+    "build-production-fix": "vue-cli-service build --fix",
     "lint": "vue-cli-service lint",
-    "build-plugin": "webpack --config jesgo-plugin/webpack.config.js"
+    "build-plugin": "webpack --config jesgo-plugin/webpack.config.js",
+    "build-plugin-production": "webpack --config jesgo-plugin/webpack.config.js --mode=production"
   },
   "dependencies": {
     "core-js": "^3.8.3",
