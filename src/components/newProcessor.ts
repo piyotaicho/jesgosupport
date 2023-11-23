@@ -1,5 +1,5 @@
-import { fa } from 'element-plus/es/locale'
-import { JsonObject, LogicRule, failableBlockTypes } from './types'
+import { ta } from 'element-plus/es/locale'
+import { JsonObject, LogicRule, SourceBlock, LogicBlock } from './types'
 import { JSONPath } from 'jsonpath-plus'
 
 interface pulledDocument {
@@ -12,223 +12,632 @@ interface pulledDocument {
 }
 
 interface processorOutput {
-  csv: string[],
+  csv: string[]
   errors?: string[]
 }
 
-export type variableOperations = 'get'|'set'|'define'|'constant'|'enum'|'enumConstants'|'enumNonConstants'|'remove'|'release'
-
-export type variableArgument = {
-  operation: variableOperations
-  name: string
-  value?: JsonObject
-  constant?: false
+interface instructionResult {
+  success: boolean
+  behavior: string
 }
 
-type variableDefinition = {
-  name: string
-  value: string[]
-  writable: boolean
+type commandOperatorsValueATypes = 'value'|'json'|'length'
+type commandOperatorsOperators = 'eq'|'gt'|'ge'|'lt'|'le'|'in'|'incl'|'regexp'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type instructionFunction = (...args:any[]) => instructionResult
+
+type translationTableObject = {
+  match: (value:string) => boolean
+  func: (value:string) => string
 }
 
-type variableDescriptor = {
-  name?: string
-  value?: string[]
-  writable?: boolean
-}
+// export type variableOperations = 'get'|'set'|'define'|'constant'|'enum'|'enumConstants'|'enumNonConstants'|'remove'|'release'
+
+// export type variableArgument = {
+//   operation: variableOperations
+//   name: string
+//   value?: JsonObject
+//   constant?: false
+// }
+
+// type variableDefinition = {
+//   name: string
+//   value: string[]
+//   writable: boolean
+// }
+
+// type variableDescriptor = {
+//   name?: string
+//   value?: string[]
+//   writable?: boolean
+// }
 
 /**
  * 変数保存クラス
  */
-class VariableStore {
-  store:variableDefinition[]
-
-  constructor () {
-    this.store = []
-  }
-
-  public getIndex = (name:string, ignoreUndefined:boolean = false) => {
-    const index = this.store.findIndex(variable => variable.name === name)
-    if (!ignoreUndefined && index === -1) {
-      throw new Error(`変数${name}が未定義です.`)
-    }
-    return index
-  }
+type VariableStore = {
+  [key: string]: unknown[]
 }
 
 /**
- * 変数保存クラスのProxy handler
+ * 変数保存オブジェクトのProxy handler
  */
 const storeProxyHandler:ProxyHandler<VariableStore> = {
-  has: (target:VariableStore, property:string) =>
-    target.getIndex(property, true) !== -1,
+  has: (target:VariableStore, property:string) => property in target,
 
-  get: (target:VariableStore, property:string) =>
-    target.store[target.getIndex(property)].value,
-
-  set: (target:VariableStore, property:string, value:unknown) => {
-    const index = target.getIndex(property)
-    if (!target.store[index].writable) {
-      throw new Error(`変数${property}は定数です.`)
-      return false
-    } else {
-      target.store[index].value.splice(0)
-      target.store[index].value.splice(0, 0, ...setValueAsStringArray(value))
-      return true
+  get: (target:VariableStore, property:string) => {
+    if (!(property in target)) {
+      throw new TypeError(`変数${property}は未定義です.`)
     }
+    return parseVariableValueArray(target[property] || [])
   },
 
-  ownKeys: (target:VariableStore) => target.store.map(variable => variable.name),
-
-  defineProperty: (target:VariableStore, property:string, descriptor?:variableDescriptor) => {
-    if (property.charAt(0) !== '@' && property.charAt(0) !== '$') {
-      throw new Error('変数名は$で開始されている必要があります.')
+  set: (target:VariableStore, property:string, value:unknown) => {
+    if (!(property in target)) {
+      throw new TypeError(`変数${property}は未定義です.`)
+    }
+    const descriptor = Object.getOwnPropertyDescriptor(target, property)
+    if (!(descriptor?.writable || false)) {
+      throw new TypeError(`変数${property}は定数です.`)
       return false
     }
-    if (target.getIndex(property, true) !== -1) {
+
+    target[property]?.splice(0)
+    target[property]?.splice(0, 0, ...setValueAsStringArray(value))
+    return true
+  },
+
+  defineProperty: (target:VariableStore, property:string, descriptor?:PropertyDescriptor) => {
+    if (property in target) {
       throw new Error(`変数${property}は既に定義されています.`)
       return false
     }
+
+    const propertyHeader = property.charAt(0)
+    if (propertyHeader !== '@' && propertyHeader !== '$') {
+      throw new TypeError('変数名は$で開始されている必要があります.')
+      return false
+    }
+
     if (descriptor === undefined) {
-      target.store.push({
-        name: property,
-        value: [],
-        writable: true
-      })
+      Object.defineProperty(target, property,
+        {
+          enumerable: true,
+          writable: true,
+          configurable: true,
+          value: []
+        }
+      )
     } else {
-      const arrayedValue = setValueAsStringArray(descriptor.value || [])
+      const arrayedValue = setValueAsStringArray(descriptor?.value || [])
       const isWritable = descriptor?.writable === undefined ? true : descriptor.writable
-      target.store.push({
-        name: property,
-        value: arrayedValue,
-        writable: isWritable
-      })
+      Object.defineProperty(target, property,
+        {
+          enumerable: true,
+          writable: isWritable,
+          configurable: true,
+          value: arrayedValue
+        }
+      )
     }
     return true
   },
 
   deleteProperty: (target:VariableStore, property:string) => {
-    const index = target.getIndex(property)
-    target.store.splice(index, 1)
-    return true
-  },
-
-  getOwnPropertyDescriptor: (target:VariableStore, property:string) => {
-    const index = target.getIndex(property)
-    return {
-      writable: target.store[index].writable,
-      value: target.store[index].value
+    if (!(property in target)) {
+      throw new TypeError(`変数${property}は未定義です.`)
     }
+    delete target[property]
+    return true
   }
 }
 
-/**
- * 変数を格納・操作するProxyオブジェクトを返す
- * @returns Variable-proxy
- */
-export const Variables = ():ProxyHandler<VariableStore> => new Proxy(new VariableStore(), storeProxyHandler)
+export class Converter {
+  private sourceDefinitions:SourceBlock[][]
+  private compiledRules:instructionFunction[][]
 
-export class converterModule {
-  private ruleCache:LogicRule[]
-  private compiledRules:unknown[][]
+  private variableStore:VariableStore
+  private variables:VariableStore
 
-  constructor (rules: LogicRule[]) {
-    //
-    this.ruleCache = rules
-    this.compiledRules = [[]]
+  /**
+   * コンストラクター = コンパイラを実行
+   * @param ruleset
+   */
+  constructor (ruleset: LogicRule[]) {
+    if (!ruleset) {
+      throw new TypeError('ロジックが指定されていません.')
+    }
+
+    // 変数を初期化
+    this.variableStore = {}
+    this.variables = new Proxy(this.variableStore, storeProxyHandler)
+    this.sourceDefinitions = []
+    this.compiledRules = []
+
+    this.compiler(ruleset)
+  }
+
+  /**
+   * コードコンパイラ本体
+   * @param ruleset
+   */
+  private compiler (ruleset: LogicRule[]) {
+    // ルールを処理
+    const rulesCount = ruleset.length
+    for (let index = 0; index < rulesCount; index++) {
+      const currentRule = ruleset[index]
+
+      // ソース定義をコピー
+      if (currentRule?.source) {
+        this.sourceDefinitions.push([...currentRule.source])
+      } else {
+        this.sourceDefinitions.push([])
+      }
+
+      // コード部分を処理
+      if (currentRule?.procedure) {
+        const procedures:LogicBlock[] = currentRule.procedure
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const compiledRule:((...args:any[]) => instructionResult)[] = []
+
+        for (let counter = 0; counter < procedures.length; counter++) {
+          const procedure = procedures[counter]
+
+          // パラメータの抽出 引数は参照では無く値をコピー
+          const command = procedure.type
+          const params:string[] = []
+
+          for (const item of procedure.arguments) {
+            params.push(String(item))
+          }
+
+          let instruction:instructionFunction
+
+          switch (command) {
+            case 'Variables':
+              instruction = (a: number) => a > 2 ? { success: true, behavior: `+${a}` } : { success: false, behavior: 'Abort' }
+              break
+            case 'Operators':
+              break
+            case 'Query':
+              break
+            case 'Sets':
+              break
+            case 'Sort':
+              break
+            case 'Translation':
+              break
+            case 'Period':
+              break
+            case 'Store':
+              break
+          }
+          compiledRule.push(instruction)
+        }
+      }
+    }
+  }
+
+  /**
+   * コマンド Variables 指定された値を変数に代入する
+   * @param value
+   * @param variableName
+   * @returns {boolean}
+   */
+  private commandVariables = (value: JsonObject[] = [], variableName = '', variableType:commandOperatorsValueATypes = 'value'): boolean => {
+    try {
+      if (!variableName || variableName === '') {
+        throw new TypeError('変数名が未指定です.')
+      }
+
+      switch (variableType) {
+        case 'json':
+          this.variables[variableName] = [JSON.stringify(value)]
+          break
+        case 'length':
+          this.variables[variableName] = [value.length]
+          break
+        default:
+          this.variables[variableName] = value
+      }
+      return true
+    } catch (e: unknown) {
+      verbose(`Variables: ${(e as Error).message}`, true)
+      return false
+    }
+  }
+
+  /**
+   * コマンド Operators valueAとvalueBの比較演算をする
+   * @param valueA
+   * @param valueAtype
+   * @param valueB
+   * @param operator
+   * @returns {boolean}
+   */
+  private commandOperators = (valueA: JsonObject[] = [], valueAtype:commandOperatorsValueATypes = 'value', valueB: JsonObject[] = [], operator:commandOperatorsOperators) :boolean => {
+    try {
+      let valueOfA:JsonObject[]
+      switch (valueAtype) {
+        case 'value':
+          valueOfA = valueA
+          break
+        case 'json': // script version1 から実装
+          valueOfA = [JSON.stringify(valueA)]
+          break
+        case 'length':
+          valueOfA = [valueA.length]
+          break
+        default:
+          throw new Error(`不正な型指定${valueAtype}です.`)
+      }
+
+      switch (operator) {
+        // 単純な比較演算子は先頭要素のみ(Number-Stringの型は自動変換に任せる)
+        case 'eq':
+          // eslint-disable-next-line eqeqeq
+          return valueOfA[0] == valueB[0]
+        case 'gt':
+          return valueOfA[0] > valueB[0]
+        case 'ge':
+          return valueOfA[0] >= valueB[0]
+        case 'lt':
+          return valueOfA[0] < valueB[0]
+        case 'le':
+          return valueOfA[0] <= valueB[0]
+        // 集合演算
+        case 'in':
+          return valueOfA.some(item => valueB.includes(item))
+        case 'incl':
+          return valueB.some(item => valueOfA.includes(item))
+        case 'regexp':
+          return valueOfA.some(item => {
+            const expression = valueB[0].toString()
+            // /.../オプション 形式の正規表現にも対応、ただしgは使用できない
+            const patternMatch = expression.match(/^\/((?:[^/\\]+|\\.)*)\/([gimy]{0,4})$/)
+            if (patternMatch) {
+              return RegExp(patternMatch[1], patternMatch[2].replace('g', '')).test(item.toString())
+            } else {
+              return RegExp(expression).test(item.toString())
+            }
+          })
+        default:
+          throw new SyntaxError(`不正な演算子${operator}です.`)
+      }
+    } catch (e:unknown) {
+      verbose(`Operators: ${(e as Error).message}`, true)
+      return false
+    }
+  }
+
+  /**
+   * commandQuery query文字列で値を処理してその結果をvariableNameに保存する
+   * @param value
+   * @param query
+   * @param variableName
+   * @returns
+   */
+  private commandQuery = (value: JsonObject[], query = '', variableName = ''): boolean => {
+    try {
+      if (!query || query === '') {
+        return this.commandVariables(value, variableName)
+      }
+      return this.commandVariables(extractJsonObjectByPath(value, query), variableName)
+    } catch (e:unknown) {
+      verbose(`Query: ${(e as Error).message}`, true)
+      return false
+    }
+  }
+
+  /**
+   * commandTranslation 変換テーブルを用いて変数の中身を置換する
+   * ※version 0.xからの破壊的変更:
+   *  - ソースの書き換え不可～変数のみ
+   *  - 置換できなかった場合空白では無く元の値のままになる
+   *  - 置換できなかった値があった場合に失敗を返す
+   *  - 置換できた値については置換された値が保存される
+   * @param variableName
+   * @param translationTable
+   * @returns
+   */
+  private commandTranslation = (variableName = '', translationTable: translationTableObject[]): boolean => {
+    try {
+      const newValues:JsonObject[] = []
+      let replacedAll = true
+      for (const item of (this.variables[variableName] as JsonObject[])) {
+        let sourceValue:string = ''
+        let replacedValue:string|undefined
+
+        switch (typeof item) {
+          case 'string':
+            sourceValue = item as string
+            break
+          case 'object':
+            sourceValue = JSON.stringify(item)
+            break
+          default:
+            sourceValue = item.toString()
+        }
+
+        for (const translation of translationTable) {
+          if (translation.match(sourceValue)) {
+            replacedValue = translation.func(sourceValue)
+            break
+          }
+        }
+
+        try {
+          if (replacedValue === undefined) {
+            replacedAll = false
+            throw new Error()
+          }
+
+          switch (typeof item) {
+            case 'object':
+              newValues.push(JSON.parse(replacedValue))
+              break
+            default:
+              newValues.push(replacedValue)
+          }
+        } catch {
+          // 置換できなかった場合は元の値を設定する
+          newValues.push(item)
+        }
+      }
+
+      return replacedAll && this.commandVariables(newValues, variableName)
+    } catch (e:unknown) {
+      verbose(`Translation: ${(e as Error).message}`, true)
+      return false
+    }
+  }
+
+  private createTranslationTable = (table:string[][]): translationTableObject[] => {
+    const tableObject:translationTableObject[] = []
+
+    for (const [pattern, newvalue] of table) {
+      // eslint-disable-next-line no-new-wrappers
+      const unquotedNewValue = newvalue.replace(/^(?<quote>["'`])(.*)\k<quote>$/, '$2')
+      const patternMatch = pattern.match(/^\/((?:[^/\\]+|\\.)*)\/([gimy]{0,4})$/)
+
+      if (patternMatch) {
+        const re = new RegExp(patternMatch[1], patternMatch[2])
+        if (unquotedNewValue.includes('$')) {
+          tableObject.push({
+            match: (value: string) => value.search(re) !== -1,
+            func: (value: string) => value.replace(re, unquotedNewValue)
+          })
+        } else {
+          tableObject.push({
+            match: (value: string) => value.search(re) !== -1,
+            func: () => unquotedNewValue
+          })
+        }
+      } else {
+        const unquotedPattern = pattern.replace(/^(?<quote>["'`])(.*)\k<quote>$/, '$2')
+        tableObject.push({
+          // eslint-disable-next-line eqeqeq
+          match: (value:string) => value === unquotedPattern,
+          func: () => unquotedNewValue
+        })
+      }
+    }
+
+    return tableObject
+  }
+
+  private commandSort = (vaiableName = '', indexPath = '', mode:'asc'|'desc' = 'asc'): boolean => {
+    try {
+      if (indexPath.trim() === '' || indexPath.trim() === '$') {
+        return this.commandVariables(
+          mode === 'asc'
+            ? (this.variables[vaiableName] as JsonObject[])
+                .map(item => JSON.stringify(item))
+                .sort()
+                .map(item => JSON.parse(item))
+            : (this.variables[vaiableName] as JsonObject[])
+                .map(item => JSON.stringify(item))
+                .sort()
+                .reverse()
+                .map(item => JSON.parse(item)),
+          vaiableName
+        )
+      } else {
+        const sortedItems = (this.variables[vaiableName] as JsonObject[])
+          .sort((a, b) => {
+            const keya = JSON.stringify(extractJsonObjectByPath(a, indexPath))
+            const keyb = JSON.stringify(extractJsonObjectByPath(b, indexPath))
+            return keya === keyb ? 0 : ((keya > keyb) ? 1 : -1)
+          })
+
+        return this.commandVariables(
+          mode === 'asc'
+            ? sortedItems
+            : sortedItems.reverse(),
+          vaiableName
+        )
+      }
+    } catch (e:unknown) {
+      verbose(`Sort: ${(e as Error).message}`, true)
+      return false
+    }
+  }
+
+  private commandSets = (valueA: JsonObject[], valueB: JsonObject[], operator:'add'|'union'|'intersect'|'difference'|'xor' = 'add', vaiableName):boolean => {
+    try {
+      const jsonsA:string[] = valueA.map(item => JSON.stringify(item))
+      const jsonsB:string[] = valueB.map(item => JSON.stringify(item))
+
+      let resultArray:string[]
+      switch (operator) {
+        case 'union':
+          resultArray = jsonsB.reduce(
+            (accum, item) => [...accum, ...(accum.includes(item) ? [] : [item])],
+            [...jsonsA]
+          )
+          break
+        case 'intersect':
+          resultArray = jsonsA.filter(item => jsonsB.includes(item))
+          break
+        case 'difference':
+          resultArray = jsonsA.reduce(
+            (accum, item) => [...accum, ...(jsonsB.includes(item) ? [] : [item])],
+            [] as string[]
+          )
+          break
+        case 'xor':
+          resultArray = [...jsonsA, ...jsonsB].reduce(
+            (accum, item, _index, original) => [
+              ...accum,
+              ...(original.filter(value => value === item).length > 1 ? [] : [item])
+            ],
+            [] as string[]
+          )
+          break
+        default: // add
+          resultArray = [...jsonsA, ...jsonsB]
+      }
+
+      return this.commandVariables(resultArray.map(item => JSON.parse(item)), vaiableName)
+    } catch (e:unknown) {
+      verbose(`Sets: ${(e as Error).message}`, true)
+      return false
+    }
   }
 
   /**
    * コンパイル済みコードを実行する
    * @param content JESGO取得ドキュメント単体
    */
-  public run = (content:pulledDocument) => {
+  public run = async (content:pulledDocument) => {
     if (!content) {
       throw new Error('ドキュメントが指定されていません.')
     }
 
-    const variables = new Proxy(new VariableStore(), storeProxyHandler)
     // ドキュメント内広域変数を設定
-    Object.defineProperty(variables, '$hash',
-      {
+    // システム変数
+    Object.defineProperties(this.variables, {
+      $hash: {
         value: [content?.hash || ''],
         writable: false
-      })
-    Object.defineProperty(variables, '$his_id',
-      {
+      },
+      $his_id: {
         value: [content?.his_id || ''],
         writable: false
-      })
-    Object.defineProperty(variables, '$name',
-      {
+      },
+      $name: {
         value: [content?.name || ''],
         writable: false
-      })
-    Object.defineProperty(variables, '$date_of_birth',
-      {
+      },
+      $date_of_birth: {
         value: [content?.date_of_birth || ''],
         writable: false
-      })
-
-    const now = new Date()
-    const nowYear = now.getFullYear()
-    const nowMonth = (now.getMonth() + 1).toString().padStart(2, '0')
-    const nowDate = (now.getDate() + 1).toString().padStart(2, '0')
-    Object.defineProperty(variables, '$now',
-      {
-        value: [`${nowYear}-${nowMonth}-${nowDate}`],
+      },
+      $now: {
+        value: () => {
+          const now = new Date()
+          const nowYear = now.getFullYear()
+          const nowMonth = (now.getMonth() + 1).toString().padStart(2, '0')
+          const nowDate = (now.getDate() + 1).toString().padStart(2, '0')
+          return [`${nowYear}-${nowMonth}-${nowDate}`]
+        },
         writable: false
-      })
+      }
+    })
 
-    // 実行ユニット
+    // ユーザ変数 - 未実装だけどこっちでは余裕
+
+    // レジスタ変数の用意
+    for (let registerIndex = 0; registerIndex < 10; registerIndex++) {
+      const registerName = `${registerIndex}`
+      if (registerName in this.variables) {
+        Object.defineProperty(this.variables, registerName, {})
+      }
+    }
+
+    const outputBuffer:processorOutput = {}
     const ruleLength = this.ruleCache.length
     const sourceDocument:JsonObject[] = content.documentList
 
     // ブロックループ
-    for (let ruleIndex = 0; ruleIndex < ruleLength; ruleIndex++) {
-      // ローカル変数の初期化
-      const sourveValueDefinitions = this.ruleCache[ruleIndex].source
+    // eslint-disable-next-line no-labels
+    blockLoop: for (let ruleIndex = 0; ruleIndex < ruleLength; ruleIndex++) {
+      // ローカル定数の初期化
+      Object.keys(this.variables).filter(name => name.charAt(0) === '@').forEach(
+        name => delete this.variables[name]
+      )
+      const sourveValueDefinitions = this.sourceDefinitions[ruleIndex]
       if (sourveValueDefinitions) {
         for (let sourceIndex = 0; sourceIndex < sourveValueDefinitions.length; sourceIndex++) {
-          const path = sourveValueDefinitions[sourceIndex].path
           const sourceName = `@${sourceIndex}`
-          if (path !== '') {
-            switch (path) {
-              case '$hash':
-              case '$his_id':
-              case '$name':
-              case '$date_of_birth':
-                Object.defineProperty(variables, path, {
-                  value: variables[path]
-                })
-                variables.next({
-                  operation: 'constant',
-                  name: sourceName,
-                  value: variables.next({
-                    operation: 'get',
-                    name: path
-                  }).value()
-                })
-                break
-              default:
-                variables.next({
-                  operation: 'constant',
-                  name: sourceName,
-                  value: extractJsonDocumentByPath(content.documentList as JsonObject, path)
-                })
-            }
+          const path = sourveValueDefinitions[sourceIndex]?.path || ''
+          switch (path) {
+            case '':
+              Object.defineProperty(this.variables, sourceName, {})
+              break
+            case '$hash':
+            case '$his_id':
+            case '$name':
+            case '$date_of_birth':
+              Object.defineProperty(this.variables, sourceName, {
+                value: this.variables[path],
+                writable: false
+              })
+              break
+            default:
+              Object.defineProperty(this.variables, sourceName, {
+                value: extractJsonObjectByPath(sourceDocument, path),
+                writable: false
+              })
           }
         }
       }
-    }
-    
 
-    }
+      // レジスタ変数の初期化
+      for (let registerIndex = 0; registerIndex < 10; registerIndex++) {
+        const registerName = `${registerIndex}`
+        if (registerName in this.variables) {
+          this.variables[registerName] = []
+        }
+      }
 
+      // 実行ユニット
+      let programCounter:number = 0
+      const instructions = this.compiledRules[ruleIndex]
+      const maxCount = instructions.length
+
+      // eslint-disable-next-line no-labels
+      instructionLoop: for (;programCounter < maxCount;) {
+        const instruction:instructionFunction = instructions[programCounter]
+
+        const result:instructionResult = await new Promise(resolve => {
+          setTimeout(() => {
+            resolve(instruction(this.variables, outputBuffer))
+          }, 0)
+        })
+
+        if (result.success) {
+          switch (result.behavior.toLowerCase()) {
+            case 'abort':
+              // eslint-disable-next-line no-labels
+              break instructionLoop
+          }
+        }
+        //
+        programCounter++
+      }
+    }
+  }
+
+  /**
+   * スクリプトの引数文字列が変数参照でない固定値であるかをチェック
+   * @param value
+   * @returns
+   */
+  // eslint-disable-next-line no-useless-escape
+  private isArgumentIsConstantValue = (value: string):boolean => !/^(@|\$[^.\[])/.test(value)
 }
-
-
-
 
 /**
  * 引数を全て文字列配列化して返す
@@ -285,15 +694,15 @@ function parseVariableValueArray (values: string[]): unknown[] {
 export function parseStringToStringArray (value: string): string[] {
   const result:string[] = []
   let quoteType:string = ''
-  let chrrentItem:string = ''
+  let currentItem:string = ''
 
   for (const char of value.trim()) {
     // 非クオート状態で区切り文字(全角スペースも区切り文字扱い)
     if (quoteType === '' && (char === ' ' || char === '　' || char === ',')) {
       // スペースでの区切りが連続した場合は1つの区切りと看做す
-      if (char === ',' || chrrentItem !== '') {
-        result.push(chrrentItem)
-        chrrentItem = ''
+      if (char === ',' || currentItem !== '') {
+        result.push(currentItem)
+        currentItem = ''
       }
       continue
     }
@@ -303,23 +712,83 @@ export function parseStringToStringArray (value: string): string[] {
       if (quoteType === '') { // クオートイン
         quoteType = char
         // クオートも区切りとして扱う
-        if (chrrentItem !== '') {
-          result.push(chrrentItem)
-          chrrentItem = ''
+        if (currentItem !== '') {
+          result.push(currentItem)
+          currentItem = ''
         }
         continue
       } else { // クオートアウト
         if (char === quoteType) {
           quoteType = ''
-          result.push(chrrentItem)
-          chrrentItem = ''
+          result.push(currentItem)
+          currentItem = ''
           continue
         }
       }
     }
 
-    chrrentItem += char
+    currentItem += char
   }
 
   return result
+}
+
+/**
+ * オブジェクト(Json)をパスで抽出
+ * @param jsonDocument
+ * @param jsonpath
+ * @returns {JsonObject[]}
+ */
+function extractJsonObjectByPath (jsonDocument: JsonObject, jsonpath: string | string[]) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let result: any
+  try {
+    if (jsonDocument === undefined) {
+      result = []
+      throw new Error('no document assigned')
+    }
+    // ドキュメントは配列化
+    const sourceValue = Array.isArray(jsonDocument) ? jsonDocument : [jsonDocument]
+
+    let queryPath: string = Array.isArray(jsonpath) ? jsonpath[0] : jsonpath
+    if (queryPath === undefined || queryPath === '') {
+      result = jsonDocument
+      throw new Error('no jsonpath assigned')
+    }
+    // トップレベルが配列を意識していないパスの場合は$[0]に置換する
+    if (!/^\$(\.\[|\[|\.\.|$)/.test(queryPath)) {
+      if (queryPath.charAt(0) !== '$') {
+        // トップオブジェクト指定の省略形
+        queryPath = '$[0].' + queryPath
+      } else {
+        queryPath = '$[0].' + queryPath.substring(2)
+      }
+    }
+
+    result = JSONPath({
+      path: queryPath,
+      json: sourceValue
+    })
+
+    // jsonpathが配列でサブパスがあるなら再帰処理する
+    if (Array.isArray(jsonpath) && jsonpath.length > 2) {
+      result = extractJsonObjectByPath(result as JsonObject, jsonpath.slice(1))
+    }
+  } catch (e) {
+    console.log(`extractJsonDocumentByPath: caught exception : ${e}`, true)
+    result = []
+  }
+
+  // 結果も配列化して返す
+  if (!Array.isArray(result)) {
+    result = [result]
+  }
+  return result
+}
+
+function verbose (message:string, isError = false) {
+  // eslint-disable-next-line dot-notation
+  if (isError || window.console) {
+    console.log(message)
+  }
 }
