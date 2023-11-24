@@ -1,4 +1,3 @@
-import { ta } from 'element-plus/es/locale'
 import { JsonObject, LogicRule, SourceBlock, LogicBlock } from './types'
 import { JSONPath } from 'jsonpath-plus'
 
@@ -23,6 +22,9 @@ interface instructionResult {
 
 type commandOperatorsValueATypes = 'value'|'json'|'length'
 type commandOperatorsOperators = 'eq'|'gt'|'ge'|'lt'|'le'|'in'|'incl'|'regexp'
+type commandSetsOperators = 'add'|'union'|'intersect'|'difference'|'xor'
+type commandPeriodOperators = 'years'|'years,roundup'|'months'|'months,roundup'|'weeks'|'weeks,roundup'|'days'
+type commandStoreFieldmodes = 'first'|'whitespace'|'colon'|'comma'|'semicolon'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type instructionFunction = (...args:any[]) => instructionResult
@@ -32,34 +34,15 @@ type translationTableObject = {
   func: (value:string) => string
 }
 
-// export type variableOperations = 'get'|'set'|'define'|'constant'|'enum'|'enumConstants'|'enumNonConstants'|'remove'|'release'
-
-// export type variableArgument = {
-//   operation: variableOperations
-//   name: string
-//   value?: JsonObject
-//   constant?: false
-// }
-
-// type variableDefinition = {
-//   name: string
-//   value: string[]
-//   writable: boolean
-// }
-
-// type variableDescriptor = {
-//   name?: string
-//   value?: string[]
-//   writable?: boolean
-// }
-
 /**
  * 変数保存クラス
  */
 type VariableStore = {
-  [key: string]: unknown[]
+  [key: string]: string[]
 }
-
+type VariableProxy = {
+  [key: string]: JsonObject[]
+}
 /**
  * 変数保存オブジェクトのProxy handler
  */
@@ -73,7 +56,8 @@ const storeProxyHandler:ProxyHandler<VariableStore> = {
     return parseVariableValueArray(target[property] || [])
   },
 
-  set: (target:VariableStore, property:string, value:unknown) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  set: (target:VariableStore, property:string, value:any) => {
     if (!(property in target)) {
       throw new TypeError(`変数${property}は未定義です.`)
     }
@@ -138,7 +122,10 @@ export class Converter {
   private compiledRules:instructionFunction[][]
 
   private variableStore:VariableStore
-  private variables:VariableStore
+  private variables:VariableProxy
+
+  public errorMessages:string[]
+  public csvRow:string[]
 
   /**
    * コンストラクター = コンパイラを実行
@@ -154,6 +141,9 @@ export class Converter {
     this.variables = new Proxy(this.variableStore, storeProxyHandler)
     this.sourceDefinitions = []
     this.compiledRules = []
+
+    this.errorMessages = []
+    this.csvRow = []
 
     this.compiler(ruleset)
   }
@@ -393,6 +383,11 @@ export class Converter {
     }
   }
 
+  /**
+   * 変換用のテーブルオブジェクトを作成する
+   * @param table 変換テーブルアレイ2xn
+   * @returns
+   */
   private createTranslationTable = (table:string[][]): translationTableObject[] => {
     const tableObject:translationTableObject[] = []
 
@@ -427,6 +422,15 @@ export class Converter {
     return tableObject
   }
 
+  /**
+   * コマンド Sort 変数の値のソートを行う
+   * ※version 0.xからの破壊的変更:
+   *  - ソースの書き換え不可～変数のみ
+   * @param vaiableName
+   * @param indexPath
+   * @param mode
+   * @returns
+   */
   private commandSort = (vaiableName = '', indexPath = '', mode:'asc'|'desc' = 'asc'): boolean => {
     try {
       if (indexPath.trim() === '' || indexPath.trim() === '$') {
@@ -464,7 +468,15 @@ export class Converter {
     }
   }
 
-  private commandSets = (valueA: JsonObject[], valueB: JsonObject[], operator:'add'|'union'|'intersect'|'difference'|'xor' = 'add', vaiableName):boolean => {
+  /**
+   * コマンド Sets 集合演算を行い値を変数に保存する
+   * @param valueA
+   * @param valueB
+   * @param operator
+   * @param vaiableName
+   * @returns
+   */
+  private commandSets = (valueA: JsonObject[], valueB: JsonObject[], operator:commandSetsOperators = 'add', valiableName = ''):boolean => {
     try {
       const jsonsA:string[] = valueA.map(item => JSON.stringify(item))
       const jsonsB:string[] = valueB.map(item => JSON.stringify(item))
@@ -499,9 +511,140 @@ export class Converter {
           resultArray = [...jsonsA, ...jsonsB]
       }
 
-      return this.commandVariables(resultArray.map(item => JSON.parse(item)), vaiableName)
+      return this.commandVariables(resultArray.map(item => JSON.parse(item)), valiableName)
     } catch (e:unknown) {
       verbose(`Sets: ${(e as Error).message}`, true)
+      return false
+    }
+  }
+
+  /**
+   * コマンド Period 日付間隔計算を行う
+   * @param valueA [0]を基準日として扱う
+   * @param valueB 目的日のアレイ
+   * @param mode
+   * @param variableName 目的日に対して計算した値を保存, 日付として認識出来ないものは-1
+   */
+  private commandPeroid = (valueA: JsonObject[], valueB: JsonObject[], operator:commandPeriodOperators = 'months', variableName = ''): boolean => {
+    try {
+      // 日付フォーマットのパターンマッチ
+      const datePattern = /(?<year>\d{4})[-/](?<month>0?[1-9]|1[0-2])[-/](?<date>0?[1-9]|[12][0-9]|3[01])/
+
+      // 値の検証
+      const baseMatch = valueA[0].toString().match(datePattern)
+      if (baseMatch === null) {
+        throw new TypeError(`${valueA[0].toString()}は有効な日付文字列ではありません.`)
+      }
+      const baseDate = new Date(
+        Number(baseMatch.groups?.year || '1970'),
+        Number(baseMatch.groups?.month || '1') - 1,
+        Number(baseMatch.groups?.date || '1')
+      )
+
+      const result:JsonObject[] = []
+      for (const targetValue of valueB) {
+        const targetMatch = targetValue.toString().match(datePattern)
+        if (targetMatch === null) {
+          result.push('-1')
+          break
+        }
+
+        const targetDate = new Date(
+          Number(targetMatch.groups?.year || '1970'),
+          Number(targetMatch.groups?.month || '1') - 1,
+          Number(targetMatch.groups?.date || '1')
+        )
+
+        // 計算処理
+        let difference = 0
+        const roundup = operator.includes(',roundup')
+        switch (operator) {
+          case 'years':
+          case 'years,roundup':
+            difference = targetDate.getFullYear() - baseDate.getFullYear() +
+              (roundup && (targetDate.getTime() > baseDate.getTime()) ? 1 : 0)
+            break
+          case 'months':
+          case 'months,roundup':
+            difference = (targetDate.getFullYear() - baseDate.getFullYear()) * 12 +
+              (targetDate.getMonth() - baseDate.getMonth()) +
+              (roundup && (targetDate.getTime() > baseDate.getTime()) ? 1 : 0)
+            break
+          case 'weeks':
+          case 'weeks,roundup':
+          case 'days':
+            difference = (targetDate.getTime() - baseDate.getTime()) / (86400000) | 1
+            if (operator !== 'days') {
+              difference = difference / 7 | 1 + (roundup && difference % 7 !== 0 ? 1 : 0)
+            }
+            break
+          default:
+            difference = -1
+        }
+        result.push(difference.toString())
+      }
+
+      return this.commandVariables(result, variableName) && result.includes('-1')
+    } catch (e:unknown) {
+      verbose(`Period: ${(e as Error).message}`, true)
+      return false
+    }
+  }
+
+  private commandStore = (values: JsonObject[], target: string = '$error', mode:commandStoreFieldmodes = 'semicolon'): boolean => {
+    try {
+      /**
+       * エクセルスタイルの列フォーマットを列番号0~に変換
+       * @param col
+       * @returns
+       */
+      const xlcolToNum = (col: string): number => {
+        let num = 0
+        for (let pos = 0; pos < col.length; pos++) {
+          num *= 26
+          num += col.toUpperCase().charCodeAt(pos) - 64
+        }
+        return num - 1
+      }
+
+      // 値をflattenし、オブジェクトはJSON文字列化する
+      const flattenValues = values.flat(99).map(item => item.toString() !== '[object Object]' ? item.toString() : JSON.stringify(item))
+      let cellValue = ''
+      switch (mode) {
+        case 'first':
+          cellValue = flattenValues[0] || ''
+          break
+        case 'whitespace':
+          cellValue = flattenValues.join(' ')
+          break
+        case 'colon':
+          cellValue = flattenValues.join(':')
+          break
+        case 'comma':
+          cellValue = flattenValues.join(',')
+          break
+        case 'semicolon':
+        default:
+          cellValue = flattenValues.join(';')
+      }
+
+      if (target === '$error') {
+        this.errorMessages.push(cellValue)
+      } else {
+        if (/^[A-Z]+$/i.test(target)) {
+          const columnIndex = xlcolToNum(target)
+          this.csvRow[columnIndex] = cellValue
+        } else {
+          const columnIndex = Number(target)
+          if (Number.isNaN(columnIndex) || columnIndex <= 0) {
+            throw new TypeError('桁番号の指定が異常です.')
+          }
+          this.csvRow[columnIndex] = cellValue
+        }
+      }
+      return true
+    } catch (e:unknown) {
+      verbose(`Store: ${(e as Error).message}`, true)
       return false
     }
   }
@@ -514,6 +657,10 @@ export class Converter {
     if (!content) {
       throw new Error('ドキュメントが指定されていません.')
     }
+
+    // 出力をクリア
+    this.errorMessages.splice(0)
+    this.csvRow.splice(0)
 
     // ドキュメント内広域変数を設定
     // システム変数
@@ -557,7 +704,7 @@ export class Converter {
     }
 
     const outputBuffer:processorOutput = {}
-    const ruleLength = this.ruleCache.length
+    const ruleLength = this.compiledRules
     const sourceDocument:JsonObject[] = content.documentList
 
     // ブロックループ
@@ -607,6 +754,7 @@ export class Converter {
       const instructions = this.compiledRules[ruleIndex]
       const maxCount = instructions.length
 
+      // インストラクションループ
       // eslint-disable-next-line no-labels
       instructionLoop: for (;programCounter < maxCount;) {
         const instruction:instructionFunction = instructions[programCounter]
@@ -624,7 +772,7 @@ export class Converter {
               break instructionLoop
           }
         }
-        //
+        // 超重要
         programCounter++
       }
     }
