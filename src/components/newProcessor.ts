@@ -23,6 +23,7 @@ interface instructionResult {
 type commandOperatorsValueATypes = 'value'|'json'|'length'
 type commandOperatorsOperators = 'eq'|'gt'|'ge'|'lt'|'le'|'in'|'incl'|'regexp'
 type commandSetsOperators = 'add'|'union'|'intersect'|'difference'|'xor'
+type commandSortModes = 'asc'|'desc'
 type commandPeriodOperators = 'years'|'years,roundup'|'months'|'months,roundup'|'weeks'|'weeks,roundup'|'days'
 type commandStoreFieldmodes = 'first'|'whitespace'|'colon'|'comma'|'semicolon'
 
@@ -179,28 +180,205 @@ export class Converter {
           const params:string[] = []
 
           for (const item of procedure.arguments) {
-            params.push(String(item))
+            params.push(item.toString())
           }
 
           let instruction:instructionFunction
+          let operator:string = ''
+          let valueType:string = ''
+          let variableName:string = ''
+
+          const success:instructionResult = {
+            success: true,
+            behavior: procedure.trueBehavior.toString() || '+1'
+          }
+          const failed:instructionResult = {
+            success: false,
+            behavior: (procedure?.falseBehavior || 'Abort').toString()
+          }
 
           switch (command) {
             case 'Variables':
-              instruction = (a: number) => a > 2 ? { success: true, behavior: `+${a}` } : { success: false, behavior: 'Abort' }
+              valueType = params[2] || 'value'
+              variableName = params[1] || ''
+              if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
+                instruction = () => {
+                  const values = this.variables[params[0]]
+                  return this.commandVariables(values, variableName, valueType as commandOperatorsValueATypes)
+                    ? success
+                    : failed
+                }
+              } else {
+                instruction = () => {
+                  return this.commandVariables(setValueAsStringArray(params[0]), variableName, valueType as commandOperatorsValueATypes)
+                    ? success
+                    : failed
+                }
+              }
               break
             case 'Operators':
+              valueType = params[1]
+              operator = params[3]
+              if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
+                if (params[2].charAt(0) === '$' || params[2].charAt(0)) {
+                  instruction = () => {
+                    const valueA = this.variables[params[0]]
+                    const valueB = this.variables[params[2]]
+                    return this.commandOperators(valueA, valueType as commandOperatorsValueATypes, valueB, operator as commandOperatorsOperators)
+                      ? success
+                      : failed
+                  }
+                } else {
+                  instruction = () => {
+                    const valueA = this.variables[params[0]]
+                    return this.commandOperators(valueA, valueType as commandOperatorsValueATypes, setValueAsStringArray(params[2]), operator as commandOperatorsOperators)
+                      ? success
+                      : failed
+                  }
+                }
+              } else {
+                if (params[2].charAt(0) === '$' || params[2].charAt(0)) {
+                  instruction = () => {
+                    const valueB = this.variables[params[2]]
+                    return this.commandOperators(setValueAsStringArray(params[0]), valueType as commandOperatorsValueATypes, valueB, operator as commandOperatorsOperators)
+                      ? success
+                      : failed
+                  }
+                } else {
+                  instruction = () => {
+                    return this.commandOperators(setValueAsStringArray(params[0]), valueType as commandOperatorsValueATypes, setValueAsStringArray(params[2]), operator as commandOperatorsOperators)
+                      ? success
+                      : failed
+                  }
+                }
+              }
               break
             case 'Query':
+              operator = params[1]
+              variableName = params[2]
+              if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
+                instruction = () => {
+                  const values = this.variables[params[0]]
+                  return this.commandQuery(values, operator, variableName)
+                    ? success
+                    : failed
+                }
+              } else {
+                instruction = () => {
+                  return this.commandQuery(setValueAsStringArray(params[0]), operator, variableName)
+                    ? success
+                    : failed
+                }
+              }
               break
             case 'Sets':
+              operator = params[2]
+              variableName = params[3]
+              if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
+                if (params[2].charAt(0) === '$' || params[2].charAt(0)) {
+                  instruction = () => {
+                    const valueA = this.variables[params[0]]
+                    const valueB = this.variables[params[1]]
+                    return this.commandSets(valueA, valueB, operator as commandSetsOperators, variableName)
+                      ? success
+                      : failed
+                  }
+                } else {
+                  instruction = () => {
+                    const valueA = this.variables[params[0]]
+                    return this.commandSets(valueA, setValueAsStringArray(params[1]), operator as commandSetsOperators, variableName)
+                      ? success
+                      : failed
+                  }
+                }
+              } else {
+                if (params[2].charAt(0) === '$' || params[2].charAt(0)) {
+                  instruction = () => {
+                    const valueB = this.variables[params[1]]
+                    return this.commandSets(setValueAsStringArray(params[0]), valueB, operator as commandSetsOperators, variableName)
+                      ? success
+                      : failed
+                  }
+                } else {
+                  instruction = () => {
+                    return this.commandSets(setValueAsStringArray(params[0]), setValueAsStringArray(params[1]), operator as commandSetsOperators, variableName)
+                      ? success
+                      : failed
+                  }
+                }
+              }
               break
             case 'Sort':
+              instruction = () => {
+                const valiableName = params[0] || ''
+                const path = params[1] || ''
+                const operator = params[2] || 'asc'
+                return this.commandSort(valiableName, path, operator as commandSortModes)
+                  ? success
+                  : failed
+              }
               break
             case 'Translation':
+              instruction = () => {
+                const vaiableName = params[0] || ''
+                const table = this.createTranslationTable(procedure.lookup || [])
+                return this.commandTranslation(vaiableName, table)
+                  ? success
+                  : failed
+              }
               break
             case 'Period':
+              variableName = params[3]
+              operator = params[2] || 'months'
+              if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
+                if (params[1].charAt(0) === '$' || params[1].charAt(0)) {
+                  instruction = () => {
+                    const valueA = this.variables[params[0]]
+                    const valueB = this.variables[params[1]]
+                    return this.commandPeroid(valueA, valueB, operator as commandPeriodOperators, variableName)
+                      ? success
+                      : failed
+                  }
+                } else {
+                  instruction = () => {
+                    const valueA = this.variables[params[0]]
+                    return this.commandPeroid(valueA, setValueAsStringArray(params[1]), operator as commandPeriodOperators, variableName)
+                      ? success
+                      : failed
+                  }
+                }
+              } else {
+                if (params[1].charAt(0) === '$' || params[1].charAt(0)) {
+                  instruction = () => {
+                    const valueB = this.variables[params[2]]
+                    return this.commandPeroid(setValueAsStringArray(params[0]), valueB, operator as commandPeriodOperators, variableName)
+                      ? success
+                      : failed
+                  }
+                } else {
+                  instruction = () => {
+                    return this.commandPeroid(setValueAsStringArray(params[0]), setValueAsStringArray(params[1]), operator as commandPeriodOperators, variableName)
+                      ? success
+                      : failed
+                  }
+                }
+              }
               break
             case 'Store':
+              if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
+                const value = this.variables[params[0]]
+                instruction = () => {
+                  return this.commandStore(value, params[1] || '$error', params[2] as commandStoreFieldmodes)
+                    ? success
+                    : failed
+                }
+              } else {
+                instruction = () => {
+                  return this.commandStore(setValueAsStringArray(params[0]), params[1] || '$error', params[2] as commandStoreFieldmodes)
+                    ? success
+                    : failed
+                }
+              }
               break
           }
           compiledRule.push(instruction)
@@ -431,7 +609,7 @@ export class Converter {
    * @param mode
    * @returns
    */
-  private commandSort = (vaiableName = '', indexPath = '', mode:'asc'|'desc' = 'asc'): boolean => {
+  private commandSort = (vaiableName = '', indexPath = '', mode:commandSortModes = 'asc'): boolean => {
     try {
       if (indexPath.trim() === '' || indexPath.trim() === '$') {
         return this.commandVariables(
@@ -653,7 +831,7 @@ export class Converter {
    * コンパイル済みコードを実行する
    * @param content JESGO取得ドキュメント単体
    */
-  public run = async (content:pulledDocument) => {
+  public run = async (content:pulledDocument) :Promise<processorOutput|undefined> => {
     if (!content) {
       throw new Error('ドキュメントが指定されていません.')
     }
@@ -703,8 +881,7 @@ export class Converter {
       }
     }
 
-    const outputBuffer:processorOutput = {}
-    const ruleLength = this.compiledRules
+    const ruleLength = this.compiledRules.length
     const sourceDocument:JsonObject[] = content.documentList
 
     // ブロックループ
@@ -761,20 +938,34 @@ export class Converter {
 
         const result:instructionResult = await new Promise(resolve => {
           setTimeout(() => {
-            resolve(instruction(this.variables, outputBuffer))
+            resolve(instruction())
           }, 0)
         })
 
-        if (result.success) {
-          switch (result.behavior.toLowerCase()) {
-            case 'abort':
-              // eslint-disable-next-line no-labels
-              break instructionLoop
-          }
+        switch (result.behavior) {
+          case 'Exit':
+            if (!result.success) {
+              // 症例に対する処理の中止は処理の不成立にしかない
+              return undefined
+            }
+          // eslint-disable-next-line no-fallthrough
+          case 'Abort':
+            // 現在のルール処理を終了
+            // eslint-disable-next-line no-labels
+            break instructionLoop
+          default:
+            if (Number.isNaN(Number(result.behavior))) {
+              programCounter += Number(result.behavior)
+            } else {
+              programCounter++
+            }
         }
-        // 超重要
-        programCounter++
       }
+    }
+
+    return {
+      csv: this.csvRow,
+      errors: this.errorMessages
     }
   }
 
