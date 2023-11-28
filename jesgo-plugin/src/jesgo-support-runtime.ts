@@ -3,7 +3,7 @@ import { showModalDialog, createElementFromHtml } from './modal-dialog'
 import { dialogHTML } from './jesgo-support-runtime-ui'
 import { processor } from '../../src/components/processor'
 import { unparse as papaUnparse } from 'papaparse'
-import { LogicRule } from '../../src/components/types'
+import { LogicRuleSet } from '../../src/components/types'
 import { scriptEM } from './support-scripts/scripts'
 
 export async function init ():Promise<scriptInfo> {
@@ -403,7 +403,7 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
         errors: string[]
       }
 
-      const result = scriptVersion >= '0' ? (await processor(caseData[0], script as LogicRule[])) as processorOutputFormat : undefined
+      const result = scriptVersion >= '0' ? (await processor(caseData[0], script as LogicRuleSet[])) as processorOutputFormat : undefined
 
       if (result) {
         // 結果

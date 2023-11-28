@@ -40,7 +40,7 @@ import { ref, Ref, computed, ComputedRef, WritableComputedRef } from 'vue'
 import { Plus, EditPen, Delete } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 import { useStore } from './store'
-import { LogicBlock, SourceBlock, LogicRule } from './types'
+import { LogicBlock, SourceBlock, LogicRuleSet } from './types'
 import LogicSource from './LogicSource.vue'
 import LogicEditor from './LogicEditor.vue'
 
@@ -80,7 +80,7 @@ const currentRulesetTitleComputed: WritableComputedRef<string> = computed({
 /**
  * currentRuleset 現在編集中のルール
  */
-const currentRuleset:Ref<LogicRule> = computed(() => {
+const currentRuleset:Ref<LogicRuleSet> = computed(() => {
   if (rules?.value) {
     const currentRule = rules.value.find(element => element.title === currentRulesetTitle.value)
     if (currentRule) {

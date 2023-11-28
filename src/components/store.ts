@@ -1,13 +1,13 @@
 import { InjectionKey } from 'vue'
 import { createStore, useStore as vuexUseStore, Store } from 'vuex'
-import { ErrorObject, JsonObject, CsvObject, LogicRule } from './types'
+import { ErrorObject, JsonObject, CsvObject, LogicRuleSet } from './types'
 import { JSONPath } from 'jsonpath-plus'
 
 export interface State {
   JsonDocument: JsonObject,
   CsvDocument: CsvObject,
   ErrorDocument: ErrorObject[],
-  RuleSet: LogicRule[],
+  RuleSet: LogicRuleSet[],
   HighlightedPath: string,
   currentIndex: number
 }
@@ -130,7 +130,7 @@ export const store = createStore<State>({
         state.RuleSet.splice(index, 1)
       }
     },
-    upsertRuleSet (state, newValue: LogicRule) {
+    upsertRuleSet (state, newValue: LogicRuleSet) {
       const index = state.RuleSet.findIndex(element => element.title === newValue.title)
       if (index >= 0) {
         state.RuleSet.splice(index, 1, newValue)
@@ -146,7 +146,7 @@ export const store = createStore<State>({
         state.RuleSet.splice(index, 1, currentRuleSet)
       }
     },
-    setRuleSet (state, newRuleset: LogicRule[]) {
+    setRuleSet (state, newRuleset: LogicRuleSet[]) {
       state.RuleSet.splice(0, state.RuleSet.length, ...newRuleset)
     },
     setHighlight (state, path = '') {

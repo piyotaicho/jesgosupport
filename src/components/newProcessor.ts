@@ -1,4 +1,4 @@
-import { JsonObject, LogicRule, SourceBlock, LogicBlock } from './types'
+import { JsonObject, LogicRuleSet, SourceBlock, LogicBlock } from './types'
 import { JSONPath } from 'jsonpath-plus'
 
 interface pulledDocument {
@@ -132,7 +132,7 @@ export class Converter {
    * コンストラクター = コンパイラを実行
    * @param ruleset
    */
-  constructor (ruleset: LogicRule[]) {
+  constructor (ruleset: LogicRuleSet[]) {
     if (!ruleset) {
       throw new TypeError('ロジックが指定されていません.')
     }
@@ -153,7 +153,7 @@ export class Converter {
    * コードコンパイラ本体
    * @param ruleset
    */
-  private compiler (ruleset: LogicRule[]) {
+  private compiler (ruleset: LogicRuleSet[]) {
     // ルールを処理
     const rulesCount = ruleset.length
     for (let index = 0; index < rulesCount; index++) {
@@ -830,6 +830,7 @@ export class Converter {
   /**
    * コンパイル済みコードを実行する
    * @param content JESGO取得ドキュメント単体
+   * @returns $.csv - csvの行アレイ $.errors - エラーメッセージアレイ
    */
   public run = async (content:pulledDocument) :Promise<processorOutput|undefined> => {
     if (!content) {

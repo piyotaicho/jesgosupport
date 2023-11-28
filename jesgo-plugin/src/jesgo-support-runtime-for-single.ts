@@ -3,7 +3,7 @@ import { showModalDialog, createElementFromHtml } from './modal-dialog'
 import { dialogHTML } from './jesgo-support-runtime-single-ui'
 import { processor } from '../../src/components/processor'
 import { unparse as papaUnparse } from 'papaparse'
-import { LogicRule } from '../../src/components/types'
+import { LogicRuleSet } from '../../src/components/types'
 
 export async function init ():Promise<scriptInfo> {
   return {
@@ -320,7 +320,7 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
     }
     let processorCall
     if (scriptVersion >= '0') {
-      processorCall = async (caseData: pulledDocument) => await processor(caseData, script as LogicRule[]) as processorOutputFormat
+      processorCall = async (caseData: pulledDocument) => await processor(caseData, script as LogicRuleSet[]) as processorOutputFormat
     } else {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       processorCall = async (_:unknown) => undefined

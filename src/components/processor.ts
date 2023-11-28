@@ -1,4 +1,4 @@
-import { JsonObject, LogicRule, failableBlockTypes } from './types'
+import { JsonObject, LogicRuleSet, failableBlockTypes } from './types'
 import { JSONPath } from 'jsonpath-plus'
 
 interface pulledDocument {
@@ -18,11 +18,11 @@ interface processorOutput {
 /**
  * マクロ実行ユニット
  * @param {pulledDocument} 1症例分のオブジェクト
- * @param {LogicRule[]} ルールセット配列
+ * @param {LogicRuleSet[]} ルールセット配列
  * @returns {csv: string[], errors: string[]}
  */
 // eslint-disable-next-line camelcase
-export async function processor (content: pulledDocument, rules: LogicRule[]): Promise<undefined | processorOutput> {
+export async function processor (content: pulledDocument, rules: LogicRuleSet[]): Promise<undefined | processorOutput> {
   const hash = content?.hash || ''
   const hisid = content?.his_id || ''
   const name = content?.name || ''
@@ -692,7 +692,7 @@ type variableDefinition = {
  * ルールをプリコンパイルしてジェネレータを生成する
  * @param rules ルールセットオブジェクト
  */
-function * codeCompiler (rules: LogicRule[]) : Iterator<undefined|processorOutput, any, undefined|pulledDocument> {
+function * codeCompiler (rules: LogicRuleSet[]) : Iterator<undefined|processorOutput, any, undefined|pulledDocument> {
   if (rules.length === 0) {
     throw new Error('ルールセットの指定がありません.')
   }

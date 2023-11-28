@@ -38,19 +38,17 @@ export const failableBlockTypes = [
   'Period'
 ]
 
-export type LogicRule = {
+export type SetDescription = {
+  title: string
+  filterPath?: string[]
+  caseVariableNames?: string[]
+}
+
+export type LogicRuleSet = {
   title: string,
   description ?: string,
   source ?: SourceBlock[],
   procedure ?: LogicBlock[]
-  global ?: [
-    {
-      filter?: string[],
-      assignpath?: string,
-      variable?: string,
-      defaultvalue: string
-    }
-  ]
 }
 
 export type documentFilter = {

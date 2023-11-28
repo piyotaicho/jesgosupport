@@ -29,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { CsvObject, JsonObject, LogicRule } from './types'
+import { CsvObject, JsonObject, LogicRuleSet } from './types'
 import { CaretTop, CaretBottom, CaretRight } from '@element-plus/icons-vue'
 import { h, ref } from 'vue'
 import { useStore } from './store'
@@ -138,7 +138,7 @@ async function loadRuleFile (event: Event) {
     try {
       // version 0.1.0のtypoを強制的に排除
       const replacedContent = (content as string).replace(/([bB])ehaivior/g, '$1ehavior')
-      const loadedRuleset = JSON.parse(replacedContent) as LogicRule[]
+      const loadedRuleset = JSON.parse(replacedContent) as LogicRuleSet[]
 
       if (Array.isArray(loadedRuleset) && loadedRuleset[0]?.title) {
         store.commit('setRuleSet', loadedRuleset)
