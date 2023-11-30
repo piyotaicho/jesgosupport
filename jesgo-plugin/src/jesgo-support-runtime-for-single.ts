@@ -7,7 +7,7 @@ import { LogicRule } from '../../src/components/types'
 
 export async function init ():Promise<scriptInfo> {
   return {
-    plugin_name: 'JESGO-supportランタイム(個別)',
+    plugin_name: '外部スクリプトの実行(個別)',
     plugin_version: '0.9',
     all_patient: false,
     attach_patient_info: true,

@@ -8,7 +8,7 @@ import { scriptEM } from './support-scripts/scripts'
 
 export async function init ():Promise<scriptInfo> {
   return {
-    plugin_name: 'JESGO-supportランタイム',
+    plugin_name: '外部スクリプトの実行',
     plugin_version: '0.9',
     all_patient: true,
     attach_patient_info: true,
