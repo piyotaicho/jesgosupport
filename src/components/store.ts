@@ -1,7 +1,7 @@
 import { InjectionKey } from 'vue'
 import { createStore, useStore as vuexUseStore, Store } from 'vuex'
 import { ErrorObject, JsonObject, CsvObject, LogicRuleSet } from './types'
-import { JSONPath } from 'jsonpath-plus'
+import { parseJesgo } from './processor'
 
 export interface State {
   JsonDocument: JsonObject,
@@ -44,35 +44,12 @@ export const store = createStore<State>({
       }
     },
     parseJesgoDocument: (_, getters) => (jsonpath:string|string[], index:number|undefined, resultType:'value'|'pointer' = 'value') => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let result:any
-      try {
-        // jsonpathが配列の場合は[0]がメイン
-        const primarypath:string = Array.isArray(jsonpath) ? jsonpath[0] : jsonpath
-        result = JSONPath({
-          path: primarypath,
-          json: getters.jesgoDocumentRef(index),
-          resultType
-        })
-      } catch (e) {
-        console.error('Exception caught in parsing primary jsonpath')
-        console.error(e)
-      }
-
-      try {
-        // サブパスはvalueの時だけ有効
-        if (resultType === 'value' && Array.isArray(jsonpath) && (jsonpath[1] || '') !== '') {
-          result = JSONPath({
-            path: jsonpath[1],
-            json: result
-          })
-        }
-      } catch (e) {
-        console.error('Exception caught in parsing secondary jsonpath')
-        console.error(e)
-      }
-      return result || []
+      const targetDocument = getters.jesgoDocumentRef(index)
+      console.dir(targetDocument)
+      return parseJesgo(targetDocument, jsonpath, resultType)
     },
+    rules: (state):LogicRuleSet[] => state.RuleSet,
+    ruleTitles: (state):string[] => state.RuleSet.map(rule => rule.title),
     getRuleSetJson: (state) => JSON.stringify(state.RuleSet, null, 2)
   },
   mutations: {
@@ -128,6 +105,15 @@ export const store = createStore<State>({
       const index = state.RuleSet.findIndex(element => element.title === setname)
       if (index !== -1) {
         state.RuleSet.splice(index, 1)
+      }
+    },
+    reorderRuleSet (state, payload: { title:string, offset:number }) {
+      const index = state.RuleSet.findIndex(element => element.title === payload.title)
+      if (index >= 0) {
+        const newIndex = index + payload.offset
+        if (newIndex >= 0 || newIndex < state.RuleSet.length) {
+          state.RuleSet.splice(newIndex, 0, ...state.RuleSet.splice(index, 1))
+        }
       }
     },
     upsertRuleSet (state, newValue: LogicRuleSet) {

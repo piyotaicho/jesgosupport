@@ -10,6 +10,41 @@ interface pulledDocument {
   name?: string
 }
 
+// JSONパスでJESGOドキュメントから値を取得
+export function parseJesgo (jesgoDocument: JsonObject, jsonpath: string | string[], mode:'value'|'pointer' = 'value') {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let result: any
+  try {
+    // jsonpathが配列の場合は[0]がメイン
+    const primarypath: string = Array.isArray(jsonpath) ? jsonpath[0] : jsonpath
+    result = JSONPath({
+      path: primarypath,
+      json: jesgoDocument,
+      resultType: mode
+    })
+    if (mode === 'value' && result.length === 1) {
+      if (!Array.isArray(result[0])) {
+        result = [result[0]]
+      } else {
+        result = result[0]
+      }
+    }
+    // value modeのとき、サブパスがあれば続いて処理する
+    if (mode === 'value' && Array.isArray(jsonpath) && (jsonpath[1] || '') !== '') {
+      result = JSONPath({
+        path: jsonpath[1],
+        json: result
+      })
+      if (result.length === 1) {
+        result = !Array.isArray(result[0]) ? [result[0]] : result[0]
+      }
+    }
+  } catch (e) {
+    verbose(`parseJesgo: JSONPath exception : ${e}`, true)
+  }
+  return result || []
+}
+
 /**
  * マクロ実行ユニット
  * @param {pulledDocument} 1症例分のオブジェクト
@@ -92,13 +127,18 @@ export async function processor (content: pulledDocument, rules: LogicRuleSet[])
           path: primarypath,
           json: jesgoDocument
         })
-
+        if (!Array.isArray(result)) {
+          result = [result]
+        }
         // サブパスがあれば続いて処理する
         if (Array.isArray(jsonpath) && (jsonpath[1] || '') !== '') {
           result = JSONPath({
             path: jsonpath[1],
             json: result
           })
+          if (!Array.isArray(result)) {
+            result = [result]
+          }
         }
       } catch (e) {
         verbose(`parseJesgo: JSONPath exception : ${e}`, true)
