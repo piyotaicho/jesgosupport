@@ -1,4 +1,4 @@
-import { JsonObject, LogicRuleSet, SourceBlock, LogicBlock } from './types'
+import { JsonObject, LogicRuleSet, SourceBlock, LogicBlock, BlockType } from './types'
 import { JSONPath } from 'jsonpath-plus'
 
 interface pulledDocument {
@@ -20,12 +20,16 @@ interface instructionResult {
   behavior: string
 }
 
-type commandOperatorsValueATypes = 'value'|'json'|'length'
-type commandOperatorsOperators = 'eq'|'gt'|'ge'|'lt'|'le'|'in'|'incl'|'regexp'
+// 後方互換を保持してスクリプトコマンドを短縮
+// type BlockType = 'Operators'|'Variables'|'Query'|'Translation'|'Sort'|'Period'|'Sets'|'Store'
+export type newBlockType = 'oper'|'hold'|'query'|'tr'|'sort'|'period'|'set'|'put'|BlockType
+
+type commandValueTypes = 'value'|'json'|'length'
+type commandOperatorExpressions = 'eq'|'='|'gt'|'>'|'ge'|'>='|'lt'|'<'|'le'|'<='|'in'|'incl'|'re'|'regexp'
 type commandSetsOperators = 'add'|'union'|'intersect'|'difference'|'xor'
-type commandSortModes = 'asc'|'desc'
+type commandSortDirections = 'asc'|'ascend'|'desc'|'descend'
 type commandPeriodOperators = 'years'|'years,roundup'|'months'|'months,roundup'|'weeks'|'weeks,roundup'|'days'
-type commandStoreFieldmodes = 'first'|'whitespace'|'colon'|'comma'|'semicolon'
+type commandStoreFieldSeparators = 'first'|'whitespace'|'colon'|'comma'|'semicolon'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type instructionFunction = (...args:any[]) => instructionResult
@@ -176,7 +180,7 @@ export class Converter {
           const procedure = procedures[counter]
 
           // パラメータの抽出 引数は参照では無く値をコピー
-          const command = procedure.type
+          const command = procedure.type as newBlockType
           const params:string[] = []
 
           for (const item of procedure.arguments) {
@@ -198,24 +202,26 @@ export class Converter {
           }
 
           switch (command) {
+            case 'hold':
             case 'Variables':
               valueType = params[2] || 'value'
               variableName = params[1] || ''
               if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
                 instruction = () => {
                   const values = this.variables[params[0]]
-                  return this.commandVariables(values, variableName, valueType as commandOperatorsValueATypes)
+                  return this.commandVariables(values, variableName, valueType as commandValueTypes)
                     ? success
                     : failed
                 }
               } else {
                 instruction = () => {
-                  return this.commandVariables(setValueAsStringArray(params[0]), variableName, valueType as commandOperatorsValueATypes)
+                  return this.commandVariables(setValueAsStringArray(params[0]), variableName, valueType as commandValueTypes)
                     ? success
                     : failed
                 }
               }
               break
+            case 'oper':
             case 'Operators':
               valueType = params[1]
               operator = params[3]
@@ -224,14 +230,14 @@ export class Converter {
                   instruction = () => {
                     const valueA = this.variables[params[0]]
                     const valueB = this.variables[params[2]]
-                    return this.commandOperators(valueA, valueType as commandOperatorsValueATypes, valueB, operator as commandOperatorsOperators)
+                    return this.commandOperators(valueA, valueType as commandValueTypes, valueB, operator as commandOperatorExpressions)
                       ? success
                       : failed
                   }
                 } else {
                   instruction = () => {
                     const valueA = this.variables[params[0]]
-                    return this.commandOperators(valueA, valueType as commandOperatorsValueATypes, setValueAsStringArray(params[2]), operator as commandOperatorsOperators)
+                    return this.commandOperators(valueA, valueType as commandValueTypes, setValueAsStringArray(params[2]), operator as commandOperatorExpressions)
                       ? success
                       : failed
                   }
@@ -240,19 +246,20 @@ export class Converter {
                 if (params[2].charAt(0) === '$' || params[2].charAt(0)) {
                   instruction = () => {
                     const valueB = this.variables[params[2]]
-                    return this.commandOperators(setValueAsStringArray(params[0]), valueType as commandOperatorsValueATypes, valueB, operator as commandOperatorsOperators)
+                    return this.commandOperators(setValueAsStringArray(params[0]), valueType as commandValueTypes, valueB, operator as commandOperatorExpressions)
                       ? success
                       : failed
                   }
                 } else {
                   instruction = () => {
-                    return this.commandOperators(setValueAsStringArray(params[0]), valueType as commandOperatorsValueATypes, setValueAsStringArray(params[2]), operator as commandOperatorsOperators)
+                    return this.commandOperators(setValueAsStringArray(params[0]), valueType as commandValueTypes, setValueAsStringArray(params[2]), operator as commandOperatorExpressions)
                       ? success
                       : failed
                   }
                 }
               }
               break
+            case 'query':
             case 'Query':
               operator = params[1]
               variableName = params[2]
@@ -271,6 +278,7 @@ export class Converter {
                 }
               }
               break
+            case 'set':
             case 'Sets':
               operator = params[2]
               variableName = params[3]
@@ -308,16 +316,18 @@ export class Converter {
                 }
               }
               break
+            case 'sort':
             case 'Sort':
               instruction = () => {
                 const valiableName = params[0] || ''
                 const path = params[1] || ''
                 const operator = params[2] || 'asc'
-                return this.commandSort(valiableName, path, operator as commandSortModes)
+                return this.commandSort(valiableName, path, operator as commandSortDirections)
                   ? success
                   : failed
               }
               break
+            case 'tr':
             case 'Translation':
               instruction = () => {
                 const vaiableName = params[0] || ''
@@ -327,6 +337,7 @@ export class Converter {
                   : failed
               }
               break
+            case 'period':
             case 'Period':
               variableName = params[3]
               operator = params[2] || 'months'
@@ -364,17 +375,18 @@ export class Converter {
                 }
               }
               break
+            case 'put':
             case 'Store':
               if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
                 const value = this.variables[params[0]]
                 instruction = () => {
-                  return this.commandStore(value, params[1] || '$error', params[2] as commandStoreFieldmodes)
+                  return this.commandStore(value, params[1] || '$error', params[2] as commandStoreFieldSeparators)
                     ? success
                     : failed
                 }
               } else {
                 instruction = () => {
-                  return this.commandStore(setValueAsStringArray(params[0]), params[1] || '$error', params[2] as commandStoreFieldmodes)
+                  return this.commandStore(setValueAsStringArray(params[0]), params[1] || '$error', params[2] as commandStoreFieldSeparators)
                     ? success
                     : failed
                 }
@@ -393,7 +405,7 @@ export class Converter {
    * @param variableName
    * @returns {boolean}
    */
-  private commandVariables = (value: JsonObject[] = [], variableName = '', variableType:commandOperatorsValueATypes = 'value'): boolean => {
+  private commandVariables = (value: JsonObject[] = [], variableName = '', variableType:commandValueTypes = 'value'): boolean => {
     try {
       if (!variableName || variableName === '') {
         throw new TypeError('変数名が未指定です.')
@@ -424,7 +436,7 @@ export class Converter {
    * @param operator
    * @returns {boolean}
    */
-  private commandOperators = (valueA: JsonObject[] = [], valueAtype:commandOperatorsValueATypes = 'value', valueB: JsonObject[] = [], operator:commandOperatorsOperators) :boolean => {
+  private commandOperators = (valueA: JsonObject[] = [], valueAtype:commandValueTypes = 'value', valueB: JsonObject[] = [], operator:commandOperatorExpressions) :boolean => {
     try {
       let valueOfA:JsonObject[]
       switch (valueAtype) {
@@ -444,21 +456,27 @@ export class Converter {
       switch (operator) {
         // 単純な比較演算子は先頭要素のみ(Number-Stringの型は自動変換に任せる)
         case 'eq':
+        case '=':
           // eslint-disable-next-line eqeqeq
           return valueOfA[0] == valueB[0]
         case 'gt':
+        case '>':
           return valueOfA[0] > valueB[0]
         case 'ge':
+        case '>=':
           return valueOfA[0] >= valueB[0]
         case 'lt':
+        case '<':
           return valueOfA[0] < valueB[0]
         case 'le':
+        case '<=':
           return valueOfA[0] <= valueB[0]
         // 集合演算
         case 'in':
           return valueOfA.some(item => valueB.includes(item))
         case 'incl':
           return valueB.some(item => valueOfA.includes(item))
+        case 're':
         case 'regexp':
           return valueOfA.some(item => {
             const expression = valueB[0].toString()
@@ -609,11 +627,11 @@ export class Converter {
    * @param mode
    * @returns
    */
-  private commandSort = (vaiableName = '', indexPath = '', mode:commandSortModes = 'asc'): boolean => {
+  private commandSort = (vaiableName = '', indexPath = '', mode:commandSortDirections = 'asc'): boolean => {
     try {
       if (indexPath.trim() === '' || indexPath.trim() === '$') {
         return this.commandVariables(
-          mode === 'asc'
+          mode === 'asc' || mode === 'ascend'
             ? (this.variables[vaiableName] as JsonObject[])
                 .map(item => JSON.stringify(item))
                 .sort()
@@ -634,7 +652,7 @@ export class Converter {
           })
 
         return this.commandVariables(
-          mode === 'asc'
+          mode === 'asc' || mode === 'ascend'
             ? sortedItems
             : sortedItems.reverse(),
           vaiableName
@@ -691,7 +709,7 @@ export class Converter {
 
       return this.commandVariables(resultArray.map(item => JSON.parse(item)), valiableName)
     } catch (e:unknown) {
-      verbose(`Sets: ${(e as Error).message}`, true)
+      verbose(`Set operation: ${(e as Error).message}`, true)
       return false
     }
   }
@@ -769,7 +787,7 @@ export class Converter {
     }
   }
 
-  private commandStore = (values: JsonObject[], target: string = '$error', mode:commandStoreFieldmodes = 'semicolon'): boolean => {
+  private commandStore = (values: JsonObject[], target: string = '$error', mode:commandStoreFieldSeparators = 'semicolon'): boolean => {
     try {
       /**
        * エクセルスタイルの列フォーマットを列番号0~に変換
