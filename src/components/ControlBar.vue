@@ -1,12 +1,11 @@
 <template>
   <div class="control-bar">
-    <div>
+    <!-- <div>
       <el-button type="primary" :icon="CaretTop" @click="loadJson()">JESGO-JSONを読み込み</el-button>
     </div>
-
+ -->
     <div>
       <el-button-group>
-        <el-button type="primary" :icon="CaretBottom" @click="saveCSV">CSVを保存</el-button>
         <el-button type="primary" :icon="CaretBottom" @click="saveError">エラーを保存</el-button>
       </el-button-group>
     </div>
@@ -22,33 +21,24 @@
       <el-button type="primary" :icon="CaretRight" @click="performProcessing" :loading="processing" :disabled="processing">実行</el-button>
     </div>
 
-    <input type="file" ref="inputFileJson" accept="*.json" style="display: none;" @input="loadJsonDocument($event)">
+    <!-- <input type="file" ref="inputFileJson" accept="*.json" style="display: none;" @input="loadJsonDocument($event)"> -->
     <input type="file" ref="inputRule" accept="*.json" style="display: none;" @input="loadRuleFile($event)">
     <!-- <input type="file" ref="inputFileCsv" accept="*.csv" style="display: none;" @input="loadCsvFile($event)"> -->
   </div>
 </template>
 
 <script setup lang="ts">
-import { CsvObject, JsonObject, LogicRuleSet } from './types'
+import { LogicRuleSet, processorOutput } from './types'
 import { CaretTop, CaretBottom, CaretRight } from '@element-plus/icons-vue'
-import { h, ref } from 'vue'
+import { ref } from 'vue'
 import { useStore } from './store'
-import Papa from 'papaparse'
-import { ElInputNumber, ElMessageBox } from 'element-plus'
+import { ElMessageBox } from 'element-plus'
 import { processor } from './processor'
 
 const store = useStore()
-const inputFileJson = ref()
 const inputRule = ref()
-// const inputFileCsv = ref()
 
 const processing = ref(false)
-/**
- * loadJson inputFileJsonへのclickイベント発火
- */
-function loadJson ():void {
-  inputFileJson.value.click()
-}
 
 /**
  * loadJson inputRuleへのclickイベント発火
@@ -67,35 +57,6 @@ function saveRule ():void {
   }
 }
 
-async function saveCSV ():Promise<void> {
-  if (store.state.CsvDocument.length > 0) {
-    const csvOffset = ref(0)
-    await ElMessageBox({
-      title: 'オフセットの設定',
-      message: () => h('p', null, [
-        h('span', null, 'CSV出力の行オフセットを設定できます.'),
-        h(ElInputNumber, {
-          min: 0,
-          modelValue: csvOffset.value,
-          'onUpdate:modelValue': (val: number|undefined) => { csvOffset.value = Number(val) || 0 }
-        })
-      ])
-    })
-
-    const exportCsvDocument: CsvObject = []
-    for (let i = 0; i < csvOffset.value; i++) {
-      exportCsvDocument.push([])
-    }
-    exportCsvDocument.push(...store.state.CsvDocument)
-
-    const data = Papa.unparse(exportCsvDocument, {
-      header: false,
-      quotes: false
-    })
-    userDownload(data, 'results.csv')
-  }
-}
-
 function saveError ():void {
   if (store.state.ErrorDocument.length > 0) {
     const data = JSON.stringify(store.state.ErrorDocument.map(element => {
@@ -106,25 +67,6 @@ function saveError ():void {
       }
     }), undefined, ' ')
     userDownload(data, 'errorreports.json')
-  }
-}
-/**
- * loadJsonDocument FILE APIで読み込んだJSONファイルをJSONドキュメントとして保存
- * @param {Event} HTMLイベントオブジェクト
- */
-async function loadJsonDocument (event: Event) {
-  const content = await loadJsonFile(event)
-  if (content) {
-    try {
-      const loadedDocument = JSON.parse(content as string) as JsonObject
-      if (Array.isArray(loadedDocument) && loadedDocument[0]?.documentList) {
-        store.commit('setJsonDocument', loadedDocument)
-      } else {
-        throw new Error()
-      }
-    } catch {
-      ElMessageBox.alert('このファイルは有効なJESGOから出力されたJSONファイルではないようです.')
-    }
   }
 }
 
@@ -206,10 +148,10 @@ async function performProcessing (): Promise<void> {
 async function processDocument (index:number) {
   const hash = store.getters.documentRef(index)?.hash || ''
 
-  let returnObject: {csv: string[], errors: string[]}|undefined
+  let returnObject: processorOutput|undefined
   try {
     processing.value = true
-    returnObject = await processor(store.getters.documentRef(index), store.state.RuleSet)
+    returnObject = (await processor(store.getters.documentRef(index), store.state.RuleSet))
   } catch (e) {
     console.error(e)
   } finally {
@@ -226,11 +168,11 @@ async function processDocument (index:number) {
       ? {
           hash,
           type,
-          errors: [...errorMessages]
+          errors: [...(errorMessages || [])]
         }
       : {
           hash,
-          errors: [...errorMessages]
+          errors: [...(errorMessages || [])]
         }
     )
   }

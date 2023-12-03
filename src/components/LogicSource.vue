@@ -102,7 +102,7 @@ function highlight (disable = false) {
 /**
  * previewSource ソースの値のプレビューを表示する
  */
-function previewSource (): void {
+async function previewSource (): Promise<void> {
   if (store.getters.documentLength > 0 && sourcePath.value) {
     let result = ''
     switch (sourcePath.value) {
@@ -122,13 +122,17 @@ function previewSource (): void {
         result = JSON.stringify(store.getters.parseJesgoDocument([sourcePath.value, sourceSubPath.value]))
     }
 
-    ElMessageBox({
-      message: h('div', null, [
-        h('p', 'ソースの抽出結果は'),
-        h('span', `${result}`),
-        h('p', 'です.')
-      ])
-    })
+    try {
+      await ElMessageBox({
+        message: h('div', null, [
+          h('p', 'ソースの抽出結果は'),
+          h('span', `${result}`),
+          h('p', 'です.')
+        ])
+      })
+    } catch {
+      // do nothing :)
+    }
   } else {
     ElMessageBox.alert('JSONドキュメントがありません.')
   }

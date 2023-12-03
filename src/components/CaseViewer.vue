@@ -3,7 +3,8 @@
     <CaseNavigation
       :index="index"
       :length="maxIndex"
-      @update:index="updateIndex($event)">
+      @update:index="updateIndex($event)"
+      @loadJson="loadJson">
     </CaseNavigation>
     <div class="case-viewer-identifiers">
       <div>
@@ -22,15 +23,17 @@
       </div>
     </div>
     <JsonViewer :json="caseDocumentList"></JsonViewer>
+    <input type="file" ref="inputFileJson" accept="*.json" style="display: none;" @input="loadJsonDocument($event)">
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, computed, ComputedRef, watchEffect } from 'vue'
+import { useStore } from './store'
+import { ElMessageBox } from 'element-plus'
 import { JsonObject } from './types'
 import CaseNavigation from './CaseNavigation.vue'
 import JsonViewer from './JsonViewer.vue'
-import { computed, ComputedRef, watchEffect } from 'vue'
-import { useStore } from './store'
 
 const store = useStore()
 
@@ -53,6 +56,8 @@ const index = computed({
   get: () => store.state.currentIndex,
   set: (value) => store.commit('setIndex', value)
 })
+
+const inputFileJson = ref()
 
 watchEffect(() => {
   // JSONドキュメントが更新されたら表示を最初のレコードに移動する
@@ -128,6 +133,56 @@ async function copytoClipboard (): Promise<void> {
     await navigator.clipboard.writeText(store.state.HighlightedPath)
   }
 }
+
+/**
+ * loadJson inputFileJsonへのclickイベント発火
+ */
+function loadJson ():void {
+  inputFileJson.value.click()
+}
+
+/**
+ * loadJsonDocument FILE APIで読み込んだJSONファイルをJSONドキュメントとして保存
+ * @param {Event} HTMLイベントオブジェクト
+ */
+async function loadJsonDocument (event: Event) {
+  const content = await loadJsonFile(event)
+  if (content) {
+    try {
+      const loadedDocument = JSON.parse(content as string) as JsonObject
+      if (Array.isArray(loadedDocument) && loadedDocument[0]?.documentList) {
+        store.commit('setJsonDocument', loadedDocument)
+      } else {
+        throw new Error()
+      }
+    } catch {
+      ElMessageBox.alert('このファイルは有効なJESGOから出力されたJSONファイルではないようです.')
+    }
+  }
+}
+
+/**
+ * loadJsonFile FILE APIで読み込まれたJSONファイルをパース
+ * @param {Event} HTMLイベントオブジェクト
+ */
+async function loadJsonFile (event: Event): Promise<string|ArrayBuffer|null> {
+  const target = event.target as HTMLInputElement
+  const files = target.files as FileList
+  if (files.length > 0) {
+    const reader = new FileReader()
+    return await new Promise((resolve) => {
+      try {
+        reader.onload = () => resolve(reader.result)
+        reader.readAsText(files[0])
+      } catch (e) {
+        ElMessageBox.alert('指定されたファイルにアクセスできません.')
+        console.error(e)
+      }
+    })
+  }
+  return null
+}
+
 </script>
 
 <style>

@@ -1,9 +1,14 @@
 <template>
   <div class="case_navigation">
+    <div style="margin-right: 1rem;">
+      <el-tooltip placement="bottom" content="JESGO-JSONファイルの読み込み">
+        <el-button type="primary" round :icon="Upload" @click="emits('loadJson')"/>
+      </el-tooltip>
+    </div>
     <div>
-      <el-button :icon="CaretLeft" @click="prev()">
-        前のレコード
-      </el-button>
+      <el-tooltip placement="bottom" content="前のレコード">
+        <el-button type="primary" round :icon="CaretLeft" @click="prev()" />
+      </el-tooltip>
     </div>
     <div class="navigation_number">
       <span>
@@ -11,15 +16,15 @@
       </span>
     </div>
     <div>
-      <el-button @click="next()">
-        次のレコード<el-icon class="el-icon--right"><caret-right /></el-icon>
-      </el-button>
+      <el-tooltip placement="bottom" content="次のレコード">
+        <el-button type="primary" round :icon="CaretRight" @click="next()"/>
+      </el-tooltip>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { CaretLeft, CaretRight } from '@element-plus/icons-vue'
+import { Upload, CaretLeft, CaretRight } from '@element-plus/icons-vue'
 // import { ref } from 'vue'
 
 const props = withDefaults(
@@ -32,7 +37,9 @@ const props = withDefaults(
     length: 0
   }
 )
-const emits = defineEmits<{(e: 'update:index', value: number): void
+const emits = defineEmits<{
+  (e: 'update:index', value: number): void,
+  (e: 'loadJson'): void
 }>()
 // const caseNumber = ref(0)
 
@@ -64,12 +71,13 @@ div.case_navigation {
   flex: initial;
   display: flex;
   flex-direction: row;
-  min-width: 40rem;
+  justify-content: center;
   margin: 0 2rem;
 }
 
 div.navigation_number {
-  margin: 0 2rem;
+  margin: 0 1rem;
   margin-top: 0.25rem;
+  flex-shrink: 0;
 }
 </style>
