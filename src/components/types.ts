@@ -55,3 +55,8 @@ export type documentFilter = {
   filter: string[],
   assignpath: string
 }
+
+export interface processorOutput {
+  csv: string[],
+  errors?: string[]
+}

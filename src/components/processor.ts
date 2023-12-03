@@ -1,4 +1,4 @@
-import { JsonObject, LogicRuleSet, failableBlockTypes } from './types'
+import { JsonObject, LogicRuleSet, failableBlockTypes, processorOutput } from './types'
 import { JSONPath } from 'jsonpath-plus'
 
 interface pulledDocument {
@@ -8,11 +8,6 @@ interface pulledDocument {
   date_of_birth?: string
   his_id?: string
   name?: string
-}
-
-interface processorOutput {
-  csv: string[],
-  errors?: string[]
 }
 
 /**
