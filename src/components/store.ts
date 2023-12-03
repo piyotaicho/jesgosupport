@@ -52,7 +52,7 @@ export const store = createStore<State>({
         result = JSONPath({
           path: primarypath,
           json: getters.jesgoDocumentRef(index),
-          resultType: resultType
+          resultType
         })
       } catch (e) {
         console.error('Exception caught in parsing primary jsonpath')
