@@ -1,12 +1,12 @@
 <template>
   <div class="case_navigation">
     <div style="margin-right: 1rem;">
-      <el-tooltip placement="bottom" content="JESGO-JSONファイルの読み込み">
+      <el-tooltip content="JESGO-JSONファイルの読み込み" placement="bottom" :show-after="500">
         <el-button type="primary" round :icon="Upload" @click="emits('loadJson')"/>
       </el-tooltip>
     </div>
     <div>
-      <el-tooltip placement="bottom" content="前のレコード">
+      <el-tooltip content="前のレコード" placement="bottom" :show-after="500">
         <el-button type="primary" round :icon="CaretLeft" @click="prev()" />
       </el-tooltip>
     </div>
@@ -16,7 +16,7 @@
       </span>
     </div>
     <div>
-      <el-tooltip placement="bottom" content="次のレコード">
+      <el-tooltip content="次のレコード" placement="bottom" :show-after="500">
         <el-button type="primary" round :icon="CaretRight" @click="next()"/>
       </el-tooltip>
     </div>

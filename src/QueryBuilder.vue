@@ -1,27 +1,31 @@
 <template>
   <div class="app_box">
-    <ControlBar/>
-    <div class="panes">
-      <Splitpanes horizontal :dblClickSplitter="false" class="default-theme pane-root">
-        <Pane size="8">
-          <CsvViewer :csv="CsvDocument"></CsvViewer>
-        </Pane>
-        <Pane size="8">
-          <ErrorViewer />
-        </Pane>
-        <Pane size="80">
-          <Splitpanes :dblClickSplitter="false" class="default-theme">
-            <Pane size="45">
-              <CaseViewer :json="JsonDocument"></CaseViewer>
+    <el-container>
+      <el-header height="36px"><ControlBar/></el-header>
+      <el-main>
+        <div class="panes">
+          <Splitpanes horizontal :dblClickSplitter="false" class="default-theme pane-root">
+            <Pane size="10">
+              <CsvViewer :csv="CsvDocument"></CsvViewer>
             </Pane>
-            <Pane size="55">
-              <LogicSection></LogicSection>
+            <Pane size="10">
+              <ErrorViewer />
+            </Pane>
+            <Pane size="80">
+              <Splitpanes :dblClickSplitter="false" class="default-theme">
+                <Pane size="45">
+                  <CaseViewer :json="JsonDocument"></CaseViewer>
+                </Pane>
+                <Pane size="55">
+                  <LogicSection></LogicSection>
+                </Pane>
+              </Splitpanes>
             </Pane>
           </Splitpanes>
-        </Pane>
-      </Splitpanes>
-    </div>
-    <FooterCopyrights />
+        </div>
+      </el-main>
+      <el-footer height="16px"><FooterCopyrights /></el-footer>
+    </el-container>
   </div>
 </template>
 
@@ -73,8 +77,7 @@ div.app_box {
 }
 
 div.panes {
-  box-sizing: border-box;
-  height: 90%;
+  height: 100%;
   flex: 1;
 }
 
@@ -82,4 +85,8 @@ div.panes {
   width: 100%;
 }
 
+.el-main {
+  margin: 0;
+  padding: 0;
+}
 </style>

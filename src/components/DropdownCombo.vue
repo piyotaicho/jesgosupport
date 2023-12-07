@@ -81,6 +81,10 @@ div.dropdown-combo-input .el-select .el-input__wrapper {
   padding-left: 11px;
 }
 
+div.dropdown-combo-input .el-input-group__append {
+  padding-left: 16.5px;
+}
+
 div.dropdown-combo-input > .el-input__inner {
   text-overflow: ellipsis;
 }

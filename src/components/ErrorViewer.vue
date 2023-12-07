@@ -9,10 +9,10 @@
         </template>
         <div>
           <div>
-            <el-button type="primary" :icon="Delete">エラー情報をクリア</el-button>
+            <el-button type="primary" :icon="Delete" :disabled="disabledButtons">エラー情報をクリア</el-button>
           </div>
           <div>
-            <el-button type="primary" :icon="Download">エラー情報をダウンロード</el-button>
+            <el-button type="primary" :icon="Download" :disabled="disabledButtons" @click="saveError">エラー情報をダウンロード</el-button>
           </div>
         </div>
       </el-popover>
@@ -32,9 +32,23 @@
 import { computed } from 'vue'
 import { Menu, Delete, Download } from '@element-plus/icons-vue'
 import { store } from './store'
+import { userDownload } from './utilities'
 
 const errorDocuments = computed(() => store.state.ErrorDocument)
+const disabledButtons = computed(() => errorDocuments.value.length === 0)
 
+const saveError = ():void => {
+  if (store.state.ErrorDocument.length > 0) {
+    const data = JSON.stringify(store.state.ErrorDocument.map(element => {
+      return {
+        hash: element.hash,
+        type: element?.type || '',
+        messages: element.errors
+      }
+    }), undefined, ' ')
+    userDownload(data, 'errorreports.json')
+  }
+}
 </script>
 
 <style>

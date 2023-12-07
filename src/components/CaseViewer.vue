@@ -32,6 +32,7 @@ import { ref, computed, ComputedRef, watchEffect } from 'vue'
 import { useStore } from './store'
 import { ElMessageBox } from 'element-plus'
 import { JsonObject } from './types'
+import { loadFile } from './utilities'
 import CaseNavigation from './CaseNavigation.vue'
 import JsonViewer from './JsonViewer.vue'
 
@@ -146,41 +147,21 @@ function loadJson ():void {
  * @param {Event} HTMLイベントオブジェクト
  */
 async function loadJsonDocument (event: Event) {
-  const content = await loadJsonFile(event)
-  if (content) {
-    try {
+  try {
+    const content = await loadFile(event)
+
+    if (content) {
       const loadedDocument = JSON.parse(content as string) as JsonObject
       if (Array.isArray(loadedDocument) && loadedDocument[0]?.documentList) {
         store.commit('setJsonDocument', loadedDocument)
       } else {
-        throw new Error()
+        throw new Error('このファイルは有効なJESGOから出力されたJSONファイルではないようです.')
       }
-    } catch {
-      ElMessageBox.alert('このファイルは有効なJESGOから出力されたJSONファイルではないようです.')
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (e:any) {
+    ElMessageBox.alert(e.message)
   }
-}
-
-/**
- * loadJsonFile FILE APIで読み込まれたJSONファイルをパース
- * @param {Event} HTMLイベントオブジェクト
- */
-async function loadJsonFile (event: Event): Promise<string|ArrayBuffer|null> {
-  const target = event.target as HTMLInputElement
-  const files = target.files as FileList
-  if (files.length > 0) {
-    const reader = new FileReader()
-    return await new Promise((resolve) => {
-      try {
-        reader.onload = () => resolve(reader.result)
-        reader.readAsText(files[0])
-      } catch (e) {
-        ElMessageBox.alert('指定されたファイルにアクセスできません.')
-        console.error(e)
-      }
-    })
-  }
-  return null
 }
 
 </script>

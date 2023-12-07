@@ -1,5 +1,5 @@
 import { JsonObject, LogicRuleSet, SourceBlock, LogicBlock, BlockType } from './types'
-import { JSONPath } from 'jsonpath-plus'
+import { parseJesgo, verbose } from './utilities'
 
 interface pulledDocument {
   decline: boolean
@@ -509,7 +509,7 @@ export class Converter {
       if (!query || query === '') {
         return this.commandVariables(value, variableName)
       }
-      return this.commandVariables(extractJsonObjectByPath(value, query), variableName)
+      return this.commandVariables(parseJesgo(value, query), variableName)
     } catch (e:unknown) {
       verbose(`Query: ${(e as Error).message}`, true)
       return false
@@ -646,8 +646,8 @@ export class Converter {
       } else {
         const sortedItems = (this.variables[vaiableName] as JsonObject[])
           .sort((a, b) => {
-            const keya = JSON.stringify(extractJsonObjectByPath(a, indexPath))
-            const keyb = JSON.stringify(extractJsonObjectByPath(b, indexPath))
+            const keya = JSON.stringify(parseJesgo(a, indexPath))
+            const keyb = JSON.stringify(parseJesgo(b, indexPath))
             return keya === keyb ? 0 : ((keya > keyb) ? 1 : -1)
           })
 
@@ -930,7 +930,7 @@ export class Converter {
               break
             default:
               Object.defineProperty(this.variables, sourceName, {
-                value: extractJsonObjectByPath(sourceDocument, path),
+                value: parseJesgo(sourceDocument, path),
                 writable: false
               })
           }
@@ -1089,64 +1089,4 @@ export function parseStringToStringArray (value: string): string[] {
   }
 
   return result
-}
-
-/**
- * オブジェクト(Json)をパスで抽出
- * @param jsonDocument
- * @param jsonpath
- * @returns {JsonObject[]}
- */
-function extractJsonObjectByPath (jsonDocument: JsonObject, jsonpath: string | string[]) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let result: any
-  try {
-    if (jsonDocument === undefined) {
-      result = []
-      throw new Error('no document assigned')
-    }
-    // ドキュメントは配列化
-    const sourceValue = Array.isArray(jsonDocument) ? jsonDocument : [jsonDocument]
-
-    let queryPath: string = Array.isArray(jsonpath) ? jsonpath[0] : jsonpath
-    if (queryPath === undefined || queryPath === '') {
-      result = jsonDocument
-      throw new Error('no jsonpath assigned')
-    }
-    // トップレベルが配列を意識していないパスの場合は$[0]に置換する
-    if (!/^\$(\.\[|\[|\.\.|$)/.test(queryPath)) {
-      if (queryPath.charAt(0) !== '$') {
-        // トップオブジェクト指定の省略形
-        queryPath = '$[0].' + queryPath
-      } else {
-        queryPath = '$[0].' + queryPath.substring(2)
-      }
-    }
-
-    result = JSONPath({
-      path: queryPath,
-      json: sourceValue
-    })
-
-    // jsonpathが配列でサブパスがあるなら再帰処理する
-    if (Array.isArray(jsonpath) && jsonpath.length > 2) {
-      result = extractJsonObjectByPath(result as JsonObject, jsonpath.slice(1))
-    }
-  } catch (e) {
-    console.log(`extractJsonDocumentByPath: caught exception : ${e}`, true)
-    result = []
-  }
-
-  // 結果も配列化して返す
-  if (!Array.isArray(result)) {
-    result = [result]
-  }
-  return result
-}
-
-function verbose (message:string, isError = false) {
-  // eslint-disable-next-line dot-notation
-  if (isError || window.console) {
-    console.log(message)
-  }
 }

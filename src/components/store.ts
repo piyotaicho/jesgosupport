@@ -1,7 +1,7 @@
 import { InjectionKey } from 'vue'
 import { createStore, useStore as vuexUseStore, Store } from 'vuex'
 import { ErrorObject, JsonObject, CsvObject, LogicRuleSet } from './types'
-import { parseJesgo } from './processor'
+import { parseJesgo } from './utilities'
 
 export interface State {
   JsonDocument: JsonObject,
@@ -45,7 +45,6 @@ export const store = createStore<State>({
     },
     parseJesgoDocument: (_, getters) => (jsonpath:string|string[], index:number|undefined, resultType:'value'|'pointer' = 'value') => {
       const targetDocument = getters.jesgoDocumentRef(index)
-      console.dir(targetDocument)
       return parseJesgo(targetDocument, jsonpath, resultType)
     },
     rules: (state):LogicRuleSet[] => state.RuleSet,

@@ -2,7 +2,7 @@
   <div style="display: flex; flex-direction: row;">
     <div class="ruleset-selector">
       <span>ルール名称 : </span>
-        <el-select v-model="currentRulesetTitleComputed"
+        <el-select v-model="currentRulesetTitle"
           placeholder="ルールを選択"
           no-data-text="選択可能なルールがありません"
           >
@@ -12,15 +12,25 @@
     </div>
     <div class="ruleset-controller">
       <el-button-group>
-        <el-button type="primary" :icon="Plus" circle @click="createNewRule()"/>
-        <el-button type="primary" :icon="CaretTop" circle @click="reorderRule(-1)"/>
-        <el-button type="primary" :icon="CaretBottom" circle @click="reorderRule(+1)"/>
-        <el-button type="primary" :icon="EditPen" circle @click="renameRule()"/>
-        <el-button type="primary" :icon="Delete" circle @click="deleteRule()"/>
+        <el-tooltip content="新しいルールを作成" placement="bottom" :show-after="500">
+          <el-button type="primary" :icon="Plus" circle @click="createNewRule()"/>
+        </el-tooltip>
+        <el-tooltip content="現在のルールをひとつ前に移動" placement="bottom" :show-after="500">
+          <el-button type="primary" :icon="CaretTop" :disabled="disableControles" circle @click="reorderRule(-1)"/>
+        </el-tooltip>
+        <el-tooltip content="現在のルールをひとつ後に移動" placement="bottom" :show-after="500">
+          <el-button type="primary" :icon="CaretBottom" :disabled="disableControles" circle @click="reorderRule(+1)"/>
+        </el-tooltip>
+        <el-tooltip content="現在のルールの名称を変更" placement="bottom" :show-after="500">
+          <el-button type="primary" :icon="EditPen" :disabled="disableControles" circle @click="renameRule()"/>
+        </el-tooltip>
+        <el-tooltip content="現在のルールを削除" placement="bottom" :show-after="500">
+          <el-button type="primary" :icon="Delete" :disabled="disableControles" circle @click="deleteRule()"/>
+        </el-tooltip>
       </el-button-group>
     </div>
   </div>
-  <div class="ruleset-section" style="padding-top: 0.3rem;" v-show="currentRulesetTitleComputed !== ''">
+  <div class="ruleset-section" style="padding-top: 0.3rem;" v-show="!disableControles">
     <el-input v-model="description" placeholder="ルールの説明" type="textarea" />
   </div>
 </template>
@@ -47,9 +57,9 @@ const rules:ComputedRef<LogicRuleSet[]> = computed(() => store.getters.rules)
 const ruleTitles: ComputedRef<string[]> = computed(() => store.getters.ruleTitles)
 
 /**
- * currentRulesetTitleComputed ルールの追加に対応
+ * currentRulesetTitle ルールの追加に対応
  */
-const currentRulesetTitleComputed: WritableComputedRef<string> = computed({
+const currentRulesetTitle: WritableComputedRef<string> = computed({
   get: () => props.ruleTitle || '',
   set: (value: string) => {
     if (value !== '') {
@@ -62,11 +72,16 @@ const currentRulesetTitleComputed: WritableComputedRef<string> = computed({
 })
 
 /**
- * currentRuleset 現在編集中のルール
+ * disabledControles 現在選択中のルールが無い
+ */
+const disableControles: ComputedRef<boolean> = computed(() => currentRulesetTitle.value === '')
+
+/**
+ * currentRuleset 現在編集中のルールオブジェクト
  */
 const currentRuleset:Ref<LogicRuleSet> = computed(() => {
   if (rules?.value) {
-    const currentRule = rules.value.find(element => element.title === currentRulesetTitleComputed.value)
+    const currentRule = rules.value.find(element => element.title === currentRulesetTitle.value)
     if (currentRule) {
       return currentRule
     }
@@ -115,7 +130,7 @@ async function createNewRule (): Promise<void> {
         if (rules.value.find(element => element.title === newSetName)) {
           await ElMessageBox.alert(`${newSetName}は既に存在しています.別の名称を入力してください.`)
         } else {
-          currentRulesetTitleComputed.value = newSetName
+          currentRulesetTitle.value = newSetName
           break
         }
       }
@@ -131,20 +146,20 @@ async function createNewRule (): Promise<void> {
  */
 async function renameRule (): Promise<void> {
   try {
-    if (currentRulesetTitleComputed.value) {
+    if (currentRulesetTitle.value) {
       const newSetName = (await ElMessageBox.prompt('ルールの新しい名称を入力してください.', '', {
         confirmButtonText: '変更',
         cancelButtonText: 'キャンセル',
         inputPattern: /\S/,
         inputErrorMessage: '正しく名称を入力してください',
-        inputValue: currentRulesetTitleComputed.value
+        inputValue: currentRulesetTitle.value
       })).value.trim()
       if (newSetName !== undefined) {
-        if (newSetName !== currentRulesetTitleComputed.value) {
+        if (newSetName !== currentRulesetTitle.value) {
           if (ruleTitles.value.includes(newSetName)) {
             await ElMessageBox.alert(`${newSetName}は既に存在しています.別の名称を入力してください.`)
           } else {
-            store.commit('changeRuleSetTitle', { old: currentRulesetTitleComputed.value, new: newSetName })
+            store.commit('changeRuleSetTitle', { old: currentRulesetTitle.value, new: newSetName })
             emit('update:ruleTitle', newSetName)
           }
         }
@@ -161,12 +176,12 @@ async function renameRule (): Promise<void> {
 async function deleteRule (): Promise<void> {
   try {
     if (
-      currentRulesetTitleComputed.value &&
+      currentRulesetTitle.value &&
       await ElMessageBox.confirm('現在編集中のルールを削除してよろしいですか', { confirmButtonText: '削除する', cancelButtonText: 'キャンセル' })
     ) {
-      store.commit('removeFromRuleSet', currentRulesetTitleComputed.value)
+      store.commit('removeFromRuleSet', currentRulesetTitle.value)
     }
-    currentRulesetTitleComputed.value = rules.value[0]?.title || ''
+    currentRulesetTitle.value = rules.value[0]?.title || ''
   } catch {
     // do notning :)
   }
@@ -174,7 +189,7 @@ async function deleteRule (): Promise<void> {
 
 async function reorderRule (offset: number): Promise<void> {
   try {
-    store.commit('reorderRuleSet', { title: currentRulesetTitleComputed.value, offset })
+    store.commit('reorderRuleSet', { title: currentRulesetTitle.value, offset })
   } catch {
     // do nothing :)
   }
