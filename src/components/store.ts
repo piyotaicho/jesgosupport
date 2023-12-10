@@ -1,15 +1,19 @@
 import { InjectionKey } from 'vue'
 import { createStore, useStore as vuexUseStore, Store } from 'vuex'
-import { ErrorObject, JsonObject, CsvObject, LogicRuleSet } from './types'
+import { ErrorObject, JsonObject, CsvObject, LogicRuleSet, configObject } from './types'
 import { parseJesgo } from './utilities'
 
 export interface State {
-  JsonDocument: JsonObject,
+  JsonDocument: JsonObject[],
   CsvDocument: CsvObject,
+  CsvHeader: string[],
   ErrorDocument: ErrorObject[],
+  RuleSetTitle: string,
+  RuleSetConfig: configObject,
   RuleSet: LogicRuleSet[],
+  // 表示の設定
   HighlightedPath: string,
-  currentIndex: number
+  caseIndex: number
 }
 
 // eslint-disable-next-line symbol-description
@@ -19,41 +23,105 @@ export const store = createStore<State>({
   state: {
     JsonDocument: [],
     CsvDocument: [],
+    CsvHeader: [],
     ErrorDocument: [],
+    RuleSetTitle: '',
+    RuleSetConfig: {},
     RuleSet: [],
     HighlightedPath: '',
-    currentIndex: -1
+    caseIndex: -1
   },
   getters: {
-    documentLength: (state) => Array.isArray(state.JsonDocument) ? state.JsonDocument.length : 0,
-    documentRef: (state, getters) => (index:number|undefined) => {
-      const cursor = index === undefined ? state.currentIndex : index
+    // 表示関連のステート
+    caseIndex: (state):number => state.caseIndex,
+    highLightedPath: (state):string => state.HighlightedPath,
+    // 症例ドキュメント関連のgetters
+    filteredDocument: (state) => {
+      /**
+       * オブジェクトを生成する
+       * @param path パス配列
+       * @param value 最終的な値オブジェクト(JSONpathの出力なのでarray)
+       * @returns 生成されたオブジェクト
+       */
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mountValue = (path:string[], value:any):any => {
+        if (path.length === 0) {
+          return value
+        } else {
+          return {
+            [path[0]]: mountValue(path.slice(1), value)
+          }
+        }
+      }
+      const queries = state.RuleSetConfig?.masterQuery || []
+      const mountPoint = state.RuleSetConfig?.masterBasePointer || '/'
+      // 処理を必要としない場合はドキュメントをそのまま出力
+      if (queries.length > 0 && !(queries.length === 1 && queries[0] === '$' && mountPoint === '/')) {
+        const mountPath = mountPoint.split('/').filter(segment => segment !== '')
+        const skipUnmatched = state.RuleSetConfig?.skipUnmatchedRecord || false
+
+        const filteredDocuments:JsonObject[] = []
+
+        for (const caseDocument of state.JsonDocument) {
+          let documentList = (caseDocument as {documentList?: JsonObject[]})?.documentList
+          if (documentList && documentList.length > 0) {
+            documentList = parseJesgo(documentList, queries)
+            if (!documentList || documentList.length === 0) {
+              // クエリにマッチしない
+              if (!skipUnmatched) {
+                filteredDocuments.push(Object.assign(caseDocument, { documentList: [mountValue(mountPath, [])].flat() }))
+              }
+            } else {
+              // マッチ
+              filteredDocuments.push(Object.assign(caseDocument, { documentList: [mountValue(mountPath, documentList)].flat() }))
+            }
+          } else {
+            if (!skipUnmatched) {
+              filteredDocuments.push(Object.assign(caseDocument, { documentList: [mountValue(mountPath, [])].flat() }))
+            }
+          }
+        }
+
+        return filteredDocuments
+      } else {
+        return state.JsonDocument
+      }
+    },
+    documentLength: (state, getters) => getters.filteredDocument.length, // Array.isArray(state.JsonDocument) ? state.JsonDocument.length : 0,
+    document: (state, getters) => (index:number|undefined) => {
+      const cursor = index === undefined ? state.caseIndex : index
       if (getters.documentLength > 0) {
         if (cursor >= 0 && cursor < getters.documentLength) {
-          return (state.JsonDocument as JsonObject[])[cursor]
+          return getters.filteredDocument[cursor]
         }
       }
       return {}
     },
-    jesgoDocumentRef: (_, getters) => (index:number|undefined) => {
-      if (getters.documentRef(index)?.documentList) {
-        const documentLists = getters.documentRef(index)?.documentList as JsonObject[]
+    jesgodocument: (_, getters) => (index:number|undefined) => {
+      if (getters.document(index)?.documentList) {
+        const documentLists = getters.document(index)?.documentList as JsonObject[]
         return documentLists
       } else {
         return []
       }
     },
     parseJesgoDocument: (_, getters) => (jsonpath:string|string[], index:number|undefined, resultType:'value'|'pointer' = 'value') => {
-      const targetDocument = getters.jesgoDocumentRef(index)
+      const targetDocument = getters.jesgodocument(index)
       return parseJesgo(targetDocument, jsonpath, resultType)
     },
     rules: (state):LogicRuleSet[] => state.RuleSet,
     ruleTitles: (state):string[] => state.RuleSet.map(rule => rule.title),
-    getRuleSetJson: (state) => JSON.stringify(state.RuleSet, null, 2)
+    rulesetConfig: (state):configObject => state.RuleSetConfig || {},
+    rulesetTitle: (state):string => state.RuleSetTitle || '',
+    csvDocument: (state):CsvObject => state.CsvDocument,
+    csvHeader: (state):string[] => state.CsvHeader,
+    errorDocument: (state) => state.ErrorDocument
   },
   mutations: {
     setIndex (state, newValue) {
-      state.currentIndex = newValue
+      if (newValue >= 0 && newValue < state.JsonDocument.length) {
+        state.caseIndex = newValue
+      }
     },
     setJsonDocument (state, jsonDocument) {
       // 単独要素として null が存在するとき、状況に応じて情報を削除する: JESGO errata
@@ -83,10 +151,16 @@ export const store = createStore<State>({
       state.JsonDocument = dropNullValues(jsonDocument)
     },
     setCsvDocument (state, newValue) {
-      state.CsvDocument = newValue
+      state.CsvDocument.splice(0)
+      state.CsvDocument.splice(0, 0, ...newValue)
+    },
+    setCsvHeader (state, newValue) {
+      state.CsvHeader.splice(0)
+      state.CsvHeader.splice(0, 0, ...newValue)
     },
     clearCsvDocument (state) {
-      state.CsvDocument.splice(0, state.CsvDocument.length)
+      state.CsvDocument.splice(0)
+      state.CsvHeader.splice(0)
     },
     addCsvDocument (state, csvRow) {
       state.CsvDocument.push(csvRow)
@@ -97,10 +171,10 @@ export const store = createStore<State>({
     addErrorDocument (state, errorObj:ErrorObject) {
       state.ErrorDocument.push(errorObj)
     },
-    addNewRuleSet (state, newValue) {
+    addRule (state, newValue) {
       state.RuleSet.push(newValue)
     },
-    removeFromRuleSet (state, setname) {
+    removeRule (state, setname) {
       const index = state.RuleSet.findIndex(element => element.title === setname)
       if (index !== -1) {
         state.RuleSet.splice(index, 1)
@@ -115,7 +189,7 @@ export const store = createStore<State>({
         }
       }
     },
-    upsertRuleSet (state, newValue: LogicRuleSet) {
+    upsertRule (state, newValue: LogicRuleSet) {
       const index = state.RuleSet.findIndex(element => element.title === newValue.title)
       if (index >= 0) {
         state.RuleSet.splice(index, 1, newValue)
@@ -123,7 +197,7 @@ export const store = createStore<State>({
         state.RuleSet.push(newValue)
       }
     },
-    changeRuleSetTitle (state, title: {old: string, new: string}) {
+    changeRuleTitle (state, title: {old: string, new: string}) {
       const index = state.RuleSet.findIndex(element => element.title === title.old)
       if (index >= 0) {
         const currentRuleSet = state.RuleSet[index]
@@ -134,8 +208,30 @@ export const store = createStore<State>({
     setRuleSet (state, newRuleset: LogicRuleSet[]) {
       state.RuleSet.splice(0, state.RuleSet.length, ...newRuleset)
     },
+    setRulesetTitle (state, newTitle: string) {
+      state.RuleSetTitle = newTitle
+    },
+    setRulesetConfig (state, newConfig: configObject) {
+      state.RuleSetConfig = newConfig
+    },
     setHighlight (state, path = '') {
       state.HighlightedPath = path
+    }
+  },
+  actions: {
+    clearRuleset ({ commit, getters }) {
+      commit('setRulesetTitle', '')
+      commit('setRulesetConfig', {
+        masterQuery: ['$'],
+        masterBasePointer: '/',
+        skipUnmatchedRecord: false,
+        csvOffset: 0,
+        errorMountpoint: '/jesgo:error',
+        errorTargetSchemaId: ''
+      })
+      getters.ruleTitles.forEach((ruleTitle:string) => {
+        commit('removeRule', ruleTitle)
+      })
     }
   }
 })

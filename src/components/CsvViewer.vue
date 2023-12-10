@@ -1,32 +1,40 @@
 <script setup lang="ts">
 import { h, ref, computed } from 'vue'
-import { store } from './store'
+import { useStore } from './store'
 import { Menu, Delete, Download, Upload } from '@element-plus/icons-vue'
 import { CsvObject } from './types'
 import { ElInputNumber, ElMessageBox } from 'element-plus'
 import Papa from 'papaparse'
+import { loadFile, userDownload } from './utilities'
 
-const props = defineProps<{
-  csv: CsvObject
-}>()
+const store = useStore()
 
 const csvData = computed(() => {
-  if (props.csv && props.csv.length > 0 && props.csv[0].length > 0) {
-    const header: string[] = []
-    for (let index = 0; index < props.csv[0].length; index++) {
-      header.push(base26(index + 1))
-    }
-    return [header, ...props.csv]
+  const csv = store.getters.csvDocument as CsvObject
+  let header:string[]
+  if (store.getters.csvHeader.length > 0) {
+    // 読み込まれたヘッダ付きCSV
+    header = store.getters.csvHeader || []
   } else {
-    return [[]]
+    header = []
+    if (csv && csv.length > 0 && csv[0].length > 0) {
+      for (let index = 0; index < csv[0].length; index++) {
+        header.push(base26(index + 1))
+      }
+    } else {
+      return [[]]
+    }
   }
+  return [header, ...csv]
 })
 
-const isEmpty = computed(() => !(props.csv && props.csv.length > 0))
+const isEmpty = computed(() => (store.getters.csvDocument as CsvObject).length === 0)
+const disableDownload = computed(() => isEmpty.value || (store.getters.csvHeader.length > 0))
+
 /**
  * CSV出力バッファのクリア
  */
-const clearCsv = () => {
+const clearCSV = () => {
   store.commit('clearCsvDocument')
 }
 
@@ -34,8 +42,8 @@ const clearCsv = () => {
  * CSV出力バッファの内容をダウンロードさせる
  */
 async function saveCSV ():Promise<void> {
-  if (store.state.CsvDocument.length > 0) {
-    const csvOffset = ref(0)
+  if (store.getters.csvDocument.length > 0) {
+    const csvOffset = ref(store.getters.rulesetConfig?.csvOffset || 0)
     await ElMessageBox({
       title: 'オフセットの設定',
       message: () => h('p', null, [
@@ -52,24 +60,43 @@ async function saveCSV ():Promise<void> {
     for (let i = 0; i < csvOffset.value; i++) {
       exportCsvDocument.push([])
     }
-    exportCsvDocument.push(...store.state.CsvDocument)
+    exportCsvDocument.push(...store.getters.csvDocument)
 
-    // 一時的DOMでダウンロード
-    const blob = new Blob([
-      new Uint8Array([0xEF, 0xBB, 0xBF]),
-      Papa.unparse(exportCsvDocument,
+    userDownload(
+      Papa.unparse(
+        exportCsvDocument,
         {
           header: false,
           quotes: false
-        })
-    ], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.setAttribute('download', 'result.csv')
-    a.setAttribute('href', url)
-    a.click()
-    a.remove()
-    URL.revokeObjectURL(url)
+        }
+      ),
+      'jesgo-support-CSV出力.csv'
+    )
+  }
+}
+
+async function loadCSV () {
+  const csvFIleContent = await loadFile('.csv')
+
+  if (csvFIleContent) {
+    const hasHeader = await ElMessageBox.confirm(
+      'CSVファイルの先頭行はヘッダー行ですか？',
+      'CSVファイルの確認',
+      {
+        confirmButtonText: 'はい',
+        cancelButtonText: 'いいえ',
+        closeOnClickModal: false
+      }
+    ).then(() => true, () => false)
+
+    const csvData = Papa.parse(csvFIleContent, { header: false }).data
+    store.commit('clearCsvDocument')
+    if (hasHeader) {
+      store.commit('setCsvHeader', csvData[0])
+      store.commit('setCsvDocument', csvData.slice(1))
+    } else {
+      store.commit('setCsvDocument', csvData)
+    }
   }
 }
 
@@ -86,42 +113,40 @@ function base26 (value: number): string {
 
 <template>
   <div class="csvViewer">
-    <div>
-      <table>
-        <tr v-for="(line, lineIndex) in csvData" :key="lineIndex">
-          <!-- 先頭行にメニューを配置 -->
-          <template v-if="lineIndex === 0">
-            <th>
-              <el-popover placement="right" trigger="click" :width="290">
-                <template #reference>
-                  <el-icon><Menu /></el-icon>
-                </template>
+    <table>
+      <tr v-for="(line, lineIndex) in csvData" :key="lineIndex">
+        <!-- 先頭行にメニューを配置 -->
+        <template v-if="lineIndex === 0">
+          <th class="csv-menu-button">
+            <el-popover placement="right" trigger="click" :width="262">
+              <template #reference>
+                <el-icon><Menu /></el-icon>
+              </template>
+              <div>
                 <div>
-                  <div>
-                    <el-button type="primary" :icon="Delete" @click="clearCsv" :disabled="isEmpty">CSV出力をクリア</el-button>
-                  </div>
-                  <div>
-                    <el-button type="primary" :icon="Upload">テンプレートCSVをアップロード</el-button>
-                  </div>
-                  <div>
-                    <el-button type="primary" :icon="Download" @click="saveCSV" :disabled="isEmpty">CSV出力をダウンロード</el-button>
-                  </div>
+                  <el-button type="primary" :icon="Delete" @click="clearCSV" :disabled="isEmpty">CSVをクリア</el-button>
                 </div>
-              </el-popover>
-            </th>
-            <th v-for="(cell, columnIndex) in line" :key="columnIndex">
-              {{ cell }}
-            </th>
-          </template>
-          <template v-else>
-            <th>{{ lineIndex }}</th>
-            <td v-for="(cell, columnIndex) in line" :key="columnIndex">
-              {{ cell }}
-            </td>
-          </template>
-        </tr>
-      </table>
-    </div>
+                <div>
+                  <el-button type="primary" :icon="Upload" @click="loadCSV">テンプレートCSVを読み込み</el-button>
+                </div>
+                <div>
+                  <el-button type="primary" :icon="Download" @click="saveCSV" :disabled="disableDownload">CSVを保存</el-button>
+                </div>
+              </div>
+            </el-popover>
+          </th>
+          <th v-for="(cell, columnIndex) in line" :key="columnIndex" class="csv-header">
+            {{ cell }}
+          </th>
+        </template>
+        <template v-else>
+          <th class="csv-rowindex">{{ lineIndex }}</th>
+          <td v-for="(cell, columnIndex) in line" :key="columnIndex">
+            {{ cell }}
+          </td>
+        </template>
+      </tr>
+    </table>
   </div>
 </template>
 
@@ -133,15 +158,9 @@ div.csvViewer {
   overflow: auto;
 }
 
-div.csvViewer > div {
-  box-sizing: content-box;
-  height: 100%;
-  overflow: visible;
-}
-
 div.csvViewer table {
   font-size: 0.9rem;
-  border-collapse: collapse;
+  border-spacing: 0;
 }
 
 .csvViewer tr {
@@ -149,15 +168,34 @@ div.csvViewer table {
 }
 
 .csvViewer th {
-  background-color: #e2e2e2;
-  font-weight: bold;
-  border: 1px solid #ccc;
+  position: sticky;
+  top: 0;
+  left: 0;
   min-width: 1.2rem;
   padding: 3px;
+  border-right: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  background:  #e2e2e2;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.csvViewer tr:first-child th {
+  border-top: 1px solid #ccc;
+}
+
+.csvViewer th:first-child {
+  border-left: 1px solid #ccc;
+}
+
+.csvViewer tr:first-child th:first-child {
+  z-index: 1;
 }
 
 .csvViewer td {
-  border: 1px solid #ccc;
+  background: white;
+  border-right: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
   padding: 3px 1rem;
 }
 

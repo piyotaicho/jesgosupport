@@ -1,7 +1,7 @@
 <template>
   <div class="errorViewer">
     <div class="errorViewer-button">
-      <el-popover placement="right" trigger="click" :width="290">
+      <el-popover placement="right" trigger="click" :width="204">
         <template #reference>
           <el-icon>
             <Menu />
@@ -12,7 +12,7 @@
             <el-button type="primary" :icon="Delete" :disabled="disabledButtons">エラー情報をクリア</el-button>
           </div>
           <div>
-            <el-button type="primary" :icon="Download" :disabled="disabledButtons" @click="saveError">エラー情報をダウンロード</el-button>
+            <el-button type="primary" :icon="Download" :disabled="disabledButtons" @click="saveError">エラー情報を保存</el-button>
           </div>
         </div>
       </el-popover>
@@ -29,17 +29,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ComputedRef, computed } from 'vue'
 import { Menu, Delete, Download } from '@element-plus/icons-vue'
 import { store } from './store'
 import { userDownload } from './utilities'
+import { ErrorObject } from './types'
 
-const errorDocuments = computed(() => store.state.ErrorDocument)
+const errorDocuments:ComputedRef<ErrorObject[]> = computed(() => store.getters.errorDocument)
 const disabledButtons = computed(() => errorDocuments.value.length === 0)
 
 const saveError = ():void => {
-  if (store.state.ErrorDocument.length > 0) {
-    const data = JSON.stringify(store.state.ErrorDocument.map(element => {
+  if (errorDocuments.value.length > 0) {
+    const data = JSON.stringify(errorDocuments.value.map(element => {
       return {
         hash: element.hash,
         type: element?.type || '',
@@ -63,11 +64,16 @@ div.errorViewer {
 
 div.errorViewer-button {
   position: absolute;
+  display: flex;
+  justify-content: center;
+  align-content: center;
   top: 0;
-  padding: 4px;
+  padding: 2px;
+  margin: auto auto;
   background-color: #e2e2e2;
-  width: 1.2rem;
-  height: 1.05rem;
+  border: 1px solid #ccc;
+  width: 1.3rem;
+  height: 1.7rem;
 }
 
 .errorViewer dt {

@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, Ref, computed, WritableComputedRef } from 'vue'
+import { ref, Ref, computed, WritableComputedRef, ComputedRef } from 'vue'
 import { useStore } from './store'
 import { LogicBlock, SourceBlock, LogicRuleSet } from './types'
 import LogicSource from './LogicSource.vue'
@@ -29,7 +29,7 @@ const store = useStore()
 /**
  * rules ルールすべて
  */
-const rules = computed(() => store.state.RuleSet)
+const rules:ComputedRef<LogicRuleSet[]> = computed(() => store.getters.rules)
 
 /**
  * currentRulesetTitle 現在編集中のルールのタイトル
@@ -72,7 +72,7 @@ const sources: WritableComputedRef<SourceBlock[]> = computed({
       currentRuleset?.value || {},
       { source: newSources }
     )
-    store.commit('upsertRuleSet', newRule)
+    store.commit('upsertRule', newRule)
   }
 })
 
@@ -92,7 +92,7 @@ const procedures: WritableComputedRef<LogicBlock[]> = computed({
       currentRuleset?.value || {},
       { procedure: newSets }
     )
-    store.commit('upsertRuleSet', newRule)
+    store.commit('upsertRule', newRule)
   }
 })
 
@@ -100,11 +100,11 @@ const procedures: WritableComputedRef<LogicBlock[]> = computed({
 
 <style>
 div.logic-section {
-  min-width: 40rem;
-  max-width: 40rem;
-  /* border: 1px solid cyan; */
-  /* display: flex;
-  flex-direction: column; */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: 630px;
   height: 100%;
   overflow-y: auto;
 }

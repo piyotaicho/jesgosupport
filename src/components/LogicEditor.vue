@@ -1,28 +1,35 @@
 <template>
-  <div>
+  <!-- コントロールボタン -->
+  <div class="logic-controler">
     <div>
-      <!-- コントロールボタン -->
       <ElButton :color="BlockColorByType.Variables" round :icon="Plus" @click="addBlock('Variables')">変数</ElButton>
-      <ElDropdown @command="addModifiers" style="padding-left: 1rem; padding-right: 1rem;">
-        <ElButton color="yellow" style="border: 1px solid gray;" round :icon="Plus">演算<ElIcon class="el-icon--right"><ArrowDown /></ElIcon></ElButton>
-        <template #dropdown>
-          <ElDropdownItem command="Translation">置換</ElDropdownItem>
-          <ElDropdownItem command="Sort">ソート</ElDropdownItem>
-          <ElDropdownItem command="Query" divided>抽出</ElDropdownItem>
-          <ElDropdownItem command="Period">日付計算</ElDropdownItem>
-          <ElDropdownItem command="Sets">集合演算</ElDropdownItem>
-        </template>
-      </ElDropdown>
+    </div>
+
+    <ElDropdown @command="addModifiers">
+      <ElButton color="yellow" style="border: 1px solid gray;" round :icon="Plus">演算<ElIcon class="el-icon--right"><ArrowDown /></ElIcon></ElButton>
+      <template #dropdown>
+        <ElDropdownItem command="Translation">置換</ElDropdownItem>
+        <ElDropdownItem command="Sort">ソート</ElDropdownItem>
+        <ElDropdownItem command="Query" divided>抽出</ElDropdownItem>
+        <ElDropdownItem command="Period">日付計算</ElDropdownItem>
+        <ElDropdownItem command="Sets">集合演算</ElDropdownItem>
+      </template>
+    </ElDropdown>
+
+    <div>
       <ElButton :color="BlockColorByType.Operators" round :icon="Plus" @click="addBlock('Operators')">条件分岐</ElButton>
+    </div>
+    <div>
       <ElButton :color="BlockColorByType.Store" round :icon="Plus" @click="addBlock('Store')">割り当て</ElButton>
     </div>
-    <div id="logicBlocks">
-      <!-- ロジック編集 -->
-      <LogicTemplate v-for="(block, index) in props.blocks" :key="index"
-        :index="index" :block="block"
-        @delete="deleteBlock" @reorder="reorderBlock"
-      />
-    </div>
+  </div>
+
+  <!-- ロジック編集 -->
+  <div id="logicBlocks">
+    <LogicTemplate v-for="(block, index) in props.blocks" :key="index"
+      :index="index" :block="block"
+      @delete="deleteBlock" @reorder="reorderBlock"
+    />
   </div>
 </template>
 
@@ -88,3 +95,16 @@ function reorderBlock (index: number, offset: number) {
   }
 }
 </script>
+
+<style>
+div.logic-controler {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+}
+
+div.logic-controler > div {
+  margin-left: 0.4rem;
+  margin-right: 0.2rem;
+}
+</style>

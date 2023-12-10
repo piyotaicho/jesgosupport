@@ -7,7 +7,7 @@ import { JSONPath } from 'jsonpath-plus'
 * @param {string} filename
 */
 export function userDownload (data: string, filename: string): void {
-  const blob = filename.includes('.csv')
+  const blob = filename.toLowerCase().includes('.csv')
     // Excelがアレ過ぎるのでCSVにはBOMをつける
     ? new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), data], { type: 'text/csv' })
     : new Blob([data], { type: 'application/json' })
@@ -22,24 +22,31 @@ export function userDownload (data: string, filename: string): void {
 
 /**
  * loadFile FILE APIでファイルをテキストとして読み込む
- * @param {Event} HTMLイベントオブジェクト
+ * @param {string} ファイル拡張子パターン
  */
-export async function loadFile (event: Event): Promise<string|null> {
-  const target = event.target as HTMLInputElement
-  const files = target.files as FileList
-  if (files.length > 0) {
-    const reader = new FileReader()
-    return await new Promise((resolve) => {
-      try {
-        reader.onload = () => resolve(reader.result as string)
-        reader.readAsText(files[0])
-      } catch (e) {
-        console.error(e)
-        throw new Error('指定されたファイルにアクセスできません.')
+export async function loadFile (acceptPattern:string = '.json'): Promise<string|null> { // (event: Event): Promise<string|null> {
+  return await new Promise((resolve) => {
+    const inputElement = document.createElement('input') as HTMLInputElement
+    inputElement.type = 'file'
+    inputElement.accept = acceptPattern
+    inputElement.style.display = 'none'
+
+    const eventHandler = () => {
+      const files = inputElement.files as FileList
+      if (files.length > 0) {
+        const reader = new FileReader()
+        try {
+          reader.onload = () => resolve(reader.result as string)
+          reader.readAsText(files[0])
+        } catch {
+          verbose('指定されたファイルにアクセス出来ません.', true)
+          resolve(null)
+        }
       }
-    })
-  }
-  return null
+    }
+    inputElement.addEventListener('input', eventHandler)
+    inputElement.click()
+  })
 }
 
 /**
@@ -66,7 +73,7 @@ export function parseJesgo (jesgoDocument: JsonObject, jsonpath: string | string
         path = '$[*].' + paths[0].slice(2)
       }
     }
-    // JSONpath-plusが.[*]でオブジェクトを展開してしまうため一段階depthを誤るため[*]に置換する
+    // JSONpath-plusが.[*]でオブジェクトのvalueを展開してしまうため一段階depthを誤るため[*]に置換する
     path = path.replace('.[*]', '[*]')
 
     result = JSONPath({
@@ -76,10 +83,11 @@ export function parseJesgo (jesgoDocument: JsonObject, jsonpath: string | string
     })
 
     if (mode === 'value') {
+      // このまま結果にするとArray in arrayになるのでflatする
       result = result.flat()
       // value modeのとき、サブパスがあれば続いて再帰的に処理する
       if (paths.length > 1 && paths[1] !== '') {
-        result = parseJesgo(result, paths.slice(1), mode)
+        result = parseJesgo(result, paths.slice(1), 'value')
       }
     }
   } catch (e) {

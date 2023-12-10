@@ -42,8 +42,8 @@ const jsonLines: ComputedRef<jsonComplex[]> = computed(() => {
 })
 
 const jsonPointers: ComputedRef<string[]> = computed(() => {
-  if (props.json && store.state.HighlightedPath !== '') {
-    const pointers = JSONPath({ path: store.state.HighlightedPath, json: props.json, resultType: 'pointer' })
+  if (props.json && store.getters.highLightedPath !== '') {
+    const pointers = JSONPath({ path: store.getters.highLightedPath, json: props.json, resultType: 'pointer' })
     return pointers
   } else {
     return []

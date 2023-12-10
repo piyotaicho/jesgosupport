@@ -38,12 +38,6 @@ export const failableBlockTypes = [
   'Period'
 ]
 
-export type SetDescription = {
-  title: string
-  filterPath?: string[]
-  caseVariableNames?: string[]
-}
-
 export type LogicRuleSet = {
   title: string,
   description ?: string,
@@ -59,4 +53,19 @@ export type documentFilter = {
 export interface processorOutput {
   csv: string[],
   errors?: string[]
+}
+
+export interface configObject {
+  masterQuery?: string[]
+  masterBasePointer?: string
+  skipUnmatchedRecord?: boolean
+  csvOffset?: number
+  errorMountpoint?: string
+  errorTargetSchemaId?: string
+}
+
+export type setDescription = {
+  title: string
+  config: configObject
+  caseVariableNames?: string[]
 }

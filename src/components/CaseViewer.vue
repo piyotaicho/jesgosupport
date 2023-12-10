@@ -4,7 +4,7 @@
       :index="index"
       :length="maxIndex"
       @update:index="updateIndex($event)"
-      @loadJson="loadJson">
+      @loadJson="loadJsonDocument">
     </CaseNavigation>
     <div class="case-viewer-identifiers">
       <div>
@@ -18,17 +18,16 @@
       </div>
       <div class="clickable" @click="copytoClipboard">
         <el-tooltip placement="top-start" content="クリックでJSONパスをクリップボードにコピー">
-          強調表示パス: {{ store.state.HighlightedPath }}
+          強調表示パス: {{ store.getters.highLightedPath }}
         </el-tooltip>
       </div>
     </div>
     <JsonViewer :json="caseDocumentList"></JsonViewer>
-    <input type="file" ref="inputFileJson" accept="*.json" style="display: none;" @input="loadJsonDocument($event)">
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, ComputedRef, watchEffect } from 'vue'
+import { computed, ComputedRef } from 'vue'
 import { useStore } from './store'
 import { ElMessageBox } from 'element-plus'
 import { JsonObject } from './types'
@@ -49,42 +48,21 @@ interface jesgoOutput {
   documentList: JsonObject
 }
 
-const props = defineProps<{
-  json: JsonObject|undefined
-}>()
-
 const index = computed({
-  get: () => store.state.currentIndex,
+  get: () => store.getters.caseIndex,
   set: (value) => store.commit('setIndex', value)
-})
-
-const inputFileJson = ref()
-
-watchEffect(() => {
-  // JSONドキュメントが更新されたら表示を最初のレコードに移動する
-  if (props.json !== undefined && Array.isArray(props.json)) {
-    index.value = props.json.length === 0 ? -1 : 0
-  } else {
-    index.value = -1
-  }
 })
 
 /**
  * maxIndex JSONドキュメント配列の症例数
  */
-const maxIndex = computed(() => {
-  if (Array.isArray(props.json)) {
-    return props.json.length
-  } else {
-    return 0
-  }
-})
+const maxIndex = computed(() => store.getters.documentLength)
 
 /**
  * indexで指定されたレコードドキュメント
  * @returns {JsonObject} ドキュメントが空白の場合は空オブジェクトを返す
  */
-const caseDocument: ComputedRef<JsonObject> = computed(() => store.getters.documentRef(index.value))
+const caseDocument: ComputedRef<JsonObject> = computed(() => store.getters.document(index.value))
 
 /**
  * @returns {string} 症例レコードのハッシュ
@@ -113,7 +91,7 @@ const caseName: ComputedRef<string> = computed(() => {
 /**
  * @returns {string} 症例レコードが保持するJSEGOドキュメント本体部分
  */
-const caseDocumentList: ComputedRef<JsonObject> = computed(() => store.getters.jesgoDocumentRef(index.value))
+const caseDocumentList: ComputedRef<JsonObject> = computed(() => store.getters.jesgodocument(index.value))
 
 /**
  * イベントハンドラ index の値を更新しハイライトを解除する
@@ -130,30 +108,25 @@ function updateIndex (value: number) :void {
  * イベントハンドラ クリップボードにハイライトされたjsonpathをコピーする
  */
 async function copytoClipboard (): Promise<void> {
-  if (store.state.HighlightedPath !== '') {
-    await navigator.clipboard.writeText(store.state.HighlightedPath)
+  const highLightedPath = store.getters.highLightedPath
+  if (highLightedPath !== '') {
+    await navigator.clipboard.writeText(highLightedPath)
   }
-}
-
-/**
- * loadJson inputFileJsonへのclickイベント発火
- */
-function loadJson ():void {
-  inputFileJson.value.click()
 }
 
 /**
  * loadJsonDocument FILE APIで読み込んだJSONファイルをJSONドキュメントとして保存
  * @param {Event} HTMLイベントオブジェクト
  */
-async function loadJsonDocument (event: Event) {
+async function loadJsonDocument () {
   try {
-    const content = await loadFile(event)
+    const content = await loadFile()
 
     if (content) {
       const loadedDocument = JSON.parse(content as string) as JsonObject
       if (Array.isArray(loadedDocument) && loadedDocument[0]?.documentList) {
         store.commit('setJsonDocument', loadedDocument)
+        index.value = 0
       } else {
         throw new Error('このファイルは有効なJESGOから出力されたJSONファイルではないようです.')
       }

@@ -1,7 +1,8 @@
 <template>
-  <div style="display: flex; flex-direction: row;">
-    <div class="ruleset-selector">
-      <span>ルール名称 : </span>
+  <div class="ruleset">
+    <el-row :gutter="0" justify="space-around">
+      <el-col :span="4" style="margin-top: 0.35rem;">ルール名称 : </el-col>
+      <el-col :span="11">
         <el-select v-model="currentRulesetTitle"
           placeholder="ルールを選択"
           no-data-text="選択可能なルールがありません"
@@ -9,29 +10,34 @@
           <el-option v-for="(title, index) in ruleTitles" :key="index"
             :value="title" :label="title" />
         </el-select>
-    </div>
-    <div class="ruleset-controller">
-      <el-button-group>
-        <el-tooltip content="新しいルールを作成" placement="bottom" :show-after="500">
-          <el-button type="primary" :icon="Plus" circle @click="createNewRule()"/>
-        </el-tooltip>
-        <el-tooltip content="現在のルールをひとつ前に移動" placement="bottom" :show-after="500">
-          <el-button type="primary" :icon="CaretTop" :disabled="disableControles" circle @click="reorderRule(-1)"/>
-        </el-tooltip>
-        <el-tooltip content="現在のルールをひとつ後に移動" placement="bottom" :show-after="500">
-          <el-button type="primary" :icon="CaretBottom" :disabled="disableControles" circle @click="reorderRule(+1)"/>
-        </el-tooltip>
-        <el-tooltip content="現在のルールの名称を変更" placement="bottom" :show-after="500">
-          <el-button type="primary" :icon="EditPen" :disabled="disableControles" circle @click="renameRule()"/>
-        </el-tooltip>
-        <el-tooltip content="現在のルールを削除" placement="bottom" :show-after="500">
-          <el-button type="primary" :icon="Delete" :disabled="disableControles" circle @click="deleteRule()"/>
-        </el-tooltip>
-      </el-button-group>
-    </div>
-  </div>
-  <div class="ruleset-section" style="padding-top: 0.3rem;" v-show="!disableControles">
-    <el-input v-model="description" placeholder="ルールの説明" type="textarea" />
+      </el-col>
+      <el-col :span="7">
+        <div class="ruleset-controller">
+          <el-button-group>
+            <el-tooltip content="新しいルールを作成" placement="bottom" :show-after="500">
+              <el-button type="primary" :icon="Plus" circle @click="createNewRule()"/>
+            </el-tooltip>
+            <el-tooltip content="現在のルールをひとつ前に移動" placement="bottom" :show-after="500">
+              <el-button type="primary" :icon="CaretTop" :disabled="disableControles" circle @click="reorderRule(-1)"/>
+            </el-tooltip>
+            <el-tooltip content="現在のルールをひとつ後に移動" placement="bottom" :show-after="500">
+              <el-button type="primary" :icon="CaretBottom" :disabled="disableControles" circle @click="reorderRule(+1)"/>
+            </el-tooltip>
+            <el-tooltip content="現在のルールの名称を変更" placement="bottom" :show-after="500">
+              <el-button type="primary" :icon="EditPen" :disabled="disableControles" circle @click="renameRule()"/>
+            </el-tooltip>
+            <el-tooltip content="現在のルールを削除" placement="bottom" :show-after="500">
+              <el-button type="primary" :icon="Delete" :disabled="disableControles" circle @click="deleteRule()"/>
+            </el-tooltip>
+          </el-button-group>
+        </div>
+      </el-col>
+    </el-row>
+    <el-row style="padding-top: 0.3rem;" v-show="!disableControles">
+      <el-col>
+        <el-input v-model="description" placeholder="ルールの説明" type="textarea" />
+      </el-col>
+    </el-row>
   </div>
 </template>
 
@@ -64,7 +70,7 @@ const currentRulesetTitle: WritableComputedRef<string> = computed({
   set: (value: string) => {
     if (value !== '') {
       if (rules.value.findIndex(element => element.title === value) === -1) {
-        store.commit('addNewRuleSet', { title: value })
+        store.commit('addRule', { title: value })
       }
     }
     emit('update:ruleTitle', value)
@@ -108,7 +114,7 @@ const description: WritableComputedRef<string> = computed({
         currentRuleset.value,
         { description: text.trim() }
       )
-      store.commit('upsertRuleSet', newRule)
+      store.commit('upsertRule', newRule)
     }
   }
 })
@@ -159,7 +165,7 @@ async function renameRule (): Promise<void> {
           if (ruleTitles.value.includes(newSetName)) {
             await ElMessageBox.alert(`${newSetName}は既に存在しています.別の名称を入力してください.`)
           } else {
-            store.commit('changeRuleSetTitle', { old: currentRulesetTitle.value, new: newSetName })
+            store.commit('changeRuleTitle', { old: currentRulesetTitle.value, new: newSetName })
             emit('update:ruleTitle', newSetName)
           }
         }
@@ -179,7 +185,7 @@ async function deleteRule (): Promise<void> {
       currentRulesetTitle.value &&
       await ElMessageBox.confirm('現在編集中のルールを削除してよろしいですか', { confirmButtonText: '削除する', cancelButtonText: 'キャンセル' })
     ) {
-      store.commit('removeFromRuleSet', currentRulesetTitle.value)
+      store.commit('removeRule', currentRulesetTitle.value)
     }
     currentRulesetTitle.value = rules.value[0]?.title || ''
   } catch {
@@ -197,11 +203,7 @@ async function reorderRule (offset: number): Promise<void> {
 </script>
 
 <style>
-div.ruleset-controller {
-  padding-left: 1rem;
-}
-
-.ruleset-selector .el-select {
-  width: 18rem;
+div.ruleset .el-select {
+  width: 100%;
 }
 </style>

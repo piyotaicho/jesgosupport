@@ -506,7 +506,7 @@ function reorderBlock (offset: number) {
 <style>
 div.Logic-block {
   box-sizing: border-box;
-  width: 100%;
+  width: 600px;
   margin: 0.3rem;
   border: #444444 solid 0.08rem;
   border-radius: 0.4rem;
