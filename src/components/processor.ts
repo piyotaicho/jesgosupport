@@ -411,7 +411,11 @@ export async function processor (content: pulledDocument, rules: LogicRuleSet[])
             default:
               difference = -1
           }
-          results.push(difference.toString())
+          if (difference !== undefined) {
+            results.push(difference.toString())
+          } else {
+            results.push('-1')
+          }
         }
       }
 
