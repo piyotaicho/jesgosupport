@@ -6,6 +6,7 @@ import { unparse as papaUnparse } from 'papaparse'
 import { LogicRule } from '../../src/components/types'
 
 const version = '0.9.1'
+const filename = 'jesgo-support-runtime.ts'
 export async function init ():Promise<scriptInfo> {
   return {
     plugin_name: '外部スクリプトの実行',
@@ -15,7 +16,7 @@ export async function init ():Promise<scriptInfo> {
     show_upload_dialog: false,
     update_db: true,
     target_schema_id_string: '',
-    explain: 'JESGOsupport(version <1.0)で作成されたスクリプトを実行してCSVファイルを作成、エラーを書き戻します.'
+    explain: 'JESGOsupport(version <0.9)で作成されたスクリプトを実行してCSVファイルを作成、エラーを書き戻します.'
   }
 }
 
@@ -31,7 +32,7 @@ export async function init ():Promise<scriptInfo> {
  *  - 取得系 void
  */
 export async function main (docData: setterPluginArgument[], apicall: (docData: getterPluginArgument|updateDocument|updateDocument[], mode: boolean) => string): Promise<mainOutput> {
-  console.log(`jesgo-support-runtime.ts@${version} (C) 2023 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
+  console.log(`${filename}@${version} (C) 2023 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
 
   // 更新モードなのでdocDataには表示されている全てのドキュメントが入っている
   const getterAPIcall = (request: getterPluginArgument) => apicall(request, true)
@@ -110,7 +111,7 @@ async function loadJSONfile (): Promise<string> {
  * saveCSV dataURLを使ってファイルにダウンロードさせる(CSV専用)
  * @param data CSVテーブルの2次元配列
  */
-function saveCSV (data:unknown[], offset = 0, filename = 'JESGO出力データ.csv') {
+export function saveCSV (data:unknown[], offset = 0, filename = 'JESGO出力データ.csv') {
   if (data && Array.isArray(data) && data.length > 0) {
     const offsettedData = []
     for (let count = 0; count < offset; count++) {
@@ -196,7 +197,7 @@ function extractDocumentId (documentList: any[], extractType: ScriptTypeFormat =
  * @param getterAPIcall 取得系API
  * @returns 更新系APIに渡す更新オブジェクトの配列
  */
-async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: getterPluginArgument) => string): Promise<updateDocument[]|undefined> {
+export async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: getterPluginArgument) => string): Promise<updateDocument[]|undefined> {
   // データ無し
   const dataLength = data.length
   if (dataLength === 0) {
@@ -348,7 +349,7 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
 
       // プログレスバーの更新
       if (progressbar) {
-        progressbar.style.width = `${(Number(index) + 1) / targets.length}%`
+        progressbar.style.width = `${((Number(index) + 1) * 100 / targets.length) | 0}%`
       } else {
         // ダイアログのDOMが消失した = modalがcloseされた と判断して処理を中止する
         verbose(undefined, 'Plugin-aborted by closing the dialog.')
@@ -414,6 +415,7 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
     const progressbar = document.getElementById('plugin-progressbar') as HTMLDivElement
     if (progressbar) {
       progressbar.style.width = '100%'
+      progressbar.innerText = ''
     }
     if (statusline1 && statusline2) {
       statusline2.innerText = '変換終了'

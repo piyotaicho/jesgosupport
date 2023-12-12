@@ -1,22 +1,25 @@
 import { mainOutput, scriptInfo, getterPluginArgument, pulledDocument, updateDocument, setterPluginArgument } from './types'
 import { showModalDialog, createElementFromHtml } from './modal-dialog'
-import { dialogHTML } from './jesgo-support-runtime-single-ui'
+import { dialogHTML } from './embedded-runtime-ui'
 import { processor } from '../../src/components/processor'
 import { unparse as papaUnparse } from 'papaparse'
 import { LogicRule } from '../../src/components/types'
+import { checkEM2023 as embeddedScript } from './support-scripts/GOEM_2023_check'
 
 const version = '0.9.1'
-const filename = 'jesgo-support-runtime-for-single.ts'
+const filename = 'check-EM-2023-single.ts'
+const targetDocumentType = 'EM'
+
 export async function init ():Promise<scriptInfo> {
   return {
-    plugin_name: '外部スクリプトの実行(個別)',
+    plugin_name: '子宮体がん登録チェック(2023年個別)',
     plugin_version: version.split('.').slice(0, 2).join('.'),
     all_patient: false,
     attach_patient_info: true,
     show_upload_dialog: false,
     update_db: true,
     target_schema_id_string: '',
-    explain: 'JESGOsupport(version <0.9)で作成されたスクリプトを実行してCSVファイルを作成、エラーを書き戻します.'
+    explain: '2023年症例子宮体がん登録対応のチェックを行います'
   }
 }
 
@@ -40,7 +43,6 @@ export async function main (docData: setterPluginArgument[], apicall: (docData: 
 
   if (docData) {
     // 実際の処理へ handlerはちゃんと処理したらupdateDocumentを返す
-    console.dir(docData)
     const values: unknown = await handler(docData, getterAPIcall)
 
     // APIで返り値ドキュメントを処理(書き戻しモード)
@@ -67,45 +69,6 @@ function verbose (message = '', item:unknown) {
     console.log(message)
   }
   console.dir(item)
-}
-
-/**
- * JSONファイルをInput type="FILE"とFileReaderで読み込む
- * @returns string
- */
-async function loadJSONfile (): Promise<string> {
-  return await new Promise(resolve => {
-    const inputFile = document.createElement('input') as HTMLInputElement
-    inputFile.type = 'file'
-    inputFile.accept = 'application/json'
-
-    // FileReaderをセットアップ
-    const reader = new FileReader()
-    reader.addEventListener('load', () => {
-      resolve(reader.result as string)
-    },
-    {
-      once: true
-    })
-
-    // input type="file"のセットアップ
-    const changeEvent = () => {
-      const files = inputFile.files
-      if (files && files.length > 0) {
-        reader.readAsText(files[0])
-      }
-    }
-    const cancelEvent = () => {
-      inputFile.removeEventListener('change', changeEvent)
-      resolve('')
-    }
-
-    inputFile.addEventListener('change', changeEvent, { once: true })
-    inputFile.addEventListener('cancel', cancelEvent, { once: true })
-
-    // input type=file発火
-    inputFile.click()
-  })
 }
 
 /**
@@ -138,14 +101,28 @@ function saveCSV (data:unknown[], offset = 0, filename = 'JESGO出力データ.c
   }
 }
 
+type ScriptTypeFormat = 'loadscript'|'CC'|'EM'|'OV'
+
 /**
  * JESGOドキュメントから jesgo:document_id の値を抽出する
  * @param documentList
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function extractDocumentId (documentList: any[]): number {
+function extractDocumentId (documentList: any[], extractType: ScriptTypeFormat = 'loadscript'): number {
+  const translation = {
+    CC: '子宮頸がん',
+    EM: '子宮体がん',
+    OV: '卵巣がん'
+  }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const extractFromDaicho = (daicho:any) => daicho['jesgo:document_id'] || -1
+  const extractFromDaicho = (daicho:any) => {
+    if (extractType === 'loadscript') {
+      return daicho['jesgo:document_id'] || -1
+    }
+    if (daicho?.がん種 && daicho.がん種 === translation[extractType]) {
+      return daicho['jesgo:document_id'] || -1
+    }
+  }
 
   let documentId = -1
   if (documentList.length > 0) {
@@ -192,7 +169,14 @@ export async function handler (data: setterPluginArgument[], getterAPIcall?: (ar
   }
 
   // ダイアログの表示
-  const createDialogContent = (parent:Element) => parent.appendChild(createElementFromHtml(dialogHTML.replace('$$version$$', version)))
+  const title = (await init()).plugin_name || 'ランタイム'
+  const description = (await init()).explain || 'スクリプトを実行します'
+  const createDialogContent = (parent:Element) => parent.appendChild(createElementFromHtml(
+    dialogHTML
+      .replace('$$version$$', version)
+      .replace('$$title$$', title)
+      .replace('>$$description$$', description)
+  ))
 
   // ダイアログ内の変数
   type typeErrorBuffer = {
@@ -204,30 +188,10 @@ export async function handler (data: setterPluginArgument[], getterAPIcall?: (ar
     errors: string[]
   }
 
-  let script: unknown[] = []
+  let script: unknown
   const csvBuffer: string[][] = []
   const errorBuffer:typeErrorBuffer[] = []
   let csvOffset = 0
-
-  // ダイアログボタンイベント
-  const loadScript = async () => await new Promise<unknown[]>(resolve => {
-    // DOMイベントを設定
-    const runButton = document.getElementById('plugin-process-script') as HTMLButtonElement
-    if (runButton) {
-      runButton.addEventListener('click', async () => {
-        // スクリプトの取得
-        const JSONstring = await loadJSONfile()
-        try {
-          if (JSONstring === '') {
-            throw new Error(undefined)
-          }
-          resolve(JSON.parse(JSONstring))
-        } catch (e) {
-          window.alert('指定のスクリプトが正しいJSONフォーマットではありません.')
-        }
-      })
-    }
-  })
 
   // ダイアログ内処理
   const dialogProcedure = async () => {
@@ -242,24 +206,22 @@ export async function handler (data: setterPluginArgument[], getterAPIcall?: (ar
     dialogPage1.style.display = 'flex'
     dialogPage2.style.display = 'none'
 
-    // ページ1 - スクリプトのロード
-    script = await loadScript()
-
-    if (script.length === 0) {
-      window.alert('スクリプトがロードされませんでした、プラグインの処理を終了します.')
-
+    // ページ1 - ダイアログボタンイベントを待期
+    await new Promise<void>(resolve => {
       const runButton = document.getElementById('plugin-process-script') as HTMLButtonElement
       if (runButton) {
-        runButton.disabled = true
+        runButton.addEventListener('click', () => resolve())
       }
-      return
-    }
+    })
+
+    script = embeddedScript
 
     // 取得ドキュメントリストの整理
     const targets:getterPluginArgument[] = []
 
     for (let index = 0; index < dataLength; index++) {
       if (targets.map(item => item.caseList[0].case_id).indexOf(data[index].case_id) < 0) {
+        // ドキュメント全てを取得
         targets.push({
           caseList: [{
             case_id: data[index].case_id
@@ -269,17 +231,21 @@ export async function handler (data: setterPluginArgument[], getterAPIcall?: (ar
       }
     }
 
-    console.dir(targets)
-
     // ページ2 - セットアップ
     dialogPage1.style.display = 'none'
     dialogPage2.style.display = 'flex'
 
     // 2ページ目のDOM取得と設定
     const statusline1 = document.getElementById('plugin-statusline1') as HTMLSpanElement
+    const statusline2 = document.getElementById('plugin-statusline2') as HTMLSpanElement
+    const divCsvOffset = document.getElementById('plugin-div-csv-offset') as HTMLDivElement
     const inputCsvOffset = document.getElementById('plugin-offset-value') as HTMLInputElement
+    const divCsvDownload = document.getElementById('plugin-div-csv-download') as HTMLInputElement
     const downloadButton = document.getElementById('plugin-download') as HTMLButtonElement
     const statusline3 = document.getElementById('plugin-statusline3') as HTMLSpanElement
+
+    divCsvDownload.style.display = 'none'
+    divCsvOffset.style.display = 'none'
 
     if (csvOffset !== 0 && inputCsvOffset) {
       inputCsvOffset.value = csvOffset.toString()
@@ -294,45 +260,58 @@ export async function handler (data: setterPluginArgument[], getterAPIcall?: (ar
       }
     })
 
-    // サポートツールの言語バージョンチェック
-    type scriptHeader = {
-      processorVersion: string
-      csvOffset?: number
+    // サポートツール スクリプトファイルのバージョンチェック
+    type newScriptFile = {
+      title: string
+      config?: unknown
+      rules: unknown[]
     }
-    let scriptVersion = '0'
-    if ((script[0] as scriptHeader)?.processorVersion) {
-      const scriptHeaderValue = script[0] as scriptHeader
-      const scriptVersionString = scriptHeaderValue.processorVersion
-      scriptVersion = scriptVersionString.substring(0, (scriptVersionString + ' ').indexOf(' ')).split('.')[0]
 
-      if (scriptHeaderValue?.csvOffset !== undefined) {
-        csvOffset = scriptHeaderValue.csvOffset || 0
+    let scriptVersion = '0'
+    if (Array.isArray(script) && (script[0] as { title?: string })?.title) {
+      // version 0 基本タイプ
+      console.log('Load script version <0.9')
+    } else if (
+      (script as newScriptFile)?.title !== undefined &&
+      (script as newScriptFile)?.rules && Array.isArray((script as newScriptFile).rules)
+    ) {
+      // version 0.9- 拡張タイプ
+      scriptVersion = '1'
+      if ((script as newScriptFile)?.config) {
+        csvOffset = ((script as newScriptFile).config as { csvOffset?: number })?.csvOffset || 0
       }
-      // splice scriptHeader
-      script.shift()
+      script = (script as newScriptFile).rules
+    } else {
+      window.alert('ロードしたファイルはスクリプトファイルではありません、プラグインの処理を終了します.')
+
+      const runButton = document.getElementById('plugin-process-script') as HTMLButtonElement
+      if (runButton) {
+        runButton.disabled = true
+      }
+      return
     }
 
     // 症例数ステータスの更新
-    if (statusline1) {
-      statusline1.innerText = 'ドキュメントを変換中です.'
-    }
-
-    // プロセッサコールをラップ
-    type processorOutputFormat = {
-      csv: string[]
-      errors: string[]
-    }
-    let processorCall
-    if (scriptVersion >= '0') {
-      processorCall = async (caseData: pulledDocument) => await processor(caseData, script as LogicRule[]) as processorOutputFormat
-    } else {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      processorCall = async (_:unknown) => undefined
+    if (statusline1 && statusline2) {
+      if (targets.length > 1) {
+        statusline1.innerText = `対象症例数は ${targets.length} 症例です.`
+      } else {
+        statusline1.innerText = ''
+      }
+      statusline2.innerText = 'データを抽出・変換処理中です'
     }
 
     // データの逐次処理
     for (let index = 0; index < targets.length; index++) {
-      if (!document.getElementById('plugin-dialog-content-top')) {
+      const progressbar = document.getElementById('plugin-progressbar') as HTMLDivElement
+      if (targets.length === 1) {
+        const progressbarDiv = document.getElementById('plugin-div-progressbar') as HTMLDivElement
+        progressbarDiv.style.display = 'none'
+      }
+      // プログレスバーの更新
+      if (progressbar) {
+        progressbar.style.width = `${((Number(index) + 1) * 100 / targets.length) | 0}%`
+      } else {
         // ダイアログのDOMが消失した = modalがcloseされた と判断して処理を中止する
         verbose(undefined, 'Plugin-aborted by closing the dialog.')
         return
@@ -342,15 +321,17 @@ export async function handler (data: setterPluginArgument[], getterAPIcall?: (ar
       const documentId = targets[index].targetDocument
       const caseData:pulledDocument[] = getterAPIcall ? JSON.parse(await getterAPIcall(targets[index])) : []
 
-      console.dir(caseData)
-
       if (!Array.isArray(caseData)) {
         continue
       }
 
       // 言語処理プロセッサの起動
+      type processorOutputFormat = {
+        csv: string[]
+        errors: string[]
+      }
 
-      const result = await processorCall(caseData[0])
+      const result = scriptVersion >= '0' ? (await processor(caseData[0], script as LogicRule[])) as processorOutputFormat : undefined
 
       if (result) {
         // 結果
@@ -369,7 +350,7 @@ export async function handler (data: setterPluginArgument[], getterAPIcall?: (ar
               errors: result.errors
             })
           } else {
-            const extractedDocumentId = extractDocumentId(caseData[0].documentList)
+            const extractedDocumentId = extractDocumentId(caseData[0].documentList, targetDocumentType)
             if (extractedDocumentId !== -1) {
               errorBuffer.push({
                 hash: caseData[0].hash,
@@ -392,14 +373,29 @@ export async function handler (data: setterPluginArgument[], getterAPIcall?: (ar
     }
 
     // ステータスの更新とダウンロードの有効化
-    if (statusline1) {
-      statusline1.innerText = '変換終了.'
+    const progressbar = document.getElementById('plugin-progressbar') as HTMLDivElement
+    if (progressbar) {
+      progressbar.style.width = '100%'
+      progressbar.innerText = ''
+    }
+    if (statusline1 && statusline2) {
+      statusline2.innerText = '変換終了'
+      if (targets.length > 1) {
+        if (csvBuffer.length > 0) {
+          statusline1.innerText = `${targets.length}症例から${csvBuffer.length}症例のデータを抽出しました.`
+        } else {
+          statusline1.innerText = `${targets.length}症例を処理しました.`
+        }
+      }
     }
 
     await new Promise<void>(resolve => setTimeout(() => {
       // CSVのデータがあればダウンロード関係をenable
       if (csvBuffer.length > 0) {
-        statusline1.innerText = '変換終了, CSVファイルをダウンロードできます.'
+        divCsvDownload.style.display = ''
+        divCsvOffset.style.display = ''
+
+        statusline2.innerText = 'CSVファイルをダウンロードできます.'
         downloadButton.disabled = false
         if (csvOffset === 0) {
           inputCsvOffset.disabled = false
@@ -425,6 +421,8 @@ export async function handler (data: setterPluginArgument[], getterAPIcall?: (ar
         {
           document_id: errorItem.documentId,
           target: {
+            // /jesgo:error で確認あり
+            // /jesgo:error/- で確認なし(追加)
             '/jesgo:error': errorItem.errors
           }
         }
