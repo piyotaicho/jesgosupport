@@ -7,10 +7,10 @@ export const dialogHTML = `
         </div>
         <div style="margin: auto;">
             <div>
-                <span style="font-size: 1.6rem;">JESGOサポートツールランタイム</span>
+                <span style="font-size: 1.6rem;">JESGOサポートツール ランタイム</span>
             </div>
             <div>
-                <span style="font-size: 0.8rem;">Version 0.9.0 Copyright &copy; 2023 by P4mohnet</span>
+                <span style="font-size: 0.8rem;">Version $$version$$ Copyright &copy; 2023 by P4mohnet</span>
             </div>
         </div>
     </div>
@@ -30,7 +30,7 @@ export const dialogHTML = `
             </div>
             <div style="margin-left: 0.8rem; margin-right: 0.8rem;">
                 <!-- <input id="plugin-offset-value" class="form-control" type="number" min="0" style="width: 5rem;" value="0"/> -->
-                <select id="plugin-offset-value" class="form-control" type="number" style="width: 5rem;" disabled>
+                <select id="plugin-offset-value" class="form-control" type="number" style="width: 6rem;" disabled>
                     <option value="0" selected>なし</option>
                     <option value="1">1</option>
                     <option value="2">2</option>

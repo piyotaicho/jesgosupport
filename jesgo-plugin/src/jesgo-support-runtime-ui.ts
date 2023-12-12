@@ -7,24 +7,17 @@ export const dialogHTML = `
         </div>
         <div style="margin: auto;">
             <div>
-                <span style="font-size: 1.6rem;">JESGOサポートツールランタイム</span>
+                <span style="font-size: 1.6rem;">JESGOサポートツール ランタイム</span>
             </div>
             <div>
-                <span style="font-size: 0.8rem;">Version 0.9.0 Copyright &copy; 2023 by P4mohnet</span>
+                <span style="font-size: 0.8rem;">Version $$version$$ Copyright &copy; 2023 by P4mohnet</span>
             </div>
         </div>
     </div>
     <div id="plugin-settings" style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
-        <div>
-            <select id="plugin-selection-mode" class="form-control">
-                <option value="loadscript" selected>スクリプトファイルを指定して実行</option>
-                <option value="CC" disabled>腫瘍登録子宮頸がんプリセット</option>
-                <option value="EM">2022年腫瘍登録子宮体がんプリセット</option>
-                <option value="OV" disabled>腫瘍登録卵巣がんプリセット</option>
-            </select>        
-        </div>
+        <div><span>スクリプトを指定します</span></div>
         <div style="margin-left: 0.8rem; margin-right: 0.8rem;">
-            <button id="plugin-process-script" class="btn btn-primary">実行</button>        
+            <button id="plugin-process-script" class="btn btn-primary">読み込んで実行</button>        
         </div>
     </div>
     <div id="plugin-processing" style="display: flex; flex-direction: column; justify-content: center;">
@@ -44,7 +37,7 @@ export const dialogHTML = `
                 <label for="plugin-offset-value">CSVファイルの先頭オフセット行数</label>
             </div>
             <div style="margin-left: 0.8rem; margin-right: 0.8rem;">
-                <!-- <input id="plugin-offset-value" class="form-control" type="number" min="0" style="width: 5rem;" value="0"/> -->
+                <!-- <input id="plugin-offset-value" class="form-control" type="number" min="0" style="width: 6rem;" value="0"/> -->
                 <select id="plugin-offset-value" class="form-control" type="number" style="width: 5rem;" disabled>
                     <option value="0" selected>なし</option>
                     <option value="1">1</option>

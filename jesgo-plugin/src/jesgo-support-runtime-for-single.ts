@@ -5,10 +5,11 @@ import { processor } from '../../src/components/processor'
 import { unparse as papaUnparse } from 'papaparse'
 import { LogicRule } from '../../src/components/types'
 
+const version = '0.9.1'
 export async function init ():Promise<scriptInfo> {
   return {
     plugin_name: '外部スクリプトの実行(個別)',
-    plugin_version: '0.9',
+    plugin_version: version.split('.').slice(0, 2).join('.'),
     all_patient: false,
     attach_patient_info: true,
     show_upload_dialog: false,
@@ -30,6 +31,8 @@ export async function init ():Promise<scriptInfo> {
  *  - 取得系 void
  */
 export async function main (docData: setterPluginArgument[], apicall: (docData: getterPluginArgument|updateDocument|updateDocument[], mode: boolean) => string): Promise<mainOutput> {
+  console.log(`jesgo-support-runtime-for-single.ts@${version} (C) 2023 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
+
   // 更新モードなのでdocDataには表示されている全てのドキュメントが入っている
   const getterAPIcall = (request: getterPluginArgument) => apicall(request, true)
   const setterAPIcall = (request: updateDocument[]) => apicall(request, false)
@@ -188,7 +191,7 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
   }
 
   // ダイアログの表示
-  const createDialogContent = (parent:Element) => parent.appendChild(createElementFromHtml(dialogHTML))
+  const createDialogContent = (parent:Element) => parent.appendChild(createElementFromHtml(dialogHTML.replace('$$version$$', version)))
 
   // ダイアログ内の変数
   type typeErrorBuffer = {
