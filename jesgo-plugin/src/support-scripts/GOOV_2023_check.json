@@ -1,0 +1,1713 @@
+[
+  {
+    "title": "GO-OV_2023_check_basic_info",
+    "description": "GO-OV_2023_ovarian_cancer: Treatment category, Age, FIGO, cTNM",
+    "source": [
+      {
+        "path": "$[?(@.患者台帳)][?(@.がん種==\"卵巣がん\")]",
+        "subpath": ""
+      },
+      {
+        "path": "$date_of_birth"
+      }
+    ],
+    "procedure": [
+      {
+        "type": "Query",
+        "arguments": [
+        "@1",
+        "$.[0].腫瘍登録対象",
+        "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+        "$0",
+        "value",
+        "はい",
+        "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].初回治療開始日",
+          "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$0",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】初回治療開始日を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "$0",
+          "$1"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "/^(\\d{4})-(\\d{2})-(\\d{2})$/",
+            "$1"
+          ]
+        ]
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$1",
+          "value",
+          "2023",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Period",
+        "arguments": [
+          "@2",
+          "$0",
+          "years",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].診断",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$1",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】診断を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.治療施行状況",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$1",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】治療施行状況を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$1",
+          "value",
+          "手術療法、薬物療法、放射線療法を実施せず",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要確認】「手術療法、薬物療法、放射線療法を実施せず」が選択されています。腫瘍登録対象症例かご確認下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$1",
+          "value",
+          "初回手術施行例",
+          "eq"
+        ],
+        "trueBehavior": "Abort",
+        "falseBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.所属リンパ節",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】病期診断:所属リンパ節を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.cTNM.T",
+          "$6"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$6",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】cT分類を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.cTNM.N",
+          "$7"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】cN分類を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.cTNM.M",
+          "$8"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$8",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】cM分類を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$8",
+          "value",
+          "1b: 実質転移ならびに腹腔外臓器(鼠径リンパ節ならびに腹腔外リンパ節を含む)に転移を認めるもの",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.cTNM.遠隔転移部位",
+          "$9"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$9",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】遠隔転移部位を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      }
+    ]
+  },
+  {
+    "title": "GO-OV_2023_check_pTNM",
+    "description": "GO-OV_2023_ovarian_cancer: pTNM",
+    "source": [
+      {
+        "path": "$[?(@.患者台帳)][?(@.がん種==\"卵巣がん\")]",
+        "subpath": ""
+      }
+    ],
+    "procedure": [
+      {
+        "type": "Query",
+        "arguments": [
+        "@1",
+        "$.[0].腫瘍登録対象",
+        "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+        "$0",
+        "value",
+        "はい",
+        "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].初回治療開始日",
+          "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "/^(\\d{4})-(\\d{2})-(\\d{2})$/",
+            "$1"
+          ]
+        ]
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$0",
+          "value",
+          "2023",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.治療施行状況",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$1",
+          "value",
+          "初回手術施行例",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.所属リンパ節",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】病期診断:所属リンパ節を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.FIGO",
+          "$4"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】FIGO分類を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "value",
+          "IC期",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 4
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.IC期の場合",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】IC期の詳細を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "value",
+          "IIIA1期",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 4
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.IIIA1期の場合",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】IIIA1期の詳細を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.pTNM.T",
+          "$6"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$6",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】pT分類を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.pTNM.N",
+          "$7"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】pN分類を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.pTNM.M",
+          "$8"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$8",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】pM分類を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$8",
+          "value",
+          "1b: 実質転移ならびに腹腔外臓器(鼠径リンパ節ならびに腹腔外リンパ節を含む)に転移を認めるもの",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.pTNM.遠隔転移部位",
+          "$9"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$9",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】遠隔転移部位を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      }
+    ]
+  },
+  {
+    "title": "GO-OV_2023_check_ypTNM",
+    "description": "GO-OV_2023_ovarian_cancer: ypTNM",
+    "source": [
+      {
+        "path": "$[?(@.患者台帳)][?(@.がん種==\"卵巣がん\")]",
+        "subpath": ""
+      }
+    ],
+    "procedure": [
+      {
+        "type": "Query",
+        "arguments": [
+        "@1",
+        "$.[0].腫瘍登録対象",
+        "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+        "$0",
+        "value",
+        "はい",
+        "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].初回治療開始日",
+          "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "/^(\\d{4})-(\\d{2})-(\\d{2})$/",
+            "$1"
+          ]
+        ]
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$0",
+          "value",
+          "2023",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.治療施行状況",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$1",
+          "value",
+          "術前治療後に手術施行",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.ypTNM.T",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】ypT分類を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.ypTNM.N",
+          "$3"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】ypN分類を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.ypTNM.M",
+          "$4"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】ypM分類を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      }
+    ]
+  },
+  {
+    "title": "GO-OV_2023_check_findings",
+    "description": "GO-OV_2023_ovarian_cancer: Findings",
+    "source": [
+      {
+        "path": "$[?(@.患者台帳)][?(@.がん種==\"卵巣がん\")]",
+        "subpath": ""
+      }
+    ],
+    "procedure": [
+      {
+        "type": "Query",
+        "arguments": [
+        "@1",
+        "$.[0].腫瘍登録対象",
+        "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+        "$0",
+        "value",
+        "はい",
+        "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].初回治療開始日",
+          "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "/^(\\d{4})-(\\d{2})-(\\d{2})$/",
+            "$1"
+          ]
+        ]
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$0",
+          "value",
+          "2023",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].診断所見.漿液性卵管上皮内癌（STIC）",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$1",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】診断所見:漿液性卵管上皮内癌（STIC）を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      }
+    ]
+  },
+  {
+    "title": "GO-OV_2023_check_histology",
+    "description": "GO-OV_2023_ovarian_cancer: Histology",
+    "source": [
+      {
+        "path": "$[?(@.患者台帳)][?(@.がん種==\"卵巣がん\")]",
+        "subpath": ""
+      }
+    ],
+    "procedure": [
+      {
+        "type": "Query",
+        "arguments": [
+        "@1",
+        "$.[0].腫瘍登録対象",
+        "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+        "$0",
+        "value",
+        "はい",
+        "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].初回治療開始日",
+          "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "/^(\\d{4})-(\\d{2})-(\\d{2})$/",
+            "$1"
+          ]
+        ]
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$0",
+          "value",
+          "2023",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].組織診断.組織型",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$1",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】組織診断:組織型を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      }
+    ]
+  },
+  {
+    "title": "GO-OV_2024_check_histology",
+    "description": "GO-OV_2024_ovarian_cancer: Histology",
+    "source": [
+      {
+        "path": "$[?(@.患者台帳)][?(@.がん種==\"卵巣がん\")]",
+        "subpath": ""
+      }
+    ],
+    "procedure": [
+      {
+        "type": "Query",
+        "arguments": [
+        "@1",
+        "$.[0].腫瘍登録対象",
+        "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+        "$0",
+        "value",
+        "はい",
+        "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].初回治療開始日",
+          "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "/^(\\d{4})-(\\d{2})-(\\d{2})$/",
+            "$1"
+          ]
+        ]
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$0",
+          "value",
+          "2024",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].組織診断.組織型",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$1",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】組織診断:組織型を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].組織診断.遺伝子プロファイル",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】組織診断:遺伝子プロファイルを入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      }
+    ]
+  },
+  {
+    "title": "GO-OV_2023_check_treatment_info",
+    "description": "GO-OV_2023_ovarian_cancer:Treatment",
+    "source": [
+      {
+        "path": "$[?(@.患者台帳)][?(@.がん種==\"卵巣がん\")].初回治療.手術療法",
+        "subpath": ""
+      },
+      {
+        "path": "$[?(@.患者台帳)][?(@.がん種==\"卵巣がん\")].初回治療.薬物療法",
+        "subpath": ""
+      },
+      {
+        "path": "$[?(@.患者台帳)][?(@.がん種==\"卵巣がん\")].初回治療.放射線療法",
+        "subpath": ""
+      },
+      {
+        "path": "$[?(@.患者台帳)][?(@.がん種==\"卵巣がん\")].初回治療.手術療法.[*].手術日",
+        "subpath": ""
+      },
+      {
+        "path": "$[?(@.患者台帳)][?(@.がん種==\"卵巣がん\")].初回治療.薬物療法.[*].投与開始日",
+        "subpath": ""
+      },
+      {
+        "path": "$[?(@.患者台帳)][?(@.がん種==\"卵巣がん\")].初回治療.放射線療法.[*].治療開始日",
+        "subpath": ""
+      },
+      {
+        "path": "$[?(@.患者台帳)][?(@.がん種==\"卵巣がん\")]",
+        "subpath": ""
+      }
+    ],
+    "procedure": [
+      {
+        "type": "Sets",
+        "arguments": [
+          "@4",
+          "@5",
+          "union",
+          "$0"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$0",
+          "@6",
+          "union",
+          "$0"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sort",
+        "arguments": [
+          "$0",
+          "",
+          "asc"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$0",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】初回治療の詳細情報を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$0",
+          "$.[0]",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@7",
+          "$.[0].初回治療開始日",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Period",
+        "arguments": [
+          "$1",
+          "$2",
+          "days",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$1",
+          "value",
+          "0",
+          "ge"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】初回治療の詳細において、初回治療開始日以前の日付が入力されています",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@7",
+          "$.[0].病期診断.治療施行状況",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$1",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[*].手術完遂度",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "@4",
+          "count",
+          "2",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】初回、2回目の手術完遂度が入力されていることを確認して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 3
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "@4",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】手術完遂度を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$0",
+          "$.[0]",
+          "$3"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$3",
+          "@4",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$1",
+          "value",
+          "初回手術施行例",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 4
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】初回手術施行例にも関わらず初回治療が手術療法となっていません。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 3
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】術前治療後に手術施行、あるいは、手術未施行例も関わらず初回治療が手術療法となっています。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$0",
+          "@4",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$0",
+          "@5",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$0",
+          "@6",
+          "intersect",
+          "$5"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[*].実施手術.[*].術式",
+          "$6"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[*].治療区分",
+          "$7"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[*].治療区分",
+          "$8"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$6",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】実施した手術について術式を登録して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】実施した薬物療法について治療区分を登録して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$8",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】実施した放射線治療について治療区分を登録して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abrot"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abrot"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abrot"
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要確認】放射線療法のみ入力されていますがよろしいですか？",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      }
+    ]
+  }
+]

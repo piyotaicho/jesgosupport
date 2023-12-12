@@ -334,7 +334,7 @@ export function convertDaichoToJOED (
     let dateOfOperation = operation?.手術日 || dateOfStartTreatment
     if (dateOfOperation === '' || dateOfOperation === undefined) {
       // 手術日がない場合はJOEDの提出データインポートに準じて自動生成
-      recordNotification.push('手術日の取得ができませんでした、適当な日付を自動生成します.')
+      recordNotification.push('手術日の取得ができませんでしたので、適当な日付を自動生成して登録します.')
       const dummyDate = ('0' + (returnValues.length + 1).toString()).substring(0, 2)
       const dummyYear = filterYear === 'ALL' ? (new Date().getFullYear() - 1).toString() : filterYear
       dateOfOperation = `${dummyYear}-01-${dummyDate}`
@@ -571,9 +571,11 @@ export function convertDaichoToJOED (
       }
     }
 
-    JOEDrecord.PresentAE = adverseEvents.length > 0
-    if (JOEDrecord.PresentAE) {
+    JOEDrecord.PresentAE = (adverseEvents.length > 0) || (operation?.合併症の有無 === 'あり')
+    if (adverseEvents.length > 0) {
       JOEDrecord.AEs = adverseEvents as formatJOEDAE[]
+    } else if (JOEDrecord.PresentAE) {
+      recordNotification.push('合併症"あり"とされていますが、合併症の入力がありません.')
     }
 
     // 最終的なレコードの成形

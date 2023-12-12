@@ -1,0 +1,9550 @@
+[
+  {
+    "title": "GO-EM_2023_check_basic_info",
+    "description": "GO-EM_2023_endometrial_cancer: Treatment category, Age, FIGO, cTNM",
+    "source": [
+      {
+        "path": "$[?(@.患者台帳)][?(@.がん種==\"子宮体がん\")]",
+        "subpath": ""
+      },
+      {
+        "path": "$date_of_birth"
+      }
+    ],
+    "procedure": [
+      {
+        "type": "Query",
+        "arguments": [
+        "@1",
+        "$.[0].腫瘍登録対象",
+        "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Exit"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+        "$0",
+        "value",
+        "はい",
+        "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Exit"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].初回治療開始日",
+          "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$0",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】初回治療開始日を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "$0",
+          "$1"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "/^(\\d{4})-(\\d{2})-(\\d{2})$/",
+            "$1"
+          ]
+        ]
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$1",
+          "value",
+          "2023",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Exit"
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$1",
+          "B",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "1",
+          "C",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Period",
+        "arguments": [
+          "@2",
+          "$0",
+          "years",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$1",
+          "D",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.治療施行状況",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$1",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】治療施行状況を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$1",
+          "value",
+          "手術療法、薬物療法、放射線療法を実施せず",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要確認】「手術療法、薬物療法、放射線療法を実施せず」が選択されています。腫瘍登録対象症例かご確認下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "初回手術施行例",
+            "1"
+          ],
+          [
+            "手術未施行例",
+            "2"
+          ],
+          [
+            "術前治療後に手術施行例",
+            "3"
+          ],
+          [
+            "手術療法、薬物療法、放射線療法を実施せず",
+            "2"
+          ]
+        ]
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$1",
+          "E",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.FIGO",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】FIGO分類を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "I期(亜分類不明)",
+            "4"
+          ],
+          [
+            "IA期",
+            "1"
+          ],
+          [
+            "IB期",
+            "2"
+          ],
+          [
+            "II期",
+            "7"
+          ],
+          [
+            "III期(亜分類不明)",
+            "11"
+          ],
+          [
+            "IIIA期",
+            "8"
+          ],
+          [
+            "IIIB期",
+            "9"
+          ],
+          [
+            "IIIC期(亜分類不明)",
+            "10"
+          ],
+          [
+            "IIIC1期",
+            "15"
+          ],
+          [
+            "IIIC2期",
+            "16"
+          ],
+          [
+            "IV期(亜分類不明)",
+            "14"
+          ],
+          [
+            "IVA期",
+            "12"
+          ],
+          [
+            "IVB期",
+            "13"
+          ]
+        ]
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$2",
+          "F",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "/^(\\d{4})-(\\d{2})-(\\d{2})$/",
+            "$1/$2/$3"
+          ]
+        ]
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$0",
+          "V",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$hash",
+          "AK",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$1",
+          "value",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": "Abort",
+        "falseBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.cTNM.T.T",
+          "$3"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】cT分類を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$3"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "TX: 組織学的に子宮体癌と診断したが、その進行度の判定が何らかの障害で不能なもの。",
+            "15"
+          ],
+          [
+            "T0: 臨床所見より子宮体癌と診断したが、原発巣より組織学的な癌の診断ができないもの(組織学的検索をせずに治療を始めたものを含む)。",
+            "14"
+          ],
+          [
+            "T1(亜分類不明)",
+            "2"
+          ],
+          [
+            "T1a",
+            "3"
+          ],
+          [
+            "T1b",
+            "4"
+          ],
+          [
+            "T2",
+            "6"
+          ],
+          [
+            "T3(亜分類不明)",
+            "9"
+          ],
+          [
+            "T3a",
+            "10"
+          ],
+          [
+            "T3b",
+            "11"
+          ],
+          [
+            "T4",
+            "13"
+          ]
+        ]
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$3",
+          "G",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.cTNM.N.画像診断の計測手段",
+          "$4"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】cN分類:画像診断の計測手段を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$4"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "MRI",
+            "1"
+          ],
+          [
+            "CT",
+            "2"
+          ],
+          [
+            "PET/CT",
+            "3"
+          ],
+          [
+            "施行せず",
+            "4"
+          ]
+        ]
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$4",
+          "L",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.cTNM.N.NP",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】cN分類:骨盤リンパ節の所見を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "NPX: リンパ節転移を判定するための画像診断が行われなかったとき",
+            "1"
+          ],
+          [
+            "NP0: 骨盤リンパ節に転移を認めない",
+            "2"
+          ],
+          [
+            "NP1: 骨盤リンパ節に転移を認める",
+            "3"
+          ]
+        ]
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$5",
+          "M",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.cTNM.N.NA",
+          "$6"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$6",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】cN分類:傍大動脈リンパ節の所見を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$6"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "NAX: リンパ節転移を判定するための画像診断が行われなかったとき",
+            "1"
+          ],
+          [
+            "NA0: 傍大動脈リンパ節に転移を認めない",
+            "2"
+          ],
+          [
+            "NA1: 傍大動脈リンパ節に転移を認める",
+            "3"
+          ]
+        ]
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$6",
+          "N",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.cTNM.M.M",
+          "$7"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】cM分類を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$7"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "M0: 遠隔転移なし",
+            "1"
+          ],
+          [
+            "M1: その他の遠隔転移の存在",
+            "2"
+          ],
+          [
+            "M9: 遠隔転移の判定不十分なとき",
+            "3"
+          ]
+        ]
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$7",
+          "O",
+          "first"
+        ],
+        "trueBehavior": 1
+      }
+    ]
+  },
+  {
+    "title": "GO-EM_2023_check_pTNM",
+    "description": "GO-EM_2023_endometrial_cancer: pTNM",
+    "source": [
+      {
+        "path": "$[?(@.患者台帳)][?(@.がん種==\"子宮体がん\")]",
+        "subpath": ""
+      }
+    ],
+    "procedure": [
+      {
+        "type": "Query",
+        "arguments": [
+        "@1",
+        "$.[0].腫瘍登録対象",
+        "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Exit"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+        "$0",
+        "value",
+        "はい",
+        "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Exit"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].初回治療開始日",
+          "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "/^(\\d{4})-(\\d{2})-(\\d{2})$/",
+            "$1"
+          ]
+        ]
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$0",
+          "value",
+          "2023",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Exit"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.治療施行状況",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$1",
+          "value",
+          "初回手術施行例",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.pTNM.T.T",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】pT分類を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "TX: 組織学的に子宮体癌と診断したが、その進行度の判定が何らかの障害で不能なもの。",
+            "15"
+          ],
+          [
+            "T0: 臨床所見より子宮体癌と診断したが、原発巣より組織学的な癌の診断ができないもの(組織学的検索をせずに治療を始めたものを含む)。",
+            "14"
+          ],
+          [
+            "T1(亜分類不明)",
+            "2"
+          ],
+          [
+            "T1a",
+            "3"
+          ],
+          [
+            "T1b",
+            "4"
+          ],
+          [
+            "T2",
+            "6"
+          ],
+          [
+            "T3(亜分類不明)",
+            "9"
+          ],
+          [
+            "T3a",
+            "10"
+          ],
+          [
+            "T3b",
+            "11"
+          ],
+          [
+            "T4",
+            "13"
+          ]
+        ]
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$2",
+          "G",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.pTNM.N.RP",
+          "$3"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 4
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.pTNM.N.RPX",
+          "$4"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】pN分類:骨盤リンパ節の所見を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$3"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "骨盤リンパ節を摘出しなかった(病理学的索が行われなかった)",
+            "1"
+          ],
+          [
+            "骨盤リンパ節の選択的郭清(生検)を行った",
+            "2"
+          ],
+          [
+            "骨盤リンパ節の系統的郭清(すべての所属リンパ節)を行った",
+            "3"
+          ],
+          [
+            "センチネルリンパ節生検を行った",
+            "4"
+          ]
+        ]
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$4"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+            "1"
+          ],
+          [
+            "RP2: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認める",
+            "2"
+          ],
+          [
+            "RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない",
+            "3"
+          ],
+          [
+            "RP4: 骨盤リンパ節を摘出し、転移を認める",
+            "4"
+          ]
+        ]
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$3",
+          "H",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$4",
+          "I",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.pTNM.N.RA",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 4
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.pTNM.N.RAX",
+          "$6"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$6",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】pN分類:傍大動脈リンパ節の所見を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "傍大動脈リンパ節を摘出しなかった(病理学的索が行われなかった)",
+            "1"
+          ],
+          [
+            "傍大動脈リンパ節の選択的郭清(生検)を行った",
+            "2"
+          ],
+          [
+            "傍大動脈リンパ節の系統的郭清(すべての所属リンパ節)を行った",
+            "3"
+          ],
+          [
+            "センチネルリンパ節生検を行った",
+            "4"
+          ]
+        ]
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$6"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+            "1"
+          ],
+          [
+            "RA2: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認める",
+            "2"
+          ],
+          [
+            "RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない",
+            "3"
+          ],
+          [
+            "RA4: 傍大動脈リンパ節を摘出し、転移を認める",
+            "4"
+          ]
+        ]
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$5",
+          "J",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$6",
+          "K",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.pTNM.M.M",
+          "$7"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】pM分類を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$7"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "M0: 遠隔転移なし",
+            "1"
+          ],
+          [
+            "M1: その他の遠隔転移の存在",
+            "2"
+          ],
+          [
+            "M9: 遠隔転移の判定不十分なとき",
+            "3"
+          ]
+        ]
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$7",
+          "O",
+          "first"
+        ],
+        "trueBehavior": 1
+      }
+    ]
+  },
+  {
+    "title": "GO-EM_2023_check_ypTNM",
+    "description": "GO-EM_2023_endometrial_cancer: ypTNM",
+    "source": [
+      {
+        "path": "$[?(@.患者台帳)][?(@.がん種==\"子宮体がん\")]",
+        "subpath": ""
+      }
+    ],
+    "procedure": [
+      {
+        "type": "Query",
+        "arguments": [
+        "@1",
+        "$.[0].腫瘍登録対象",
+        "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Exit"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+        "$0",
+        "value",
+        "はい",
+        "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Exit"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].初回治療開始日",
+          "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "/^(\\d{4})-(\\d{2})-(\\d{2})$/",
+            "$1"
+          ]
+        ]
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$0",
+          "value",
+          "2023",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Exit"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.治療施行状況",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$1",
+          "value",
+          "術前治療後に手術施行",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.ypTNM.T.T",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】ypT分類を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "TX: 組織学的に子宮体癌と診断したが、その進行度の判定が何らかの障害で不能なもの。",
+            "15"
+          ],
+          [
+            "T0: 臨床所見より子宮体癌と診断したが、原発巣より組織学的な癌の診断ができないもの(組織学的検索をせずに治療を始めたものを含む)。",
+            "14"
+          ],
+          [
+            "T1(亜分類不明)",
+            "2"
+          ],
+          [
+            "T1a",
+            "3"
+          ],
+          [
+            "T1b",
+            "4"
+          ],
+          [
+            "T2",
+            "6"
+          ],
+          [
+            "T3(亜分類不明)",
+            "9"
+          ],
+          [
+            "T3a",
+            "10"
+          ],
+          [
+            "T3b",
+            "11"
+          ],
+          [
+            "T4",
+            "13"
+          ]
+        ]
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$2",
+          "AD",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.ypTNM.N.RP",
+          "$3"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 4
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.ypTNM.N.RPX",
+          "$4"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】ypN分類:骨盤リンパ節の所見を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$3"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "骨盤リンパ節を摘出しなかった(病理学的索が行われなかった)",
+            "1"
+          ],
+          [
+            "骨盤リンパ節の選択的郭清(生検)を行った",
+            "2"
+          ],
+          [
+            "骨盤リンパ節の系統的郭清(すべての所属リンパ節)を行った",
+            "3"
+          ],
+          [
+            "センチネルリンパ節生検を行った",
+            "4"
+          ]
+        ]
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$4"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+            "1"
+          ],
+          [
+            "RP2: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認める",
+            "2"
+          ],
+          [
+            "RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない",
+            "3"
+          ],
+          [
+            "RP4: 骨盤リンパ節を摘出し、転移を認める",
+            "4"
+          ]
+        ]
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$3",
+          "AE",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$4",
+          "AF",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.ypTNM.N.RA",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 4
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.ypTNM.N.RAX",
+          "$6"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$6",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】ypN分類:傍大動脈リンパ節の所見を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "傍大動脈リンパ節を摘出しなかった(病理学的索が行われなかった)",
+            "1"
+          ],
+          [
+            "傍大動脈リンパ節の選択的郭清(生検)を行った",
+            "2"
+          ],
+          [
+            "傍大動脈リンパ節の系統的郭清(すべての所属リンパ節)を行った",
+            "3"
+          ],
+          [
+            "センチネルリンパ節生検を行った",
+            "4"
+          ]
+        ]
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$6"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+            "1"
+          ],
+          [
+            "RA2: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認める",
+            "2"
+          ],
+          [
+            "RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない",
+            "3"
+          ],
+          [
+            "RA4: 傍大動脈リンパ節を摘出し、転移を認める",
+            "4"
+          ]
+        ]
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$5",
+          "AG",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$6",
+          "AH",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.ypTNM.M.M",
+          "$7"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】ypM分類を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$7"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "M0: 遠隔転移なし",
+            "1"
+          ],
+          [
+            "M1: その他の遠隔転移の存在",
+            "2"
+          ],
+          [
+            "M9: 遠隔転移の判定不十分なとき",
+            "3"
+          ]
+        ]
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$7",
+          "O",
+          "first"
+        ],
+        "trueBehavior": 1
+      }
+    ]
+  },
+  {
+    "title": "GO-EM_2023_check_findings",
+    "description": "GO-EM_2023_endometrial_cancer: Findings",
+    "source": [
+      {
+        "path": "$[?(@.患者台帳)][?(@.がん種==\"子宮体がん\")]",
+        "subpath": ""
+      }
+    ],
+    "procedure": [
+      {
+        "type": "Query",
+        "arguments": [
+        "@1",
+        "$.[0].腫瘍登録対象",
+        "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Exit"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+        "$0",
+        "value",
+        "はい",
+        "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Exit"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].初回治療開始日",
+          "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "/^(\\d{4})-(\\d{2})-(\\d{2})$/",
+            "$1"
+          ]
+        ]
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$0",
+          "value",
+          "2023",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Exit"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.治療施行状況",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].診断所見.腹水細胞診",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】診断所見:腹水細胞診を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "陽性",
+            "1"
+          ],
+          [
+            "陰性",
+            "2"
+          ],
+          [
+            "未施行",
+            "3"
+          ],
+          [
+            "不明",
+            "4"
+          ]
+        ]
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$2",
+          "R",
+          "first"
+        ],
+        "trueBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].診断所見.筋層浸潤.所見",
+          "$3"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】診断所見:筋層浸潤の所見を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$3"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "浸潤なし",
+            "1"
+          ],
+          [
+            "浸潤＜1/2",
+            "2"
+          ],
+          [
+            "浸潤≧1/2",
+            "3"
+          ],
+          [
+            "不明",
+            "4"
+          ]
+        ]
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].診断所見.筋層浸潤.診断方法",
+          "$4"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】診断所見:筋層浸潤の診断方法を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$1",
+          "value",
+          "初回手術施行例",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 4
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "value",
+          "初回手術施行による病理学的診断",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】初回手術症例にも関わらず、筋層浸潤の診断方法で「初回手術施行による病理学的診断」が選択されていません",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$3",
+          "S",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "value",
+          "初回手術施行による病理学的診断",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】初回手術未施行例にも関わらず、筋層浸潤の診断方法で「MRI」「CT」「PET/CT」のいずれかが選択されていません",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$4"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "MRI",
+            "1"
+          ],
+          [
+            "CT",
+            "2"
+          ],
+          [
+            "PET/CT",
+            "3"
+          ]
+        ]
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$3",
+          "U",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$4",
+          "T",
+          "first"
+        ],
+        "trueBehavior": 1
+      }
+    ]
+  },
+  {
+    "title": "GO-EM_2023_check_histology",
+    "description": "GO-EM_2023_endometrial_cancer: Histology",
+    "source": [
+      {
+        "path": "$[?(@.患者台帳)][?(@.がん種==\"子宮体がん\")]",
+        "subpath": ""
+      }
+    ],
+    "procedure": [
+      {
+        "type": "Query",
+        "arguments": [
+        "@1",
+        "$.[0].腫瘍登録対象",
+        "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Exit"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+        "$0",
+        "value",
+        "はい",
+        "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Exit"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].初回治療開始日",
+          "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "/^(\\d{4})-(\\d{2})-(\\d{2})$/",
+            "$1"
+          ]
+        ]
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$0",
+          "value",
+          "2023",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Exit"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].組織診断.組織型",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$1",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】組織診断:組織型を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "類内膜癌",
+            "1"
+          ],
+          [
+            "扁平上皮への分化を伴う類内膜癌",
+            "2"
+          ],
+          [
+            "絨毛腺管型類内膜癌",
+            "3"
+          ],
+          [
+            "分泌型類内膜癌",
+            "4"
+          ],
+          [
+            "粘液性癌",
+            "5"
+          ],
+          [
+            "漿液性子宮内膜上皮内癌",
+            "18"
+          ],
+          [
+            "漿液性癌",
+            "6"
+          ],
+          [
+            "明細胞癌",
+            "7"
+          ],
+          [
+            "カルチノイド腫瘍",
+            "8"
+          ],
+          [
+            "小細胞神経内分泌癌",
+            "9"
+          ],
+          [
+            "大細胞神経内分泌癌",
+            "10"
+          ],
+          [
+            "混合癌",
+            "11"
+          ],
+          [
+            "未分化癌",
+            "12"
+          ],
+          [
+            "脱分化癌",
+            "13"
+          ],
+          [
+            "癌肉腫",
+            "14"
+          ],
+          [
+            "扁平上皮癌",
+            "15"
+          ],
+          [
+            "その他",
+            "16"
+          ],
+          [
+            "採取せず",
+            "17"
+          ]
+        ]
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$1",
+          "P",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].組織診断.組織学的異形度",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】組織診断:組織学的異形度を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "Grade 1",
+            "1"
+          ],
+          [
+            "Grade 2",
+            "2"
+          ],
+          [
+            "Grade 3",
+            "3"
+          ],
+          [
+            "異型度評価の対象に含まれない",
+            "4"
+          ],
+          [
+            "不明",
+            "5"
+          ]
+        ]
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$2",
+          "Q",
+          "first"
+        ],
+        "trueBehavior": 1
+      }      
+    ]
+  },
+  {
+    "title": "GOEM_2023_treatment_info",
+    "description": "GO-EM_2023_endometrial_cancer: Treatment",
+    "source": [
+      {
+        "path": "$[?(@.患者台帳)][?(@.がん種==\"子宮体がん\")].初回治療.手術療法",
+        "subpath": ""
+      },
+      {
+        "path": "$[?(@.患者台帳)][?(@.がん種==\"子宮体がん\")].初回治療.薬物療法",
+        "subpath": ""
+      },
+      {
+        "path": "$[?(@.患者台帳)][?(@.がん種==\"子宮体がん\")].初回治療.放射線療法",
+        "subpath": ""
+      },
+      {
+        "path": "$[?(@.患者台帳)][?(@.がん種==\"子宮体がん\")].初回治療.手術療法.[*].手術日",
+        "subpath": ""
+      },
+      {
+        "path": "$[?(@.患者台帳)][?(@.がん種==\"子宮体がん\")].初回治療.薬物療法.[*].投与開始日",
+        "subpath": ""
+      },
+      {
+        "path": "$[?(@.患者台帳)][?(@.がん種==\"子宮体がん\")].初回治療.放射線療法.[*].治療開始日",
+        "subpath": ""
+      },
+      {
+        "path": "$[?(@.患者台帳)][?(@.がん種==\"子宮体がん\")]",
+        "subpath": ""
+      }
+    ],
+    "procedure": [
+      {
+        "type": "Sets",
+        "arguments": [
+          "@4",
+          "@5",
+          "union",
+          "$0"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$0",
+          "@6",
+          "union",
+          "$0"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sort",
+        "arguments": [
+          "$0",
+          "",
+          "asc"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "治療情報なし",
+          "$5"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "99",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$0",
+          "$.[0]",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$0",
+          "$.[:1]",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@4",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@4",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 8
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[1].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[2].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@5",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@5",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 10
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "薬物療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[0].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 7,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[1].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[2].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "4",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[3].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@6",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@6",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 8
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "放射線療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[0].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[1].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[2].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "腟上部切断術, 単純子宮全摘出術(筋膜内), 単純子宮全摘出術(筋膜外), 拡大子宮全摘術, 準広汎子宮全摘出術, 準広汎子宮頸部摘出術, 広汎子宮全摘出術, 広汎子宮全摘出術(神経温存術式), 広汎子宮頸部摘出術, 腟式単純子宮全摘術(筋膜内), 腟式準広汎子宮全摘術(筋膜外), 腟式広汎子宮全摘出術, 腟式広汎子宮頸部摘出術, 腹腔鏡下単純子宮全摘出術(筋膜内), 腹腔鏡下単純子宮全摘出術(筋膜外), 腹腔鏡下準広汎子宮全摘出術, 腹腔鏡下広汎子宮全摘出術, 腹腔鏡下子宮頸部摘出術, ロボット支援下単純子宮全摘出術, ロボット支援下準広汎子宮全摘出術, ロボット支援下広汎子宮全摘出術, ロボット支援下子宮頸部摘出術",
+          "$1"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "骨盤リンパ節系統的郭清, 腹腔鏡下骨盤内リンパ節郭清, ロボット支援下骨盤内リンパ節郭清",
+          "$2"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "傍大動脈リンパ節系統的郭清, 腹腔鏡下傍大動脈リンパ節郭清, ロボット支援下傍大動脈リンパ節郭清",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$1",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$6",
+          "value",
+          "手術療法",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 10
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術なし",
+          "$5"
+        ],
+        "trueBehavior": 8
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$2",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（リンパ節郭清を伴わない）",
+          "$5"
+        ],
+        "trueBehavior": 5
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$3",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（骨盤・傍大動脈リンパ節郭清を伴う）",
+          "$5"
+        ],
+        "trueBehavior": 2
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（骨盤リンパ節郭清のみを伴う）",
+          "$5"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 9,
+        "lookup": [
+          [
+            "化学療法",
+            "5"
+          ],
+          [
+            "分子標的薬",
+            "5"
+          ],
+          [
+            "化学療法+分子標的治療",
+            "5"
+          ],
+          [
+            "ホルモン治療",
+            "7"
+          ],
+          [
+            "その他の治療",
+            "8"
+          ],
+          [
+            "腔内照射",
+            "3"
+          ],
+          [
+            "体外照射",
+            "4"
+          ],
+          [
+            "体外照射+腔内照射",
+            "3+4"
+          ],
+          [
+            "同時化学放射線治療(腔内照射)",
+            "11"
+          ],
+          [
+            "同時化学放射線治療(体外照射)",
+            "12"
+          ],
+          [
+            "同時化学放射線治療(体外照射+腔内照射)",
+            "11+12"
+          ],
+          [
+            "核医学治療",
+            "8"
+          ],
+          [
+            "手術（骨盤・傍大動脈リンパ節郭清を伴う）",
+            "9"
+          ],
+          [
+            "手術（骨盤リンパ節郭清のみを伴う）",
+            "10"
+          ],
+          [
+            "手術（リンパ節郭清を伴わない）",
+            "2"
+          ],
+          [
+            "手術なし",
+            "99"
+          ],
+          [
+            "治療情報なし",
+            "99"
+          ]
+        ]
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "99",
+          "eq"
+        ],
+        "trueBehavior": 8,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "2+3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "2",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "3",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 5
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "11+12",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "11",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "12",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 2
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "$5",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "治療情報なし",
+          "$5"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$0",
+          "$.[1]",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$0",
+          "$.[:2]",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@4",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@4",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 8
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[1].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[2].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@5",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@5",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 10
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "薬物療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[0].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 7,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[1].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[2].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "4",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[3].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@6",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@6",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 8
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "放射線療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[0].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[1].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[2].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "腟上部切断術, 単純子宮全摘出術(筋膜内), 単純子宮全摘出術(筋膜外), 拡大子宮全摘術, 準広汎子宮全摘出術, 準広汎子宮頸部摘出術, 広汎子宮全摘出術, 広汎子宮全摘出術(神経温存術式), 広汎子宮頸部摘出術, 腟式単純子宮全摘術(筋膜内), 腟式準広汎子宮全摘術(筋膜外), 腟式広汎子宮全摘出術, 腟式広汎子宮頸部摘出術, 腹腔鏡下単純子宮全摘出術(筋膜内), 腹腔鏡下単純子宮全摘出術(筋膜外), 腹腔鏡下準広汎子宮全摘出術, 腹腔鏡下広汎子宮全摘出術, 腹腔鏡下子宮頸部摘出術, ロボット支援下単純子宮全摘出術, ロボット支援下準広汎子宮全摘出術, ロボット支援下広汎子宮全摘出術, ロボット支援下子宮頸部摘出術",
+          "$1"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "骨盤リンパ節系統的郭清, 腹腔鏡下骨盤内リンパ節郭清, ロボット支援下骨盤内リンパ節郭清",
+          "$2"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "傍大動脈リンパ節系統的郭清, 腹腔鏡下傍大動脈リンパ節郭清, ロボット支援下傍大動脈リンパ節郭清",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$1",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$6",
+          "value",
+          "手術療法",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 10
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術なし",
+          "$5"
+        ],
+        "trueBehavior": 8
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$2",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（リンパ節郭清を伴わない）",
+          "$5"
+        ],
+        "trueBehavior": 5
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$3",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（骨盤・傍大動脈リンパ節郭清を伴う）",
+          "$5"
+        ],
+        "trueBehavior": 2
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（骨盤リンパ節郭清のみを伴う）",
+          "$5"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 9,
+        "lookup": [
+          [
+            "化学療法",
+            "5"
+          ],
+          [
+            "分子標的薬",
+            "5"
+          ],
+          [
+            "化学療法+分子標的治療",
+            "5"
+          ],
+          [
+            "ホルモン治療",
+            "7"
+          ],
+          [
+            "その他の治療",
+            "8"
+          ],
+          [
+            "腔内照射",
+            "3"
+          ],
+          [
+            "体外照射",
+            "4"
+          ],
+          [
+            "体外照射+腔内照射",
+            "3+4"
+          ],
+          [
+            "同時化学放射線治療(腔内照射)",
+            "11"
+          ],
+          [
+            "同時化学放射線治療(体外照射)",
+            "12"
+          ],
+          [
+            "同時化学放射線治療(体外照射+腔内照射)",
+            "11+12"
+          ],
+          [
+            "核医学治療",
+            "8"
+          ],
+          [
+            "手術（骨盤・傍大動脈リンパ節郭清を伴う）",
+            "9"
+          ],
+          [
+            "手術（骨盤リンパ節郭清のみを伴う）",
+            "10"
+          ],
+          [
+            "手術（リンパ節郭清を伴わない）",
+            "2"
+          ],
+          [
+            "手術なし",
+            "99"
+          ],
+          [
+            "治療情報なし",
+            "99"
+          ]
+        ]
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "99",
+          "eq"
+        ],
+        "trueBehavior": 8,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "2+3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "2",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "3",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 5
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "11+12",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "11",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "12",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 2
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "$5",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "治療情報なし",
+          "$5"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$0",
+          "$.[2]",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$0",
+          "$.[:3]",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@4",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@4",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 8
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[1].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[2].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@5",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@5",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 10
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "薬物療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[0].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 7,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[1].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[2].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "4",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[3].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@6",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@6",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 8
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "放射線療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[0].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[1].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[2].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "腟上部切断術, 単純子宮全摘出術(筋膜内), 単純子宮全摘出術(筋膜外), 拡大子宮全摘術, 準広汎子宮全摘出術, 準広汎子宮頸部摘出術, 広汎子宮全摘出術, 広汎子宮全摘出術(神経温存術式), 広汎子宮頸部摘出術, 腟式単純子宮全摘術(筋膜内), 腟式準広汎子宮全摘術(筋膜外), 腟式広汎子宮全摘出術, 腟式広汎子宮頸部摘出術, 腹腔鏡下単純子宮全摘出術(筋膜内), 腹腔鏡下単純子宮全摘出術(筋膜外), 腹腔鏡下準広汎子宮全摘出術, 腹腔鏡下広汎子宮全摘出術, 腹腔鏡下子宮頸部摘出術, ロボット支援下単純子宮全摘出術, ロボット支援下準広汎子宮全摘出術, ロボット支援下広汎子宮全摘出術, ロボット支援下子宮頸部摘出術",
+          "$1"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "骨盤リンパ節系統的郭清, 腹腔鏡下骨盤内リンパ節郭清, ロボット支援下骨盤内リンパ節郭清",
+          "$2"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "傍大動脈リンパ節系統的郭清, 腹腔鏡下傍大動脈リンパ節郭清, ロボット支援下傍大動脈リンパ節郭清",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$1",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$6",
+          "value",
+          "手術療法",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 10
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術なし",
+          "$5"
+        ],
+        "trueBehavior": 8
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$2",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（リンパ節郭清を伴わない）",
+          "$5"
+        ],
+        "trueBehavior": 5
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$3",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（骨盤・傍大動脈リンパ節郭清を伴う）",
+          "$5"
+        ],
+        "trueBehavior": 2
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（骨盤リンパ節郭清のみを伴う）",
+          "$5"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 9,
+        "lookup": [
+          [
+            "化学療法",
+            "5"
+          ],
+          [
+            "分子標的薬",
+            "5"
+          ],
+          [
+            "化学療法+分子標的治療",
+            "5"
+          ],
+          [
+            "ホルモン治療",
+            "7"
+          ],
+          [
+            "その他の治療",
+            "8"
+          ],
+          [
+            "腔内照射",
+            "3"
+          ],
+          [
+            "体外照射",
+            "4"
+          ],
+          [
+            "体外照射+腔内照射",
+            "3+4"
+          ],
+          [
+            "同時化学放射線治療(腔内照射)",
+            "11"
+          ],
+          [
+            "同時化学放射線治療(体外照射)",
+            "12"
+          ],
+          [
+            "同時化学放射線治療(体外照射+腔内照射)",
+            "11+12"
+          ],
+          [
+            "核医学治療",
+            "8"
+          ],
+          [
+            "手術（骨盤・傍大動脈リンパ節郭清を伴う）",
+            "9"
+          ],
+          [
+            "手術（骨盤リンパ節郭清のみを伴う）",
+            "10"
+          ],
+          [
+            "手術（リンパ節郭清を伴わない）",
+            "2"
+          ],
+          [
+            "手術なし",
+            "99"
+          ],
+          [
+            "治療情報なし",
+            "99"
+          ]
+        ]
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "99",
+          "eq"
+        ],
+        "trueBehavior": 8,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "2+3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "2",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "3",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 5
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "11+12",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "11",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "12",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 2
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "$5",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "治療情報なし",
+          "$5"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$0",
+          "$.[3]",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$0",
+          "$.[:4]",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@4",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@4",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 8
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[1].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[2].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@5",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@5",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 10
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "薬物療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[0].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 7,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[1].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[2].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "4",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[3].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@6",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@6",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 8
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "放射線療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[0].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[1].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[2].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "腟上部切断術, 単純子宮全摘出術(筋膜内), 単純子宮全摘出術(筋膜外), 拡大子宮全摘術, 準広汎子宮全摘出術, 準広汎子宮頸部摘出術, 広汎子宮全摘出術, 広汎子宮全摘出術(神経温存術式), 広汎子宮頸部摘出術, 腟式単純子宮全摘術(筋膜内), 腟式準広汎子宮全摘術(筋膜外), 腟式広汎子宮全摘出術, 腟式広汎子宮頸部摘出術, 腹腔鏡下単純子宮全摘出術(筋膜内), 腹腔鏡下単純子宮全摘出術(筋膜外), 腹腔鏡下準広汎子宮全摘出術, 腹腔鏡下広汎子宮全摘出術, 腹腔鏡下子宮頸部摘出術, ロボット支援下単純子宮全摘出術, ロボット支援下準広汎子宮全摘出術, ロボット支援下広汎子宮全摘出術, ロボット支援下子宮頸部摘出術",
+          "$1"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "骨盤リンパ節系統的郭清, 腹腔鏡下骨盤内リンパ節郭清, ロボット支援下骨盤内リンパ節郭清",
+          "$2"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "傍大動脈リンパ節系統的郭清, 腹腔鏡下傍大動脈リンパ節郭清, ロボット支援下傍大動脈リンパ節郭清",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$1",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$6",
+          "value",
+          "手術療法",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 10
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術なし",
+          "$5"
+        ],
+        "trueBehavior": 8
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$2",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（リンパ節郭清を伴わない）",
+          "$5"
+        ],
+        "trueBehavior": 5
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$3",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（骨盤・傍大動脈リンパ節郭清を伴う）",
+          "$5"
+        ],
+        "trueBehavior": 2
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（骨盤リンパ節郭清のみを伴う）",
+          "$5"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 9,
+        "lookup": [
+          [
+            "化学療法",
+            "5"
+          ],
+          [
+            "分子標的薬",
+            "5"
+          ],
+          [
+            "化学療法+分子標的治療",
+            "5"
+          ],
+          [
+            "ホルモン治療",
+            "7"
+          ],
+          [
+            "その他の治療",
+            "8"
+          ],
+          [
+            "腔内照射",
+            "3"
+          ],
+          [
+            "体外照射",
+            "4"
+          ],
+          [
+            "体外照射+腔内照射",
+            "3+4"
+          ],
+          [
+            "同時化学放射線治療(腔内照射)",
+            "11"
+          ],
+          [
+            "同時化学放射線治療(体外照射)",
+            "12"
+          ],
+          [
+            "同時化学放射線治療(体外照射+腔内照射)",
+            "11+12"
+          ],
+          [
+            "核医学治療",
+            "8"
+          ],
+          [
+            "手術（骨盤・傍大動脈リンパ節郭清を伴う）",
+            "9"
+          ],
+          [
+            "手術（骨盤リンパ節郭清のみを伴う）",
+            "10"
+          ],
+          [
+            "手術（リンパ節郭清を伴わない）",
+            "2"
+          ],
+          [
+            "手術なし",
+            "99"
+          ],
+          [
+            "治療情報なし",
+            "99"
+          ]
+        ]
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "99",
+          "eq"
+        ],
+        "trueBehavior": 8,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "2+3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "2",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "3",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 5
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "11+12",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "11",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "12",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 2
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "$5",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "治療情報なし",
+          "$5"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$0",
+          "$.[4]",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$0",
+          "$.[:5]",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@4",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@4",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 8
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[1].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[2].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@5",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@5",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 10
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "薬物療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[0].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 7,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[1].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[2].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "4",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[3].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@6",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@6",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 8
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "放射線療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[0].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[1].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[2].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "腟上部切断術, 単純子宮全摘出術(筋膜内), 単純子宮全摘出術(筋膜外), 拡大子宮全摘術, 準広汎子宮全摘出術, 準広汎子宮頸部摘出術, 広汎子宮全摘出術, 広汎子宮全摘出術(神経温存術式), 広汎子宮頸部摘出術, 腟式単純子宮全摘術(筋膜内), 腟式準広汎子宮全摘術(筋膜外), 腟式広汎子宮全摘出術, 腟式広汎子宮頸部摘出術, 腹腔鏡下単純子宮全摘出術(筋膜内), 腹腔鏡下単純子宮全摘出術(筋膜外), 腹腔鏡下準広汎子宮全摘出術, 腹腔鏡下広汎子宮全摘出術, 腹腔鏡下子宮頸部摘出術, ロボット支援下単純子宮全摘出術, ロボット支援下準広汎子宮全摘出術, ロボット支援下広汎子宮全摘出術, ロボット支援下子宮頸部摘出術",
+          "$1"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "骨盤リンパ節系統的郭清, 腹腔鏡下骨盤内リンパ節郭清, ロボット支援下骨盤内リンパ節郭清",
+          "$2"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "傍大動脈リンパ節系統的郭清, 腹腔鏡下傍大動脈リンパ節郭清, ロボット支援下傍大動脈リンパ節郭清",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$1",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$6",
+          "value",
+          "手術療法",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 10
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術なし",
+          "$5"
+        ],
+        "trueBehavior": 8
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$2",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（リンパ節郭清を伴わない）",
+          "$5"
+        ],
+        "trueBehavior": 5
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$3",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（骨盤・傍大動脈リンパ節郭清を伴う）",
+          "$5"
+        ],
+        "trueBehavior": 2
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（骨盤リンパ節郭清のみを伴う）",
+          "$5"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 9,
+        "lookup": [
+          [
+            "化学療法",
+            "5"
+          ],
+          [
+            "分子標的薬",
+            "5"
+          ],
+          [
+            "化学療法+分子標的治療",
+            "5"
+          ],
+          [
+            "ホルモン治療",
+            "7"
+          ],
+          [
+            "その他の治療",
+            "8"
+          ],
+          [
+            "腔内照射",
+            "3"
+          ],
+          [
+            "体外照射",
+            "4"
+          ],
+          [
+            "体外照射+腔内照射",
+            "3+4"
+          ],
+          [
+            "同時化学放射線治療(腔内照射)",
+            "11"
+          ],
+          [
+            "同時化学放射線治療(体外照射)",
+            "12"
+          ],
+          [
+            "同時化学放射線治療(体外照射+腔内照射)",
+            "11+12"
+          ],
+          [
+            "核医学治療",
+            "8"
+          ],
+          [
+            "手術（骨盤・傍大動脈リンパ節郭清を伴う）",
+            "9"
+          ],
+          [
+            "手術（骨盤リンパ節郭清のみを伴う）",
+            "10"
+          ],
+          [
+            "手術（リンパ節郭清を伴わない）",
+            "2"
+          ],
+          [
+            "手術なし",
+            "99"
+          ],
+          [
+            "治療情報なし",
+            "99"
+          ]
+        ]
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "99",
+          "eq"
+        ],
+        "trueBehavior": 8,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "2+3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "2",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "3",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 5
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "11+12",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "11",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "12",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 2
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "$5",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "治療情報なし",
+          "$5"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$0",
+          "$.[5]",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$0",
+          "$.[:6]",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@4",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@4",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 8
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[1].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[2].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@5",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@5",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 10
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "薬物療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[0].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 7,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[1].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[2].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "4",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[3].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@6",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@6",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 8
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "放射線療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[0].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[1].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[2].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "腟上部切断術, 単純子宮全摘出術(筋膜内), 単純子宮全摘出術(筋膜外), 拡大子宮全摘術, 準広汎子宮全摘出術, 準広汎子宮頸部摘出術, 広汎子宮全摘出術, 広汎子宮全摘出術(神経温存術式), 広汎子宮頸部摘出術, 腟式単純子宮全摘術(筋膜内), 腟式準広汎子宮全摘術(筋膜外), 腟式広汎子宮全摘出術, 腟式広汎子宮頸部摘出術, 腹腔鏡下単純子宮全摘出術(筋膜内), 腹腔鏡下単純子宮全摘出術(筋膜外), 腹腔鏡下準広汎子宮全摘出術, 腹腔鏡下広汎子宮全摘出術, 腹腔鏡下子宮頸部摘出術, ロボット支援下単純子宮全摘出術, ロボット支援下準広汎子宮全摘出術, ロボット支援下広汎子宮全摘出術, ロボット支援下子宮頸部摘出術",
+          "$1"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "骨盤リンパ節系統的郭清, 腹腔鏡下骨盤内リンパ節郭清, ロボット支援下骨盤内リンパ節郭清",
+          "$2"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "傍大動脈リンパ節系統的郭清, 腹腔鏡下傍大動脈リンパ節郭清, ロボット支援下傍大動脈リンパ節郭清",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$1",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$6",
+          "value",
+          "手術療法",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 10
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術なし",
+          "$5"
+        ],
+        "trueBehavior": 8
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$2",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（リンパ節郭清を伴わない）",
+          "$5"
+        ],
+        "trueBehavior": 5
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$3",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（骨盤・傍大動脈リンパ節郭清を伴う）",
+          "$5"
+        ],
+        "trueBehavior": 2
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（骨盤リンパ節郭清のみを伴う）",
+          "$5"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 9,
+        "lookup": [
+          [
+            "化学療法",
+            "5"
+          ],
+          [
+            "分子標的薬",
+            "5"
+          ],
+          [
+            "化学療法+分子標的治療",
+            "5"
+          ],
+          [
+            "ホルモン治療",
+            "7"
+          ],
+          [
+            "その他の治療",
+            "8"
+          ],
+          [
+            "腔内照射",
+            "3"
+          ],
+          [
+            "体外照射",
+            "4"
+          ],
+          [
+            "体外照射+腔内照射",
+            "3+4"
+          ],
+          [
+            "同時化学放射線治療(腔内照射)",
+            "11"
+          ],
+          [
+            "同時化学放射線治療(体外照射)",
+            "12"
+          ],
+          [
+            "同時化学放射線治療(体外照射+腔内照射)",
+            "11+12"
+          ],
+          [
+            "核医学治療",
+            "8"
+          ],
+          [
+            "手術（骨盤・傍大動脈リンパ節郭清を伴う）",
+            "9"
+          ],
+          [
+            "手術（骨盤リンパ節郭清のみを伴う）",
+            "10"
+          ],
+          [
+            "手術（リンパ節郭清を伴わない）",
+            "2"
+          ],
+          [
+            "手術なし",
+            "99"
+          ],
+          [
+            "治療情報なし",
+            "99"
+          ]
+        ]
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "99",
+          "eq"
+        ],
+        "trueBehavior": 8,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "2+3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "2",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "3",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 5
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "11+12",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "11",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "12",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 2
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "$5",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "治療情報なし",
+          "$5"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$0",
+          "$.[6]",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$0",
+          "$.[:7]",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@4",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@4",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 8
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[1].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[2].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@5",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@5",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 10
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "薬物療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[0].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 7,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[1].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[2].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "4",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[3].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@6",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@6",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 8
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "放射線療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[0].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[1].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[2].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "腟上部切断術, 単純子宮全摘出術(筋膜内), 単純子宮全摘出術(筋膜外), 拡大子宮全摘術, 準広汎子宮全摘出術, 準広汎子宮頸部摘出術, 広汎子宮全摘出術, 広汎子宮全摘出術(神経温存術式), 広汎子宮頸部摘出術, 腟式単純子宮全摘術(筋膜内), 腟式準広汎子宮全摘術(筋膜外), 腟式広汎子宮全摘出術, 腟式広汎子宮頸部摘出術, 腹腔鏡下単純子宮全摘出術(筋膜内), 腹腔鏡下単純子宮全摘出術(筋膜外), 腹腔鏡下準広汎子宮全摘出術, 腹腔鏡下広汎子宮全摘出術, 腹腔鏡下子宮頸部摘出術, ロボット支援下単純子宮全摘出術, ロボット支援下準広汎子宮全摘出術, ロボット支援下広汎子宮全摘出術, ロボット支援下子宮頸部摘出術",
+          "$1"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "骨盤リンパ節系統的郭清, 腹腔鏡下骨盤内リンパ節郭清, ロボット支援下骨盤内リンパ節郭清",
+          "$2"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "傍大動脈リンパ節系統的郭清, 腹腔鏡下傍大動脈リンパ節郭清, ロボット支援下傍大動脈リンパ節郭清",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$1",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$6",
+          "value",
+          "手術療法",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 10
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術なし",
+          "$5"
+        ],
+        "trueBehavior": 8
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$2",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（リンパ節郭清を伴わない）",
+          "$5"
+        ],
+        "trueBehavior": 5
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$3",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（骨盤・傍大動脈リンパ節郭清を伴う）",
+          "$5"
+        ],
+        "trueBehavior": 2
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（骨盤リンパ節郭清のみを伴う）",
+          "$5"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 9,
+        "lookup": [
+          [
+            "化学療法",
+            "5"
+          ],
+          [
+            "分子標的薬",
+            "5"
+          ],
+          [
+            "化学療法+分子標的治療",
+            "5"
+          ],
+          [
+            "ホルモン治療",
+            "7"
+          ],
+          [
+            "その他の治療",
+            "8"
+          ],
+          [
+            "腔内照射",
+            "3"
+          ],
+          [
+            "体外照射",
+            "4"
+          ],
+          [
+            "体外照射+腔内照射",
+            "3+4"
+          ],
+          [
+            "同時化学放射線治療(腔内照射)",
+            "11"
+          ],
+          [
+            "同時化学放射線治療(体外照射)",
+            "12"
+          ],
+          [
+            "同時化学放射線治療(体外照射+腔内照射)",
+            "11+12"
+          ],
+          [
+            "核医学治療",
+            "8"
+          ],
+          [
+            "手術（骨盤・傍大動脈リンパ節郭清を伴う）",
+            "9"
+          ],
+          [
+            "手術（骨盤リンパ節郭清のみを伴う）",
+            "10"
+          ],
+          [
+            "手術（リンパ節郭清を伴わない）",
+            "2"
+          ],
+          [
+            "手術なし",
+            "99"
+          ],
+          [
+            "治療情報なし",
+            "99"
+          ]
+        ]
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "99",
+          "eq"
+        ],
+        "trueBehavior": 8,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "2+3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "2",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "3",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 5
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "11+12",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "11",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "12",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 2
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "$5",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "治療情報なし",
+          "$5"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$0",
+          "$.[7]",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$0",
+          "$.[:8]",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@4",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@4",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 8
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[1].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[2].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@5",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@5",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 10
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "薬物療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[0].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 7,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[1].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[2].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "4",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[3].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@6",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@6",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 8
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "放射線療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[0].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[1].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[2].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "腟上部切断術, 単純子宮全摘出術(筋膜内), 単純子宮全摘出術(筋膜外), 拡大子宮全摘術, 準広汎子宮全摘出術, 準広汎子宮頸部摘出術, 広汎子宮全摘出術, 広汎子宮全摘出術(神経温存術式), 広汎子宮頸部摘出術, 腟式単純子宮全摘術(筋膜内), 腟式準広汎子宮全摘術(筋膜外), 腟式広汎子宮全摘出術, 腟式広汎子宮頸部摘出術, 腹腔鏡下単純子宮全摘出術(筋膜内), 腹腔鏡下単純子宮全摘出術(筋膜外), 腹腔鏡下準広汎子宮全摘出術, 腹腔鏡下広汎子宮全摘出術, 腹腔鏡下子宮頸部摘出術, ロボット支援下単純子宮全摘出術, ロボット支援下準広汎子宮全摘出術, ロボット支援下広汎子宮全摘出術, ロボット支援下子宮頸部摘出術",
+          "$1"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "骨盤リンパ節系統的郭清, 腹腔鏡下骨盤内リンパ節郭清, ロボット支援下骨盤内リンパ節郭清",
+          "$2"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "傍大動脈リンパ節系統的郭清, 腹腔鏡下傍大動脈リンパ節郭清, ロボット支援下傍大動脈リンパ節郭清",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$1",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$6",
+          "value",
+          "手術療法",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 10
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術なし",
+          "$5"
+        ],
+        "trueBehavior": 8
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$2",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（リンパ節郭清を伴わない）",
+          "$5"
+        ],
+        "trueBehavior": 5
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$3",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（骨盤・傍大動脈リンパ節郭清を伴う）",
+          "$5"
+        ],
+        "trueBehavior": 2
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（骨盤リンパ節郭清のみを伴う）",
+          "$5"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 9,
+        "lookup": [
+          [
+            "化学療法",
+            "5"
+          ],
+          [
+            "分子標的薬",
+            "5"
+          ],
+          [
+            "化学療法+分子標的治療",
+            "5"
+          ],
+          [
+            "ホルモン治療",
+            "7"
+          ],
+          [
+            "その他の治療",
+            "8"
+          ],
+          [
+            "腔内照射",
+            "3"
+          ],
+          [
+            "体外照射",
+            "4"
+          ],
+          [
+            "体外照射+腔内照射",
+            "3+4"
+          ],
+          [
+            "同時化学放射線治療(腔内照射)",
+            "11"
+          ],
+          [
+            "同時化学放射線治療(体外照射)",
+            "12"
+          ],
+          [
+            "同時化学放射線治療(体外照射+腔内照射)",
+            "11+12"
+          ],
+          [
+            "核医学治療",
+            "8"
+          ],
+          [
+            "手術（骨盤・傍大動脈リンパ節郭清を伴う）",
+            "9"
+          ],
+          [
+            "手術（骨盤リンパ節郭清のみを伴う）",
+            "10"
+          ],
+          [
+            "手術（リンパ節郭清を伴わない）",
+            "2"
+          ],
+          [
+            "手術なし",
+            "99"
+          ],
+          [
+            "治療情報なし",
+            "99"
+          ]
+        ]
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "99",
+          "eq"
+        ],
+        "trueBehavior": 8,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "2+3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "2",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "3",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 5
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "11+12",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "11",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "12",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 2
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "$5",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "治療情報なし",
+          "$5"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$0",
+          "$.[8]",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$0",
+          "$.[:9]",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@4",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@4",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 8
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[1].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[2].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@5",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@5",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 10
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "薬物療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[0].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 7,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[1].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[2].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "4",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[3].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@6",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@6",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 8
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "放射線療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[0].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[1].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[2].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "腟上部切断術, 単純子宮全摘出術(筋膜内), 単純子宮全摘出術(筋膜外), 拡大子宮全摘術, 準広汎子宮全摘出術, 準広汎子宮頸部摘出術, 広汎子宮全摘出術, 広汎子宮全摘出術(神経温存術式), 広汎子宮頸部摘出術, 腟式単純子宮全摘術(筋膜内), 腟式準広汎子宮全摘術(筋膜外), 腟式広汎子宮全摘出術, 腟式広汎子宮頸部摘出術, 腹腔鏡下単純子宮全摘出術(筋膜内), 腹腔鏡下単純子宮全摘出術(筋膜外), 腹腔鏡下準広汎子宮全摘出術, 腹腔鏡下広汎子宮全摘出術, 腹腔鏡下子宮頸部摘出術, ロボット支援下単純子宮全摘出術, ロボット支援下準広汎子宮全摘出術, ロボット支援下広汎子宮全摘出術, ロボット支援下子宮頸部摘出術",
+          "$1"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "骨盤リンパ節系統的郭清, 腹腔鏡下骨盤内リンパ節郭清, ロボット支援下骨盤内リンパ節郭清",
+          "$2"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "傍大動脈リンパ節系統的郭清, 腹腔鏡下傍大動脈リンパ節郭清, ロボット支援下傍大動脈リンパ節郭清",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$1",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$6",
+          "value",
+          "手術療法",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 10
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術なし",
+          "$5"
+        ],
+        "trueBehavior": 8
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$2",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（リンパ節郭清を伴わない）",
+          "$5"
+        ],
+        "trueBehavior": 5
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$3",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（骨盤・傍大動脈リンパ節郭清を伴う）",
+          "$5"
+        ],
+        "trueBehavior": 2
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（骨盤リンパ節郭清のみを伴う）",
+          "$5"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 9,
+        "lookup": [
+          [
+            "化学療法",
+            "5"
+          ],
+          [
+            "分子標的薬",
+            "5"
+          ],
+          [
+            "化学療法+分子標的治療",
+            "5"
+          ],
+          [
+            "ホルモン治療",
+            "7"
+          ],
+          [
+            "その他の治療",
+            "8"
+          ],
+          [
+            "腔内照射",
+            "3"
+          ],
+          [
+            "体外照射",
+            "4"
+          ],
+          [
+            "体外照射+腔内照射",
+            "3+4"
+          ],
+          [
+            "同時化学放射線治療(腔内照射)",
+            "11"
+          ],
+          [
+            "同時化学放射線治療(体外照射)",
+            "12"
+          ],
+          [
+            "同時化学放射線治療(体外照射+腔内照射)",
+            "11+12"
+          ],
+          [
+            "核医学治療",
+            "8"
+          ],
+          [
+            "手術（骨盤・傍大動脈リンパ節郭清を伴う）",
+            "9"
+          ],
+          [
+            "手術（骨盤リンパ節郭清のみを伴う）",
+            "10"
+          ],
+          [
+            "手術（リンパ節郭清を伴わない）",
+            "2"
+          ],
+          [
+            "手術なし",
+            "99"
+          ],
+          [
+            "治療情報なし",
+            "99"
+          ]
+        ]
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "99",
+          "eq"
+        ],
+        "trueBehavior": 8,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "2+3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "2",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "3",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 5
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "11+12",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "11",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "12",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 2
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "$5",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "治療情報なし",
+          "$5"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$0",
+          "$.[9]",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$0",
+          "$.[:10]",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@4",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@4",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 8
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[1].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[2].実施手術.[*].術式",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@5",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@5",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 10
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "薬物療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[0].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 7,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[1].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[2].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "4",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@2",
+          "$.[3].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "@6",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "@6",
+          "intersect",
+          "$4"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 8
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "放射線療法",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[0].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 5,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[1].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@3",
+          "$.[2].治療区分",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "腟上部切断術, 単純子宮全摘出術(筋膜内), 単純子宮全摘出術(筋膜外), 拡大子宮全摘術, 準広汎子宮全摘出術, 準広汎子宮頸部摘出術, 広汎子宮全摘出術, 広汎子宮全摘出術(神経温存術式), 広汎子宮頸部摘出術, 腟式単純子宮全摘術(筋膜内), 腟式準広汎子宮全摘術(筋膜外), 腟式広汎子宮全摘出術, 腟式広汎子宮頸部摘出術, 腹腔鏡下単純子宮全摘出術(筋膜内), 腹腔鏡下単純子宮全摘出術(筋膜外), 腹腔鏡下準広汎子宮全摘出術, 腹腔鏡下広汎子宮全摘出術, 腹腔鏡下子宮頸部摘出術, ロボット支援下単純子宮全摘出術, ロボット支援下準広汎子宮全摘出術, ロボット支援下広汎子宮全摘出術, ロボット支援下子宮頸部摘出術",
+          "$1"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "骨盤リンパ節系統的郭清, 腹腔鏡下骨盤内リンパ節郭清, ロボット支援下骨盤内リンパ節郭清",
+          "$2"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "傍大動脈リンパ節系統的郭清, 腹腔鏡下傍大動脈リンパ節郭清, ロボット支援下傍大動脈リンパ節郭清",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$1",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$6",
+          "value",
+          "手術療法",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 10
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術なし",
+          "$5"
+        ],
+        "trueBehavior": 8
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$2",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（リンパ節郭清を伴わない）",
+          "$5"
+        ],
+        "trueBehavior": 5
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "$3",
+          "intersect",
+          "$7"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（骨盤・傍大動脈リンパ節郭清を伴う）",
+          "$5"
+        ],
+        "trueBehavior": 2
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "手術（骨盤リンパ節郭清のみを伴う）",
+          "$5"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 9,
+        "lookup": [
+          [
+            "化学療法",
+            "5"
+          ],
+          [
+            "分子標的薬",
+            "5"
+          ],
+          [
+            "化学療法+分子標的治療",
+            "5"
+          ],
+          [
+            "ホルモン治療",
+            "7"
+          ],
+          [
+            "その他の治療",
+            "8"
+          ],
+          [
+            "腔内照射",
+            "3"
+          ],
+          [
+            "体外照射",
+            "4"
+          ],
+          [
+            "体外照射+腔内照射",
+            "3+4"
+          ],
+          [
+            "同時化学放射線治療(腔内照射)",
+            "11"
+          ],
+          [
+            "同時化学放射線治療(体外照射)",
+            "12"
+          ],
+          [
+            "同時化学放射線治療(体外照射+腔内照射)",
+            "11+12"
+          ],
+          [
+            "核医学治療",
+            "8"
+          ],
+          [
+            "手術（骨盤・傍大動脈リンパ節郭清を伴う）",
+            "9"
+          ],
+          [
+            "手術（骨盤リンパ節郭清のみを伴う）",
+            "10"
+          ],
+          [
+            "手術（リンパ節郭清を伴わない）",
+            "2"
+          ],
+          [
+            "手術なし",
+            "99"
+          ],
+          [
+            "治療情報なし",
+            "99"
+          ]
+        ]
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "99",
+          "eq"
+        ],
+        "trueBehavior": 8,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "2+3",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "2",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "3",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 5
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "value",
+          "11+12",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "11",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "12",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 2
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "$5",
+          "add",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[*].実施手術.[*].術式",
+          "$4"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "腟上部切断術, 単純子宮全摘出術(筋膜内), 単純子宮全摘出術(筋膜外), 拡大子宮全摘術, 準広汎子宮全摘出術, 準広汎子宮頸部摘出術, 広汎子宮全摘出術, 広汎子宮全摘出術(神経温存術式), 広汎子宮頸部摘出術, 腟式単純子宮全摘術(筋膜内), 腟式準広汎子宮全摘術(筋膜外), 腟式広汎子宮全摘出術, 腟式広汎子宮頸部摘出術",
+          "$1"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "腹腔鏡下単純子宮全摘出術(筋膜内), 腹腔鏡下単純子宮全摘出術(筋膜外), 腹腔鏡下準広汎子宮全摘出術, 腹腔鏡下広汎子宮全摘出術, 腹腔鏡下子宮頸部摘出術",
+          "$2"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "ロボット支援下単純子宮全摘出術, ロボット支援下準広汎子宮全摘出術, ロボット支援下広汎子宮全摘出術, ロボット支援下子宮頸部摘出術",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$4",
+          "$1",
+          "intersect",
+          "$1"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$4",
+          "$2",
+          "intersect",
+          "$2"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$4",
+          "$3",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$1",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "1",
+          "$6"
+        ],
+        "trueBehavior": 6
+      },
+
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "2",
+          "$6"
+        ],
+        "trueBehavior": 4
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "3",
+          "$6"
+        ],
+        "trueBehavior": 2
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "4",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$6",
+          "AC",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$9",
+          "$.[1:]",
+          "$9"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$9",
+          "$.[0]",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "$1",
+          "$8"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$9",
+          "$.[1:]",
+          "$9"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 4
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$9",
+          "$.[0]",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "value",
+          "$1",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$8",
+          "$2",
+          "add",
+          "$8"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "$2",
+          "$1"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$9",
+          "$.[1:]",
+          "$9"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 4
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$9",
+          "$.[0]",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "value",
+          "$1",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$8",
+          "$2",
+          "add",
+          "$8"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "$2",
+          "$1"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$9",
+          "$.[1:]",
+          "$9"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 4
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$9",
+          "$.[0]",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "value",
+          "$1",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$8",
+          "$2",
+          "add",
+          "$8"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "$2",
+          "$1"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$9",
+          "$.[1:]",
+          "$9"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 4
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$9",
+          "$.[0]",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "value",
+          "$1",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$8",
+          "$2",
+          "add",
+          "$8"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "$2",
+          "$1"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$9",
+          "$.[1:]",
+          "$9"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 4
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$9",
+          "$.[0]",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "value",
+          "$1",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$8",
+          "$2",
+          "add",
+          "$8"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "$2",
+          "$1"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$9",
+          "$.[1:]",
+          "$9"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 4
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$9",
+          "$.[0]",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "value",
+          "$1",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$8",
+          "$2",
+          "add",
+          "$8"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "$2",
+          "$1"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$9",
+          "$.[1:]",
+          "$9"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 4
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$9",
+          "$.[0]",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "value",
+          "$1",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$8",
+          "$2",
+          "add",
+          "$8"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "$2",
+          "$1"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$9",
+          "$.[1:]",
+          "$9"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 4
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$9",
+          "$.[0]",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "value",
+          "$1",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$8",
+          "$2",
+          "add",
+          "$8"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "$2",
+          "$1"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$9",
+          "$.[1:]",
+          "$9"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 4
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$9",
+          "$.[0]",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "value",
+          "$1",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$8",
+          "$2",
+          "add",
+          "$8"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "$2",
+          "$1"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$9",
+          "$.[1:]",
+          "$9"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 4
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$9",
+          "$.[0]",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "value",
+          "$1",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$8",
+          "$2",
+          "add",
+          "$8"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$8",
+          "$.[0]",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$1",
+          "W",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$8",
+          "$.[1]",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$1",
+          "X",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$8",
+          "$.[2]",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$1",
+          "Y",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$8",
+          "$.[3]",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$1",
+          "Z",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$8",
+          "$.[4]",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$1",
+          "AA",
+          "first"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "$8",
+          "$.[5]",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "$1",
+          "AB",
+          "first"
+        ],
+        "trueBehavior": 1
+      }
+    ]
+  }
+]

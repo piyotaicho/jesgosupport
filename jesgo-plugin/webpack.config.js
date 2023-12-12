@@ -1,15 +1,16 @@
 const path = require('path')
+const webpack = require('webpack')
 
 module.exports = {
   mode: 'development',
   devtool: false,
   entry: {
-    'jesgo-supporttool-runtime': './jesgo-plugin/src/jesgo-support-runtime.ts',
-    'jesgo-supporttool-runtime-for-singlecase': './jesgo-plugin/src/jesgo-support-runtime-for-single.ts',
-    'jesgo-exporter': './jesgo-plugin/src/jesgo-exporter.ts',
-    'jesgo-single-exporter': './jesgo-plugin/src/jesgo-exporter-single.ts',
+    'runtime-for-all': './jesgo-plugin/src/jesgo-support-runtime.ts',
+    'runtime-for-one': './jesgo-plugin/src/jesgo-support-runtime-for-single.ts',
+    'export-all': './jesgo-plugin/src/jesgo-exporter.ts',
+    'export-one': './jesgo-plugin/src/jesgo-exporter-single.ts',
     'export-to-joed': './jesgo-plugin/src/export-to-joed.ts',
-    'import-jsog-ids': './jesgo-plugin/src/import-jsog-ids.ts'
+    'import-go-ids': './jesgo-plugin/src/import-jsog-ids.ts'
   },
   module: {
     rules: [
@@ -75,6 +76,11 @@ module.exports = {
       '.js', '.ts', '.json', '.html'
     ]
   },
+  plugins: [
+    new webpack.DefinePlugin({
+      __sourceFileName: (pathdata) => JSON.stringify(path.basename(pathdata))
+    })
+  ],
   experiments: {
     outputModule: true
   },

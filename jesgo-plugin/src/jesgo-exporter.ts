@@ -8,14 +8,15 @@
 import { mainOutput, scriptInfo, getterPluginArgument, pulledDocument } from './types'
 import { showModalMessageBox } from './modal-dialog'
 
+const version = '1.0.0'
 const script_info: scriptInfo = {
-  plugin_name: 'JESGOサポートツール用データ出力',
-  plugin_version: '0.2',
+  plugin_name: '全患者文書出力',
+  plugin_version: version.split('.').slice(0, 2).join('.'),
   all_patient: true,
   attach_patient_info: true,
   update_db: false,
   show_upload_dialog: false,
-  explain: 'JESGO-supportが読み込むAPI生データを出力します.入力された患者の全情報が入っています.'
+  explain: 'JESGOのAPIが生成した生データを全患者分出力します.'
 }
 
 export async function init () {
@@ -23,7 +24,8 @@ export async function init () {
 }
 
 export async function main (docData: getterPluginArgument, apifunc: (docData: getterPluginArgument) => string): Promise<mainOutput> {
-  console.dir(docData)
+  console.log(`jesgo-exporter.ts@${version} (C) 2023 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
+
   if (docData.caseList) {
     const apiresult = await apifunc(docData)
     let documents:pulledDocument[]
@@ -39,7 +41,7 @@ export async function main (docData: getterPluginArgument, apifunc: (docData: ge
 
 async function handler (docData: pulledDocument[]) {
   const numberOfCases = docData.length
-  await showModalMessageBox(`出力される症例数は ${numberOfCases} です.`)
+  await showModalMessageBox(`出力された症例数は ${numberOfCases} です.`)
   return docData
 }
 

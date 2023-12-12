@@ -10,14 +10,15 @@ import { convertDaichoToJOED, formatJOED } from './jesgo-joed-translator'
 import { createElementFromHtml, showModalDialog } from './modal-dialog'
 import { dialogHTMLstrings } from './export-to-joed-ui'
 
+const version = '1.0.1'
 const script_info: scriptInfo = {
-  plugin_name: 'JOED5用インポートデータの作成',
-  plugin_version: '1.0',
+  plugin_name: 'JOED5インポートデータの作成',
+  plugin_version: version.split('.').slice(0, 2).join('.'),
   all_patient: true,
   attach_patient_info: true,
   update_db: false,
   show_upload_dialog: false,
-  explain: 'JOED5アプリケーションで読み込み可能なJSONファイルを作成します.'
+  explain: '産科婦人科内視鏡学会症例登録で使用するJOED5アプリケーションで読み込み可能なJSONファイルを作成します.'
 }
 
 export async function init () {
@@ -25,6 +26,8 @@ export async function init () {
 }
 
 export async function main (docData: getterPluginArgument, apifunc: (docData: getterPluginArgument) => string): Promise<mainOutput> {
+  console.log(`export-to-joed.ts@${version} (C) 2023 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
+
   if (docData.caseList) {
     const apiresult = await apifunc(docData)
     let documents:pulledDocument[]
