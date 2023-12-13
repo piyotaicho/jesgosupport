@@ -2,8 +2,11 @@ import { mainOutput, scriptInfo, getterPluginArgument, pulledDocument, updateDoc
 import { showModalDialog, createElementFromHtml } from './modal-dialog'
 import { dialogHTML } from './jesgo-support-runtime-ui'
 import { processor } from '../../src/components/processor'
-import { unparse as papaUnparse } from 'papaparse'
+import { saveCSV, loadJSONfile } from './fileHandlers'
 import { LogicRule } from '../../src/components/types'
+import { exportEM2023 } from './support-scripts/GOEM_2023_export'
+import { exportCC2023 } from './support-scripts/GOCC_2023_export'
+import { exportOV2023 } from './support-scripts/GOOV_2023_export'
 
 const version = '0.9.1'
 const filename = 'jesgo-support-runtime.ts'
@@ -66,75 +69,6 @@ function verbose (message = '', item:unknown) {
     console.log(message)
   }
   console.dir(item)
-}
-
-/**
- * JSONファイルをInput type="FILE"とFileReaderで読み込む
- * @returns string
- */
-export async function loadJSONfile (): Promise<string> {
-  return await new Promise(resolve => {
-    const inputFile = document.createElement('input') as HTMLInputElement
-    inputFile.type = 'file'
-    inputFile.accept = 'application/json'
-
-    // FileReaderをセットアップ
-    const reader = new FileReader()
-    reader.addEventListener('load', () => {
-      resolve(reader.result as string)
-    },
-    {
-      once: true
-    })
-
-    // input type="file"のセットアップ
-    const changeEvent = () => {
-      const files = inputFile.files
-      if (files && files.length > 0) {
-        reader.readAsText(files[0])
-      }
-    }
-    const cancelEvent = () => {
-      inputFile.removeEventListener('change', changeEvent)
-      resolve('')
-    }
-
-    inputFile.addEventListener('change', changeEvent, { once: true })
-    inputFile.addEventListener('cancel', cancelEvent, { once: true })
-
-    // input type=file発火
-    inputFile.click()
-  })
-}
-
-/**
- * saveCSV dataURLを使ってファイルにダウンロードさせる(CSV専用)
- * @param data CSVテーブルの2次元配列
- */
-export function saveCSV (data:unknown[], offset = 0, filename = 'JESGO出力データ.csv') {
-  if (data && Array.isArray(data) && data.length > 0) {
-    const offsettedData = []
-    for (let count = 0; count < offset; count++) {
-      offsettedData.push([])
-    }
-    offsettedData.push(...data)
-
-    const blob = new Blob([
-      papaUnparse(
-        offsettedData,
-        {
-          header: false,
-          delimiter: ',',
-          quoteChar: '"'
-        }
-      )
-    ], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const anchorElement = document.createElement('A') as HTMLAnchorElement
-    anchorElement.href = url
-    anchorElement.download = filename
-    anchorElement.click()
-  }
 }
 
 type ScriptTypeFormat = 'loadscript'|'CC'|'EM'|'OV'
@@ -256,18 +190,18 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
             // 未実装
             targetSchemaIdString = '/schema/CC/root'
             csvOffset = 6
-            resolve([])
+            resolve([exportCC2023])
             break
           case 'EM':
             targetSchemaIdString = '/schema/EM/root'
             csvOffset = 6
-            resolve([])
+            resolve([exportEM2023])
             break
           case 'OV':
             // 未実装
             targetSchemaIdString = '/schema/OV/root'
             csvOffset = 6
-            resolve([])
+            resolve([exportOV2023])
             break
           default:
             throw new Error('SELECTから不正な値が取得されました.')

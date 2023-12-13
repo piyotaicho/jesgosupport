@@ -2,7 +2,7 @@ import { mainOutput, scriptInfo, getterPluginArgument, pulledDocument, updateDoc
 import { showModalDialog, createElementFromHtml } from './modal-dialog'
 import { dialogHTML } from './jesgo-support-runtime-single-ui'
 import { processor } from '../../src/components/processor'
-import { saveCSV, loadJSONfile } from './jesgo-support-runtime'
+import { saveCSV, loadJSONfile } from './fileHandlers'
 import { LogicRule } from '../../src/components/types'
 
 const version = '0.9.1'

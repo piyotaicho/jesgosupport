@@ -1,6 +1,6 @@
 import { scriptInfo, updateDocument, mainOutput } from './types'
 import { showModalMessageBox } from './modal-dialog'
-import { papaParse } from './papaparse'
+import { papaParse } from './fileHandlers'
 
 export async function init ():Promise<scriptInfo> {
   return {

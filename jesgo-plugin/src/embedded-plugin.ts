@@ -5,8 +5,8 @@ import { mainOutput, getterPluginArgument, pulledDocument, updateDocument, sette
 import { showModalDialog, createElementFromHtml } from './modal-dialog'
 import { dialogHTML } from './embedded-runtime-ui'
 import { processor } from '../../src/components/processor'
-import { unparse as papaUnparse } from 'papaparse'
 import { LogicRule } from '../../src/components/types'
+import { saveCSV } from './fileHandlers'
 
 export type pluginInformation = {
   version: string
@@ -60,36 +60,6 @@ function verbose (message = '', item:unknown) {
     console.log(message)
   }
   console.dir(item)
-}
-
-/**
- * saveCSV dataURLを使ってファイルにダウンロードさせる(CSV専用)
- * @param data CSVテーブルの2次元配列
- */
-function saveCSV (data:unknown[], offset = 0, filename = 'JESGO出力データ.csv') {
-  if (data && Array.isArray(data) && data.length > 0) {
-    const offsettedData = []
-    for (let count = 0; count < offset; count++) {
-      offsettedData.push([])
-    }
-    offsettedData.push(...data)
-
-    const blob = new Blob([
-      papaUnparse(
-        offsettedData,
-        {
-          header: false,
-          delimiter: ',',
-          quoteChar: '"'
-        }
-      )
-    ], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const anchorElement = document.createElement('A') as HTMLAnchorElement
-    anchorElement.href = url
-    anchorElement.download = filename
-    anchorElement.click()
-  }
 }
 
 type ScriptTypeFormat = 'loadscript'|'CC'|'EM'|'OV'
