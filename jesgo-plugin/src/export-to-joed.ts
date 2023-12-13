@@ -10,7 +10,7 @@ import { convertDaichoToJOED, formatJOED } from './jesgo-joed-translator'
 import { createElementFromHtml, showModalDialog } from './modal-dialog'
 import { dialogHTMLstrings } from './export-to-joed-ui'
 
-const version = '1.0.1'
+const version = '1.0.2'
 const script_info: scriptInfo = {
   plugin_name: 'JOED5インポートデータの作成',
   plugin_version: version.split('.').slice(0, 2).join('.'),

@@ -1,7 +1,7 @@
 //
 // JESGOの各種情報をJOEDの内容にマップする
 //
-import { formatJESGOOperationSection, formatJESGOdaicho, formatJESGOrelapse } from './types'
+import { formatJESGOOperationSection, formatJESGOdaicho, formatJESGOoperationV2, formatJESGOrelapse } from './types'
 
 // JOED5ドキュメント構造定義
 export interface formatJOEDdiagnosis {
@@ -326,7 +326,7 @@ export function convertDaichoToJOED (
     const recordNotification:string[] = []
 
     // 空白のレコードだと困るので実施手術の有無を確認
-    if (!operation.実施手術 || operation.実施手術.length === 0) {
+    if (!operation.実施手術) {
       continue
     }
 
@@ -371,11 +371,23 @@ export function convertDaichoToJOED (
     let isRobotOperation = false
 
     // 実施数の登録が無ければスキップ
-    if (!operation?.実施手術 || !Array.isArray(operation.実施手術) || operation.実施手術.length === 0) {
+    if (!operation?.実施手術) {
       break
     }
 
-    const operationTitles = operation.実施手術.map(item => item.術式)
+    let operationTitles:string[] = []
+    if (Array.isArray(operation.実施手術) && operation.実施手術.length > 0) {
+      operationTitles = operation.実施手術.map(item => typeof item === 'string' ? item as string : item.術式)
+    } else {
+      const operationV2s = (operation.実施手術 as formatJESGOoperationV2).実施手術
+      if (Array.isArray(operationV2s) && operationV2s.length > 0) {
+        operationTitles = operationV2s.map(item => typeof item === 'string' ? item as string : item.術式)
+      } else {
+        // 実施手術の入力なし
+        break
+      }
+    }
+
     for (const operationTitle of operationTitles) {
       if (operationTitlesToExtract.includes(operationTitle)) {
         operationRecords.push(operationTranslation[operationTitle])
@@ -579,6 +591,8 @@ export function convertDaichoToJOED (
     }
 
     // 最終的なレコードの成形
+    JOEDrecord.Imported = true
+
     if (patientName && patientName !== '') {
       JOEDrecord.Name = patientName
     }
