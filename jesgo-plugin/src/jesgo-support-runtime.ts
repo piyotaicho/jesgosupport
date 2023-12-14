@@ -4,9 +4,6 @@ import { dialogHTML } from './jesgo-support-runtime-ui'
 import { processor } from '../../src/components/processor'
 import { saveCSV, loadJSONfile } from './fileHandlers'
 import { LogicRule } from '../../src/components/types'
-import { exportEM2023 } from './support-scripts/GOEM_2023_export'
-import { exportCC2023 } from './support-scripts/GOCC_2023_export'
-import { exportOV2023 } from './support-scripts/GOOV_2023_export'
 
 const version = '0.9.1'
 const filename = 'jesgo-support-runtime.ts'
@@ -190,18 +187,18 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
             // 未実装
             targetSchemaIdString = '/schema/CC/root'
             csvOffset = 6
-            resolve([exportCC2023])
+            resolve([])
             break
           case 'EM':
             targetSchemaIdString = '/schema/EM/root'
             csvOffset = 6
-            resolve([exportEM2023])
+            resolve([])
             break
           case 'OV':
             // 未実装
             targetSchemaIdString = '/schema/OV/root'
             csvOffset = 6
-            resolve([exportOV2023])
+            resolve([])
             break
           default:
             throw new Error('SELECTから不正な値が取得されました.')
