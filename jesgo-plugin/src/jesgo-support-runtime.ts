@@ -12,7 +12,7 @@ const version = '0.9.1'
 const filename = 'jesgo-support-runtime.ts'
 export async function init ():Promise<scriptInfo> {
   return {
-    plugin_name: '外部スクリプトの実行',
+    plugin_name: '外部スクリプトの実行[検証用]',
     plugin_version: version.split('.').slice(0, 2).join('.'),
     all_patient: true,
     attach_patient_info: true,
@@ -190,18 +190,18 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
             // 未実装
             targetSchemaIdString = '/schema/CC/root'
             csvOffset = 6
-            resolve([exportCC2023])
+            resolve(exportCC2023)
             break
           case 'EM':
             targetSchemaIdString = '/schema/EM/root'
             csvOffset = 6
-            resolve([exportEM2023])
+            resolve(exportEM2023)
             break
           case 'OV':
             // 未実装
             targetSchemaIdString = '/schema/OV/root'
             csvOffset = 6
-            resolve([exportOV2023])
+            resolve(exportOV2023)
             break
           default:
             throw new Error('SELECTから不正な値が取得されました.')
