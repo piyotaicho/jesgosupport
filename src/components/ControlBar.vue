@@ -180,7 +180,7 @@ async function processDocument (index:number) {
       </el-dropdown>
     </div>
     <div>
-      <el-input style="width: 20rem;" v-model="rulesetTitle" placeholder="ルールセットの名称未定"/>
+      <el-input style="width: 20rem;" v-model="rulesetTitle" placeholder="ルールセットの名称未設定"/>
       <el-dialog v-model="openMenu" :show-close="false" :close-on-click-modal="false" title="ルールセットの詳細設定">
         <RulesetConfig @close="openMenu = false"/>
       </el-dialog>
