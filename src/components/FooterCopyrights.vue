@@ -7,7 +7,7 @@
 </template>
 
 <script setup lang="ts">
-const version = process.env.VUE_APP_VERSION || 'NA'
+const version = import.meta.env.VITE_APP_VERSION || 'NA'
 </script>
 
 <style>
