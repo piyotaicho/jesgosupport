@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineEmits, ref, computed, ComputedRef, onMounted } from 'vue'
+import { ref, computed, ComputedRef, onMounted } from 'vue'
 import { useStore } from './store'
 import { configObject } from './types'
 

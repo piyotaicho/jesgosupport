@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { Ref, computed, ComputedRef, WritableComputedRef, defineProps, defineEmits } from 'vue'
+import { Ref, computed, ComputedRef, WritableComputedRef } from 'vue'
 import { ElMessageBox } from 'element-plus'
 import { Plus, CaretTop, CaretBottom, EditPen, Delete } from '@element-plus/icons-vue'
 import { LogicRuleSet } from './types'
