@@ -60,7 +60,7 @@ export interface configObject {
   masterBasePointer?: string
   skipUnmatchedRecord?: boolean
   csvOffset?: number
-  errorMountpoint?: string
+  errorPointer?: string
   errorTargetSchemaId?: string
 }
 
@@ -69,3 +69,16 @@ export type setDescription = {
   config: configObject
   caseVariableNames?: string[]
 }
+
+// ルールセットファイル形式
+// V1形式はオブジェクト
+export type fileRuleSetV1 = {
+  title: string // 必須
+  config?: configObject
+  rules: LogicRuleSet[]
+  languageMajorVersion?: number // 新エンジンに載せ変わったら>1になる
+}
+// V0.9未満はルールセットのアレイ
+export type fileRuleSetV0 = LogicRuleSet[]
+
+export type fileRuleSet = fileRuleSetV0 | fileRuleSetV1

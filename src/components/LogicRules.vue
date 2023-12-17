@@ -35,7 +35,7 @@
     </el-row>
     <el-row style="padding-top: 0.3rem;" v-show="!disableControles">
       <el-col>
-        <el-input v-model="description" placeholder="ルールの説明" type="textarea" />
+        <el-input v-model="description" placeholder="ルールの説明" type="textarea" :rows="1"/>
       </el-col>
     </el-row>
   </div>

@@ -226,7 +226,7 @@ export const store = createStore<State>({
         masterBasePointer: '/',
         skipUnmatchedRecord: false,
         csvOffset: 0,
-        errorMountpoint: '/jesgo:error',
+        errorPointer: '/jesgo:error',
         errorTargetSchemaId: ''
       })
       getters.ruleTitles.forEach((ruleTitle:string) => {

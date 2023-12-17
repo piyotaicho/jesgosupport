@@ -22,9 +22,10 @@ interface instructionResult {
 
 // 後方互換を保持してスクリプトコマンドを短縮
 // type BlockType = 'Operators'|'Variables'|'Query'|'Translation'|'Sort'|'Period'|'Sets'|'Store'
-export type newBlockType = 'oper'|'hold'|'query'|'tr'|'sort'|'period'|'set'|'put'|BlockType
+type v1BlockType = 'oper'|'var'|'query'|'tr'|'sort'|'period'|'set'|'put'
+export type newBlockType = v1BlockType | BlockType
 
-type commandValueTypes = 'value'|'json'|'length'
+type commandValueTypes = 'value'|'length'
 type commandOperatorExpressions = 'eq'|'='|'gt'|'>'|'ge'|'>='|'lt'|'<'|'le'|'<='|'in'|'incl'|'re'|'regexp'
 type commandSetsOperators = 'add'|'union'|'intersect'|'difference'|'xor'
 type commandSortDirections = 'asc'|'ascend'|'desc'|'descend'
@@ -56,7 +57,7 @@ const storeProxyHandler:ProxyHandler<VariableStore> = {
 
   get: (target:VariableStore, property:string) => {
     if (!(property in target)) {
-      throw new TypeError(`変数${property}は未定義です.`)
+      throw new TypeError(`変数"${property}"は未定義です.`)
     }
     return parseVariableValueArray(target[property] || [])
   },
@@ -64,11 +65,11 @@ const storeProxyHandler:ProxyHandler<VariableStore> = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   set: (target:VariableStore, property:string, value:any) => {
     if (!(property in target)) {
-      throw new TypeError(`変数${property}は未定義です.`)
+      throw new TypeError(`変数"${property}"は未定義です.`)
     }
     const descriptor = Object.getOwnPropertyDescriptor(target, property)
     if (!(descriptor?.writable || false)) {
-      throw new TypeError(`変数${property}は定数です.`)
+      throw new TypeError(`変数"${property}"は定数です.`)
       return false
     }
 
@@ -79,13 +80,13 @@ const storeProxyHandler:ProxyHandler<VariableStore> = {
 
   defineProperty: (target:VariableStore, property:string, descriptor?:PropertyDescriptor) => {
     if (property in target) {
-      throw new Error(`変数${property}は既に定義されています.`)
+      throw new TypeError(`変数"${property}"は既に定義されています.`)
       return false
     }
 
     const propertyHeader = property.charAt(0)
     if (propertyHeader !== '@' && propertyHeader !== '$') {
-      throw new TypeError('変数名は$で開始されている必要があります.')
+      throw new SyntaxError('変数名は$で開始されている必要があります.')
       return false
     }
 
@@ -115,7 +116,7 @@ const storeProxyHandler:ProxyHandler<VariableStore> = {
 
   deleteProperty: (target:VariableStore, property:string) => {
     if (!(property in target)) {
-      throw new TypeError(`変数${property}は未定義です.`)
+      throw new TypeError(`変数"${property}"は未定義です.`)
     }
     delete target[property]
     return true
@@ -202,9 +203,9 @@ export class Converter {
           }
 
           switch (command) {
-            case 'hold':
+            case 'var':
             case 'Variables':
-              valueType = params[2] || 'value'
+              valueType = params[2] || 'value' // 拡張
               variableName = params[1] || ''
               if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
                 instruction = () => {
@@ -215,7 +216,8 @@ export class Converter {
                 }
               } else {
                 instruction = () => {
-                  return this.commandVariables(setValueAsStringArray(params[0]), variableName, valueType as commandValueTypes)
+                  const values = parseVariableValueArray(parseStringToStringArray(params[0])) as JsonObject[]
+                  return this.commandVariables(values, variableName, valueType as commandValueTypes)
                     ? success
                     : failed
                 }
@@ -237,7 +239,8 @@ export class Converter {
                 } else {
                   instruction = () => {
                     const valueA = this.variables[params[0]]
-                    return this.commandOperators(valueA, valueType as commandValueTypes, setValueAsStringArray(params[2]), operator as commandOperatorExpressions)
+                    const valueB = setValueAsStringArray(params[2])
+                    return this.commandOperators(valueA, valueType as commandValueTypes, valueB, operator as commandOperatorExpressions)
                       ? success
                       : failed
                   }
@@ -245,14 +248,17 @@ export class Converter {
               } else {
                 if (params[2].charAt(0) === '$' || params[2].charAt(0)) {
                   instruction = () => {
+                    const valueA = setValueAsStringArray(params[0])
                     const valueB = this.variables[params[2]]
-                    return this.commandOperators(setValueAsStringArray(params[0]), valueType as commandValueTypes, valueB, operator as commandOperatorExpressions)
+                    return this.commandOperators(valueA, valueType as commandValueTypes, valueB, operator as commandOperatorExpressions)
                       ? success
                       : failed
                   }
                 } else {
                   instruction = () => {
-                    return this.commandOperators(setValueAsStringArray(params[0]), valueType as commandValueTypes, setValueAsStringArray(params[2]), operator as commandOperatorExpressions)
+                    const valueA = setValueAsStringArray(params[0])
+                    const valueB = setValueAsStringArray(params[2])
+                    return this.commandOperators(valueA, valueType as commandValueTypes, valueB, operator as commandOperatorExpressions)
                       ? success
                       : failed
                   }
@@ -408,13 +414,10 @@ export class Converter {
   private commandVariables = (value: JsonObject[] = [], variableName = '', variableType:commandValueTypes = 'value'): boolean => {
     try {
       if (!variableName || variableName === '') {
-        throw new TypeError('変数名が未指定です.')
+        throw new SyntaxError('変数名が未指定です.')
       }
 
       switch (variableType) {
-        case 'json':
-          this.variables[variableName] = [JSON.stringify(value)]
-          break
         case 'length':
           this.variables[variableName] = [value.length]
           break
@@ -443,14 +446,11 @@ export class Converter {
         case 'value':
           valueOfA = valueA
           break
-        case 'json': // script version1 から実装
-          valueOfA = [JSON.stringify(valueA)]
-          break
         case 'length':
           valueOfA = [valueA.length]
           break
         default:
-          throw new Error(`不正な型指定${valueAtype}です.`)
+          throw new SyntaxError(`不正な型指定${valueAtype}です.`)
       }
 
       switch (operator) {
@@ -787,7 +787,13 @@ export class Converter {
     }
   }
 
-  private commandStore = (values: JsonObject[], target: string = '$error', mode:commandStoreFieldSeparators = 'semicolon'): boolean => {
+  /**
+   * コマンド Store 出力バッファ(文字列)に値を出力する
+   * @param values 値のアレイ
+   * @param target CSVの桁もしくはエラーバッファ
+   * @param mode アレイの出力様式
+   */
+  private commandStore = (values: JsonObject[], target: string = '$error', mode:commandStoreFieldSeparators = 'first'): boolean => {
     try {
       /**
        * エクセルスタイルの列フォーマットを列番号0~に変換
@@ -989,12 +995,12 @@ export class Converter {
   }
 
   /**
-   * スクリプトの引数文字列が変数参照でない固定値であるかをチェック
+   * スクリプトの引数文字列が変数であるかをチェック
    * @param value
    * @returns
    */
   // eslint-disable-next-line no-useless-escape
-  private isArgumentIsConstantValue = (value: string):boolean => !/^(@|\$[^.\[])/.test(value)
+  private isVariableName = (value: string):boolean => /^(@\d+|\$[^.\[])/.test(value)
 }
 
 /**
@@ -1031,18 +1037,11 @@ function setValueAsStringArray (argValue: unknown|unknown[]): string[] {
  * @returns {unknown[]}
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function parseVariableValueArray (values: string[]): unknown[] {
-  const results:unknown[] = []
-  for (const value of values) {
-    try {
-      const parsed = JSON.parse(value)
-      results.push(parsed)
-    } catch {
-      results.push(value)
-    }
-  }
-  return results
-}
+const parseVariableValueArray = (values: string[]): JsonObject[] => values.map(value => {
+  // JSON形式で保存されていないものは例外を起こすので、文字列として返す
+  // クオートした文字列としてJSONを記載することでオブジェクトを生成出来る
+  try { return JSON.parse(value) } catch { return value }
+})
 
 /**
  * 文字列を切り出し文字で切り出して配列に変換
@@ -1054,9 +1053,10 @@ export function parseStringToStringArray (value: string): string[] {
   let quoteType:string = ''
   let currentItem:string = ''
 
+  const splitters = ' 　,\t'
   for (const char of value.trim()) {
     // 非クオート状態で区切り文字(全角スペースも区切り文字扱い)
-    if (quoteType === '' && (char === ' ' || char === '　' || char === ',')) {
+    if (quoteType === '' && splitters.indexOf(char) >= 0) {
       // スペースでの区切りが連続した場合は1つの区切りと看做す
       if (char === ',' || currentItem !== '') {
         result.push(currentItem)
@@ -1065,8 +1065,9 @@ export function parseStringToStringArray (value: string): string[] {
       continue
     }
 
-    // クオート処理 シングル・ダブル・バック全て可能とする
-    if (char === '"' || char === '\'' || char === '`') {
+    // クオート処理 シングル・ダブル・バックおよび全角全て可能とする
+    const quoteChars = '"\'`“”’｀'
+    if (quoteChars.indexOf(char) >= 0) {
       if (quoteType === '') { // クオートイン
         quoteType = char
         // クオートも区切りとして扱う
@@ -1075,8 +1076,8 @@ export function parseStringToStringArray (value: string): string[] {
           currentItem = ''
         }
         continue
-      } else { // クオートアウト
-        if (char === quoteType) {
+      } else { // クオートアウト 全角の “～” 形式にも対応する
+        if (char === quoteType || (quoteType === '“' && char === '”')) {
           quoteType = ''
           result.push(currentItem)
           currentItem = ''
