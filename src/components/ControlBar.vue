@@ -181,8 +181,9 @@ async function processDocument (index:number) {
     </div>
     <div>
       <el-input style="width: 20rem;" v-model="rulesetTitle" placeholder="ルールセットの名称未設定"/>
-      <el-dialog v-model="openMenu" :show-close="false" :close-on-click-modal="false" title="ルールセットの詳細設定">
-        <RulesetConfig @close="openMenu = false"/>
+      <el-dialog title="ルールセットの詳細設定"
+        v-model="openMenu" :show-close="false" :close-on-click-modal="false">
+        <RulesetConfig v-if="openMenu" @close="openMenu = false"/>
       </el-dialog>
     </div>
     <div>
@@ -206,5 +207,6 @@ div.control-bar {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  align-items: center;
 }
 </style>
