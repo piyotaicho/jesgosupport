@@ -6,14 +6,14 @@ const version = '0.9.1'
 const filename = 'check-EM-2023-single.ts'
 const targetDocumentType = 'EM'
 const scriptInformation: scriptInfo = {
-  plugin_name: '子宮体がん登録チェック(2023年個別)',
-  plugin_version: version.split('.').slice(0, 2).join('.'),
+  plugin_name: '子宮体がん個別確認 (2023-2024)',
+  plugin_version: '0.1', // version.split('.').slice(0, 2).join('.'),
   all_patient: false,
   attach_patient_info: true,
   show_upload_dialog: false,
   update_db: true,
   target_schema_id_string: '',
-  explain: '2023年症例子宮体がん登録対応のチェックを行います'
+  explain: '2023年・2024年症例子宮体がん登録対応のチェックを行います'
 }
 
 export async function init ():Promise<scriptInfo> {
@@ -40,5 +40,5 @@ export async function main (docData: setterPluginArgument[], apicall: (docData: 
     description: scriptInformation.explain,
     script: embeddedScript
   }
-  return await embeddedMain(docData, apicall, pluginInfo)
+  return await embeddedMain(docData, '/jesgo:error/-', apicall, pluginInfo)
 }

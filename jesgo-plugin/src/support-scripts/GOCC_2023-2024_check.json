@@ -1,7 +1,7 @@
 [
   {
-    "title": "GO-CC_2023_check_basic_info",
-    "description": "GO-CC_2023_cervical_cancer: Treatment category, Age, FIGO, cTNM",
+    "title": "GO-CC_2021_2024_check_basic_info",
+    "description": "GO-CC_2021_2024_cervical_cancer: Treatment category, Age, FIGO, cTNM",
     "source": [
       {
         "path": "$[?(@.患者台帳)][?(@.がん種==\"子宮頸がん\")]",
@@ -10,14 +10,14 @@
       {
         "path": "$date_of_birth"
       }
-    ],
-    "procedure": [
+      ],
+      "procedure": [
       {
         "type": "Query",
         "arguments": [
-          "@1",
-          "$.[0].腫瘍登録対象",
-          "$0"
+        "@1",
+        "$.[0].腫瘍登録対象",
+        "$0"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -25,10 +25,10 @@
       {
         "type": "Operators",
         "arguments": [
-          "$0",
-          "value",
-          "はい",
-          "eq"
+        "$0",
+        "value",
+        "はい",
+        "eq"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -41,18 +41,28 @@
           "$0"
         ],
         "trueBehavior": 1,
-        "falseBehavior": 2
+        "falseBehavior": 3
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$0",
+          "\"\"",
+          "difference",
+          "$0"
+        ],
+        "trueBehavior": 1
       },
       {
         "type": "Operators",
         "arguments": [
           "$0",
           "count",
-          "0",
+          "1",
           "eq"
         ],
-        "trueBehavior": 1,
-        "falseBehavior": 2
+        "trueBehavior": 2,
+        "falseBehavior": 1
       },
       {
         "type": "Store",
@@ -90,8 +100,19 @@
         "arguments": [
           "$1",
           "value",
-          "2023",
-          "eq"
+          "2021",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$1",
+          "value",
+          "2024",
+          "le"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -115,18 +136,28 @@
           "$1"
         ],
         "trueBehavior": 1,
-        "falseBehavior": 2
+        "falseBehavior": 3
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "\"\"",
+          "difference",
+          "$1"
+        ],
+        "trueBehavior": 1
       },
       {
         "type": "Operators",
         "arguments": [
           "$1",
           "count",
-          "0",
+          "1",
           "eq"
         ],
-        "trueBehavior": 1,
-        "falseBehavior": 2
+        "trueBehavior": 2,
+        "falseBehavior": 1
       },
       {
         "type": "Store",
@@ -142,7 +173,7 @@
         "arguments": [
           "$1",
           "value",
-          "手術療法、薬物療法、放射線療法を実施せず",
+          "\"手術療法、薬物療法、放射線療法を実施せず\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -165,18 +196,28 @@
           "$2"
         ],
         "trueBehavior": 1,
-        "falseBehavior": 2
+        "falseBehavior": 3
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$2",
+          "\"\"",
+          "difference",
+          "$2"
+        ],
+        "trueBehavior": 1
       },
       {
         "type": "Operators",
         "arguments": [
           "$2",
           "count",
-          "0",
+          "1",
           "eq"
         ],
-        "trueBehavior": 1,
-        "falseBehavior": 2
+        "trueBehavior": 2,
+        "falseBehavior": 1
       },
       {
         "type": "Store",
@@ -365,7 +406,7 @@
       {
         "type": "Store",
         "arguments": [
-          "【要修正】臨床進行期:T1a詳細情報を入力して下さい。",
+          "【要修正】cT1a症例の腫瘍の水平方向の広がりを入力して下さい。",
           "$error",
           "whitespace"
         ],
@@ -455,7 +496,7 @@
       {
         "type": "Store",
         "arguments": [
-          "【要修正】臨床進行期:M分類を入力して下さい。",
+          "【要修正】臨床進行期:cM分類を入力して下さい。",
           "$error",
           "whitespace"
         ],
@@ -523,23 +564,23 @@
         "trueBehavior": "Abort"
       }
     ]
-  },
+  },      
   {
-    "title": "GO-CC_2023_check_primary_operation",
-    "description": "GO-CC_2023_cervical_cancer: pTNM",
+    "title": "GO-CC_2021_2023_check_pTNM",
+    "description": "GO-CC_2021_2023_cervical_cancer: pTNM",
     "source": [
       {
         "path": "$[?(@.患者台帳)][?(@.がん種==\"子宮頸がん\")]",
         "subpath": ""
       }
-    ],
-    "procedure": [
+      ],
+      "procedure": [
       {
         "type": "Query",
         "arguments": [
-          "@1",
-          "$.[0].腫瘍登録対象",
-          "$0"
+        "@1",
+        "$.[0].腫瘍登録対象",
+        "$0"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -547,10 +588,10 @@
       {
         "type": "Operators",
         "arguments": [
-          "$0",
-          "value",
-          "はい",
-          "eq"
+        "$0",
+        "value",
+        "はい",
+        "eq"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -584,8 +625,19 @@
         "arguments": [
           "$0",
           "value",
+          "2021",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$0",
+          "value",
           "2023",
-          "eq"
+          "le"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -789,7 +841,7 @@
       {
         "type": "Store",
         "arguments": [
-          "【要修正】pT1a詳細情報を入力して下さい。",
+          "【要修正】pT1a症例の腫瘍の水平方向の広がりが入力されていません。",
           "$error",
           "whitespace"
         ],
@@ -915,8 +967,8 @@
           "0",
           "eq"
         ],
-        "trueBehavior": "Abort",
-        "falseBehavior": 1
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
       },
       {
         "type": "Store",
@@ -930,21 +982,21 @@
     ]
   },
   {
-    "title": "GO-CC_2023_export_secondary_operation",
-    "description": "GO-CC_2023_cervical_cancer: ypTNM",
+    "title": "GO-CC_2024_20XX_check_pTNM",
+    "description": "GO-CC_2024_20XX_cervical_cancer: pTNM",
     "source": [
       {
         "path": "$[?(@.患者台帳)][?(@.がん種==\"子宮頸がん\")]",
         "subpath": ""
       }
-    ],
-    "procedure": [
+      ],
+      "procedure": [
       {
         "type": "Query",
         "arguments": [
-          "@1",
-          "$.[0].腫瘍登録対象",
-          "$0"
+        "@1",
+        "$.[0].腫瘍登録対象",
+        "$0"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -952,10 +1004,10 @@
       {
         "type": "Operators",
         "arguments": [
-          "$0",
-          "value",
-          "はい",
-          "eq"
+        "$0",
+        "value",
+        "はい",
+        "eq"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -989,8 +1041,465 @@
         "arguments": [
           "$0",
           "value",
-          "2023",
+          "2024",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$0",
+          "value",
+          "2024",
+          "le"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.治療施行状況",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$1",
+          "value",
+          "初回手術施行例",
           "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.pTNM.T.T",
+          "$2"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$2"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1,
+        "lookup": [
+          [
+            "TX",
+            "20"
+          ],
+          [
+            "T0",
+            "19"
+          ],
+          [
+            "Tis",
+            "1"
+          ],
+          [
+            "T1(亜分類不明)",
+            "2"
+          ],
+          [
+            "T1a1:脈管侵襲なし",
+            "3"
+          ],
+          [
+            "T1a1:脈管侵襲あり",
+            "4"
+          ],
+          [
+            "T1a2:脈管侵襲なし",
+            "5"
+          ],
+          [
+            "T1a2:脈管侵襲あり",
+            "6"
+          ],
+          [
+            "T1a(亜分類不明):脈管侵襲なし",
+            "7"
+          ],
+          [
+            "T1a(亜分類不明):脈管侵襲あり",
+            "8"
+          ],
+          [
+            "T1b1",
+            "9"
+          ],
+          [
+            "T1b2",
+            "10"
+          ],
+          [
+            "T1b3",
+            "23"
+          ],
+          [
+            "T1b(亜分類不明)",
+            "11"
+          ],
+          [
+            "T2(亜分類不明)",
+            "12"
+          ],
+          [
+            "T2a1",
+            "21"
+          ],
+          [
+            "T2a2",
+            "22"
+          ],
+          [
+            "T2a(亜分類不明)",
+            "13"
+          ],
+          [
+            "T2b",
+            "14"
+          ],
+          [
+            "T3(亜分類不明)",
+            "15"
+          ],
+          [
+            "T3a",
+            "16"
+          ],
+          [
+            "T3b",
+            "17"
+          ],
+          [
+            "T4",
+            "18"
+          ]
+        ]
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】pT分類を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 9
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "value",
+          "3",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 8
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "value",
+          "8",
+          "le"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 7
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.pTNM.T.T1a期 詳細入力",
+          "$3"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要確認】pT1a症例の腫瘍の水平方向の広がりが入力されていません。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.pTNM.T.T1a期 腫瘍の厚さ",
+          "$3"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要確認】pT1a症例の腫瘍の厚さが入力されていません。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.pTNM.N.RP",
+          "$4"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 4
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.pTNM.N.RPX",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】pN分類: 骨盤リンパ節（RP）を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.pTNM.N.RA",
+          "$6"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 4
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$6",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.pTNM.N.RAX",
+          "$7"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】pN分類: 傍大動脈リンパ節（RA）を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].病期診断.pTNM.M.M",
+          "$8"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$8",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】pM分類を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      }
+    ]
+  },
+  {
+    "title": "GO-CC_2021_2024_export_ypTNM",
+    "description": "GO-CC_2021_2024_cervical_cancer: ypTNM",
+    "source": [
+      {
+        "path": "$[?(@.患者台帳)][?(@.がん種==\"子宮頸がん\")]",
+        "subpath": ""
+      }
+      ],
+      "procedure": [
+      {
+        "type": "Query",
+        "arguments": [
+        "@1",
+        "$.[0].腫瘍登録対象",
+        "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+        "$0",
+        "value",
+        "はい",
+        "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].初回治療開始日",
+          "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "/^(\\d{4})-(\\d{2})-(\\d{2})$/",
+            "$1"
+          ]
+        ]
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$0",
+          "value",
+          "2021",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$0",
+          "value",
+          "2024",
+          "le"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -1194,7 +1703,7 @@
       {
         "type": "Store",
         "arguments": [
-          "【要修正】ypT1a詳細情報を入力して下さい。",
+          "【要修正】ypT1a症例の腫瘍の水平方向の広がりが入力されていません。",
           "$error",
           "whitespace"
         ],
@@ -1335,21 +1844,21 @@
     ]
   },
   {
-    "title": "GO-CC_2023_check_findings",
-    "description": "GO-CC_2023_cervical_cancer: Findings",
+    "title": "GO-CC_2021_2024_check_findings",
+    "description": "GO-CC_2021_2024_cervical_cancer: Findings",
     "source": [
       {
         "path": "$[?(@.患者台帳)][?(@.がん種==\"子宮頸がん\")]",
         "subpath": ""
       }
-    ],
+      ],
     "procedure": [
       {
         "type": "Query",
         "arguments": [
-          "@1",
-          "$.[0].腫瘍登録対象",
-          "$0"
+        "@1",
+        "$.[0].腫瘍登録対象",
+        "$0"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -1357,10 +1866,10 @@
       {
         "type": "Operators",
         "arguments": [
-          "$0",
-          "value",
-          "はい",
-          "eq"
+        "$0",
+        "value",
+        "はい",
+        "eq"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -1394,8 +1903,19 @@
         "arguments": [
           "$0",
           "value",
-          "2023",
-          "eq"
+          "2021",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$0",
+          "value",
+          "2024",
+          "le"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -1943,21 +2463,21 @@
     ]
   },
   {
-    "title": "GO-CC_2023_check_histology",
-    "description": "GO-CC_2023_cervical_cancer: Histology",
+    "title": "GO-CC_2021_2023_check_histology",
+    "description": "GO-CC_2021_2023_cervical_cancer: Histology",
     "source": [
       {
         "path": "$[?(@.患者台帳)][?(@.がん種==\"子宮頸がん\")]",
         "subpath": ""
       }
-    ],
+      ],
     "procedure": [
       {
         "type": "Query",
         "arguments": [
-          "@1",
-          "$.[0].腫瘍登録対象",
-          "$0"
+        "@1",
+        "$.[0].腫瘍登録対象",
+        "$0"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -1965,10 +2485,10 @@
       {
         "type": "Operators",
         "arguments": [
-          "$0",
-          "value",
-          "はい",
-          "eq"
+        "$0",
+        "value",
+        "はい",
+        "eq"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -2002,8 +2522,19 @@
         "arguments": [
           "$0",
           "value",
+          "2021",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$0",
+          "value",
           "2023",
-          "eq"
+          "le"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -2016,18 +2547,28 @@
           "$1"
         ],
         "trueBehavior": 1,
-        "falseBehavior": 2
+        "falseBehavior": 3
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "\"\"",
+          "difference",
+          "$1"
+        ],
+        "trueBehavior": 1
       },
       {
         "type": "Operators",
         "arguments": [
           "$1",
           "count",
-          "0",
+          "1",
           "eq"
         ],
-        "trueBehavior": 1,
-        "falseBehavior": "Abort"
+        "trueBehavior": "Abort",
+        "falseBehavior": 1
       },
       {
         "type": "Store",
@@ -2036,13 +2577,270 @@
           "$error",
           "whitespace"
         ],
+        "trueBehavior": 1
+      }
+    ]
+  },
+  {
+    "title": "GO-CC_2024_20XX_check_histology",
+    "description": "GO-CC_2024_20XX_cervical_cancer: Histology",
+    "source": [
+      {
+        "path": "$[?(@.患者台帳)][?(@.がん種==\"子宮頸がん\")]",
+        "subpath": ""
+      }
+      ],
+    "procedure": [
+      {
+        "type": "Query",
+        "arguments": [
+        "@1",
+        "$.[0].腫瘍登録対象",
+        "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+        "$0",
+        "value",
+        "はい",
+        "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].初回治療開始日",
+          "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "/^(\\d{4})-(\\d{2})-(\\d{2})$/",
+            "$1"
+          ]
+        ]
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$0",
+          "value",
+          "2024",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$0",
+          "value",
+          "2024",
+          "le"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].組織診断.組織型",
+          "$1"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "\"\"",
+          "difference",
+          "$1"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$1",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】組織診断を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "\"扁平上皮癌 HPV関連\", \"扁平上皮癌 HPV非依存性\", \"扁平上皮癌, NOS\"",
+          "$2"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "$2",
+          "intersect",
+          "$2"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Variables",
+        "arguments": [
+          "\"腺癌 HPV関連\", \"腺癌 HPV非依存性\", \"腺癌, NOS\"",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$1",
+          "$3",
+          "intersect",
+          "$3"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 5
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].組織診断.扁平上皮癌 詳細",
+          "$5"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$5",
+          "\"\"",
+          "difference",
+          "$5"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要確認】組織診断:扁平上皮癌 詳細欄を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[0].組織診断.腺癌 詳細",
+          "$6"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$6",
+          "\"\"",
+          "difference",
+          "$6"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$6",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要修正】組織診断:腺癌 詳細欄を入力して下さい。",
+          "$error",
+          "whitespace"
+        ],
         "trueBehavior": "Abort"
       }
     ]
   },
   {
-    "title": "GO-CC_2023_check_treatment_info",
-    "description": "GO-CC_2023_cervical_cancer:Treatment",
+    "title": "GO-CC_2021_2024_check_treatment_info",
+    "description": "GO-CC_2021_2024_cervical_cancer:Treatment",
     "source": [
       {
         "path": "$[?(@.患者台帳)][?(@.がん種==\"子宮頸がん\")].初回治療.手術療法",
@@ -2074,6 +2872,73 @@
       }
     ],
     "procedure": [
+      {
+        "type": "Query",
+        "arguments": [
+        "@7",
+        "$.[0].腫瘍登録対象",
+        "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+        "$0",
+        "value",
+        "はい",
+        "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@7",
+          "$.[0].初回治療開始日",
+          "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Translation",
+        "arguments": [
+          "$0"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort",
+        "lookup": [
+          [
+            "/^(\\d{4})-(\\d{2})-(\\d{2})$/",
+            "$1"
+          ]
+        ]
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$0",
+          "value",
+          "2021",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$0",
+          "value",
+          "2024",
+          "le"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
       {
         "type": "Sets",
         "arguments": [
@@ -2146,13 +3011,13 @@
       {
         "type": "Period",
         "arguments": [
-          "$1",
           "$2",
+          "$1",
           "days",
           "$1"
         ],
         "trueBehavior": 1,
-        "falseBehavior": "Abort"
+        "falseBehavior": 2
       },
       {
         "type": "Operators",
@@ -2185,17 +3050,6 @@
         "falseBehavior": "Abort"
       },
       {
-        "type": "Operators",
-        "arguments": [
-          "$1",
-          "count",
-          "0",
-          "eq"
-        ],
-        "trueBehavior": 1,
-        "falseBehavior": "Abort"
-      },
-      {
         "type": "Query",
         "arguments": [
           "@7",
@@ -2204,17 +3058,6 @@
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
-      },
-      {
-        "type": "Operators",
-        "arguments": [
-          "$2",
-          "count",
-          "0",
-          "eq"
-        ],
-        "trueBehavior": "Abort",
-        "falseBehavior": 1
       },
       {
         "type": "Translation",
@@ -2427,7 +3270,7 @@
         "type": "Query",
         "arguments": [
           "@1",
-          "$.[*].実施手術.[*].術式",
+          "$.[*].実施手術.実施手術.[*].術式",
           "$6"
         ],
         "trueBehavior": 1,
@@ -2555,7 +3398,7 @@
           "eq"
         ],
         "trueBehavior": 1,
-        "falseBehavior": 9
+        "falseBehavior": 8
       },
       {
         "type": "Operators",
@@ -2566,7 +3409,7 @@
           "ge"
         ],
         "trueBehavior": 1,
-        "falseBehavior": 8
+        "falseBehavior": 7
       },
       {
         "type": "Operators",
@@ -2577,7 +3420,40 @@
           "eq"
         ],
         "trueBehavior": 1,
-        "falseBehavior": 7
+        "falseBehavior": 6
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "value",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 4,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "value",
+          "2",
+          "eq"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$2",
+          "value",
+          "3",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
       },
       {
         "type": "Operators",
@@ -2585,10 +3461,10 @@
           "$2",
           "value",
           "4",
-          "le"
+          "eq"
         ],
         "trueBehavior": 1,
-        "falseBehavior": 6
+        "falseBehavior": 2
       },
       {
         "type": "Store",
@@ -2598,6 +3474,39 @@
           "whitespace"
         ],
         "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$3",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 7
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$4",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 6
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$5",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 5
       },
       {
         "type": "Operators",
@@ -2614,7 +3523,7 @@
         "type": "Sets",
         "arguments": [
           "$7",
-          "分子標的薬",
+          "分子標的治療",
           "difference",
           "$9"
         ],
@@ -2743,25 +3652,268 @@
           "whitespace"
         ],
         "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "@4",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 9
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[*].手術時間",
+          "$8"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 4
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$8",
+          "\"\"",
+          "difference",
+          "$8"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$8",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要確認】手術時間が入力されていません。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[*].合併症の有無",
+          "$9"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 4
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "\"\"",
+          "difference",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$9",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要確認】合併症の有無が入力されていません。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "@4",
+          "count",
+          "2",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 9
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[*].手術時間",
+          "$8"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 4
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$8",
+          "\"\"",
+          "difference",
+          "$8"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$8",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要確認】全ての手術療法に対し手術時間が入力されていることを確認して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[*].合併症の有無",
+          "$9"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "\"\"",
+          "difference",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$9",
+          "count",
+          "1",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要確認】全ての手術療法に対し合併症の有無が入力されていることを確認して下さい。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[*].合併症の有無",
+          "$9"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 3
+      },
+      {
+        "type": "Sets",
+        "arguments": [
+          "$9",
+          "あり",
+          "intersect",
+          "$9"
+        ],
+        "trueBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$9",
+          "count",
+          "1",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Query",
+        "arguments": [
+          "@1",
+          "$.[*].手術合併症.[*].転帰",
+          "$9"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": 2
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$9",
+          "count",
+          "0",
+          "eq"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Store",
+        "arguments": [
+          "【要確認】合併症が「あり」と登録されていますが、手術合併症の詳細情報が登録されていません。",
+          "$error",
+          "whitespace"
+        ],
+        "trueBehavior": 1
       }
     ]
   },
   {
-    "title": "GO-CC_2023_logicalcheck_FIGO_finding",
-    "description": "GO-CC_2023_cervical_cancer: Logical check between FIGO and findings",
+    "title": "GO-CC_2021_2024_logicalcheck_FIGO_finding",
+    "description": "GO-CC_2021_2024_cervical_cancer: Logical check between FIGO and findings",
     "source": [
       {
         "path": "$[?(@.患者台帳)][?(@.がん種==\"子宮頸がん\")]",
         "subpath": ""
       }
-    ],
+      ],
     "procedure": [
       {
         "type": "Query",
         "arguments": [
-          "@1",
-          "$.[0].腫瘍登録対象",
-          "$0"
+        "@1",
+        "$.[0].腫瘍登録対象",
+        "$0"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -2769,10 +3921,10 @@
       {
         "type": "Operators",
         "arguments": [
-          "$0",
-          "value",
-          "はい",
-          "eq"
+        "$0",
+        "value",
+        "はい",
+        "eq"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -2806,8 +3958,19 @@
         "arguments": [
           "$0",
           "value",
-          "2023",
-          "eq"
+          "2021",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$0",
+          "value",
+          "2024",
+          "le"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -2818,17 +3981,6 @@
           "@1",
           "$.[0].病期診断.FIGO",
           "$0"
-        ],
-        "trueBehavior": 1,
-        "falseBehavior": "Abort"
-      },
-      {
-        "type": "Operators",
-        "arguments": [
-          "$0",
-          "count",
-          "1",
-          "ge"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -3910,7 +5062,7 @@
           "eq"
         ],
         "trueBehavior": 1,
-        "falseBehavior": 4
+        "falseBehavior": 6
       },
       {
         "type": "Operators",
@@ -3921,14 +5073,36 @@
           "eq"
         ],
         "trueBehavior": 1,
-        "falseBehavior": 3
+        "falseBehavior": 5
       },
       {
         "type": "Operators",
         "arguments": [
           "$7",
           "value",
-          "画像診断",
+          "画像診断―MRI",
+          "eq"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "value",
+          "画像診断―CT",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "value",
+          "画像診断―PET/CT",
           "eq"
         ],
         "trueBehavior": 1,
@@ -3994,7 +5168,7 @@
           "eq"
         ],
         "trueBehavior": 1,
-        "falseBehavior": 4
+        "falseBehavior": 6
       },
       {
         "type": "Operators",
@@ -4005,14 +5179,36 @@
           "eq"
         ],
         "trueBehavior": 1,
-        "falseBehavior": 3
+        "falseBehavior": 5
       },
       {
         "type": "Operators",
         "arguments": [
-          "$8",
+          "$7",
           "value",
-          "画像診断",
+          "画像診断―MRI",
+          "eq"
+        ],
+        "trueBehavior": 3,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "value",
+          "画像診断―CT",
+          "eq"
+        ],
+        "trueBehavior": 2,
+        "falseBehavior": 1
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$7",
+          "value",
+          "画像診断―PET/CT",
           "eq"
         ],
         "trueBehavior": 1,
@@ -4089,25 +5285,25 @@
           "whitespace"
         ],
         "trueBehavior": 1
-      }
+      }  
     ]
   },
   {
-    "title": "GO-CC_2023_logicalcheck_TNM_finding",
-    "description": "GO-CC_2023_cervical_cancer: Logical check between TNM and findings",
+    "title": "GO-CC_2021_2024_logicalcheck_TNM_finding",
+    "description": "GO-CC_2021_2024_cervical_cancer: Logical check between TNM and findings",
     "source": [
       {
         "path": "$[?(@.患者台帳)][?(@.がん種==\"子宮頸がん\")]",
         "subpath": ""
       }
-    ],
+      ],
     "procedure": [
       {
         "type": "Query",
         "arguments": [
-          "@1",
-          "$.[0].腫瘍登録対象",
-          "$0"
+        "@1",
+        "$.[0].腫瘍登録対象",
+        "$0"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -4115,10 +5311,10 @@
       {
         "type": "Operators",
         "arguments": [
-          "$0",
-          "value",
-          "はい",
-          "eq"
+        "$0",
+        "value",
+        "はい",
+        "eq"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -4152,8 +5348,19 @@
         "arguments": [
           "$0",
           "value",
-          "2023",
-          "eq"
+          "2021",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$0",
+          "value",
+          "2024",
+          "le"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -4641,21 +5848,21 @@
     ]
   },
   {
-    "title": "GO-CC_2023_logicalcheck_ FIGO_cTNM",
-    "description": "GO-CC_2023_cervical_cancer: Logical check between FIGO and cTNM",
+    "title": "GO-CC_2021_2024_logicalcheck_ FIGO_cTNM",
+    "description": "GO-CC_2021_2024_cervical_cancer: Logical check between FIGO and cTNM",
     "source": [
       {
         "path": "$[?(@.患者台帳)][?(@.がん種==\"子宮頸がん\")]",
         "subpath": ""
       }
-    ],
+      ],
     "procedure": [
       {
         "type": "Query",
         "arguments": [
-          "@1",
-          "$.[0].腫瘍登録対象",
-          "$0"
+        "@1",
+        "$.[0].腫瘍登録対象",
+        "$0"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -4663,10 +5870,10 @@
       {
         "type": "Operators",
         "arguments": [
-          "$0",
-          "value",
-          "はい",
-          "eq"
+        "$0",
+        "value",
+        "はい",
+        "eq"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -4700,8 +5907,19 @@
         "arguments": [
           "$0",
           "value",
-          "2023",
-          "eq"
+          "2021",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$0",
+          "value",
+          "2024",
+          "le"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -4733,17 +5951,6 @@
           "@1",
           "$.[0].病期診断.FIGO",
           "$0"
-        ],
-        "trueBehavior": 1,
-        "falseBehavior": "Abort"
-      },
-      {
-        "type": "Operators",
-        "arguments": [
-          "$0",
-          "count",
-          "1",
-          "ge"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -4816,7 +6023,7 @@
         "arguments": [
           "$1",
           "value",
-          "T1a1:脈管侵襲なし",
+          "\"T1a1:脈管侵襲なし\"",
           "eq"
         ],
         "trueBehavior": 2,
@@ -4827,7 +6034,7 @@
         "arguments": [
           "$1",
           "value",
-          "T1a1:脈管侵襲あり",
+          "\"T1a1:脈管侵襲あり\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -4880,7 +6087,7 @@
         "arguments": [
           "$1",
           "value",
-          "T1a2:脈管侵襲なし",
+          "\"T1a2:脈管侵襲なし\"",
           "eq"
         ],
         "trueBehavior": 2,
@@ -4891,7 +6098,7 @@
         "arguments": [
           "$1",
           "value",
-          "T1a2:脈管侵襲あり",
+          "\"T1a2:脈管侵襲あり\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -4944,7 +6151,7 @@
         "arguments": [
           "$1",
           "value",
-          "T1b1",
+          "\"T1b1\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -5368,7 +6575,7 @@
         "arguments": [
           "$1",
           "value",
-          "T4",
+          "\"T4\"",
           "eq"
         ],
         "trueBehavior": 5,
@@ -5421,7 +6628,7 @@
         "arguments": [
           "$1",
           "value",
-          "T4",
+          "\"T4\"",
           "eq"
         ],
         "trueBehavior": 6,
@@ -5485,7 +6692,7 @@
         "arguments": [
           "$1",
           "value",
-          "T4",
+          "\"T4\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -5556,21 +6763,21 @@
     ]
   },
   {
-    "title": "GO-CC_2023_logicalcheck_FIGO_pTNM",
-    "description": "GO-CC_2023_cervical_cancer: Logical check between FIGO and pTNM",
+    "title": "GO-CC_2021_2024_logicalcheck_FIGO_pTNM",
+    "description": "GO-CC_2021_2024_cervical_cancer: Logical check between FIGO and pTNM",
     "source": [
       {
         "path": "$[?(@.患者台帳)][?(@.がん種==\"子宮頸がん\")]",
         "subpath": ""
       }
-    ],
+      ],
     "procedure": [
       {
         "type": "Query",
         "arguments": [
-          "@1",
-          "$.[0].腫瘍登録対象",
-          "$0"
+        "@1",
+        "$.[0].腫瘍登録対象",
+        "$0"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -5578,10 +6785,10 @@
       {
         "type": "Operators",
         "arguments": [
-          "$0",
-          "value",
-          "はい",
-          "eq"
+        "$0",
+        "value",
+        "はい",
+        "eq"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -5615,8 +6822,19 @@
         "arguments": [
           "$0",
           "value",
-          "2023",
-          "eq"
+          "2021",
+          "ge"
+        ],
+        "trueBehavior": 1,
+        "falseBehavior": "Abort"
+      },
+      {
+        "type": "Operators",
+        "arguments": [
+          "$0",
+          "value",
+          "2024",
+          "le"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -5648,17 +6866,6 @@
           "@1",
           "$.[0].病期診断.FIGO",
           "$0"
-        ],
-        "trueBehavior": 1,
-        "falseBehavior": "Abort"
-      },
-      {
-        "type": "Operators",
-        "arguments": [
-          "$0",
-          "count",
-          "1",
-          "ge"
         ],
         "trueBehavior": 1,
         "falseBehavior": "Abort"
@@ -5752,7 +6959,7 @@
         "arguments": [
           "$1",
           "value",
-          "T1a1:脈管侵襲なし",
+          "\"T1a1:脈管侵襲なし\"",
           "eq"
         ],
         "trueBehavior": 2,
@@ -5763,7 +6970,7 @@
         "arguments": [
           "$1",
           "value",
-          "T1a1:脈管侵襲あり",
+          "\"T1a1:脈管侵襲あり\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -5785,7 +6992,7 @@
         "arguments": [
           "$2",
           "value",
-          "RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+          "\"RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない\"",
           "eq"
         ],
         "trueBehavior": 2,
@@ -5796,7 +7003,7 @@
         "arguments": [
           "$2",
           "value",
-          "RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない",
+          "\"RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -5807,7 +7014,7 @@
         "arguments": [
           "$3",
           "value",
-          "RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+          "\"RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない\"",
           "eq"
         ],
         "trueBehavior": 2,
@@ -5818,7 +7025,7 @@
         "arguments": [
           "$3",
           "value",
-          "RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない",
+          "\"RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -5849,7 +7056,7 @@
         "arguments": [
           "$1",
           "value",
-          "T1a2:脈管侵襲なし",
+          "\"T1a2:脈管侵襲なし\"",
           "eq"
         ],
         "trueBehavior": 2,
@@ -5860,7 +7067,7 @@
         "arguments": [
           "$1",
           "value",
-          "T1a2:脈管侵襲あり",
+          "\"T1a2:脈管侵襲あり\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -5882,7 +7089,7 @@
         "arguments": [
           "$2",
           "value",
-          "RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+          "\"RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない\"",
           "eq"
         ],
         "trueBehavior": 2,
@@ -5893,7 +7100,7 @@
         "arguments": [
           "$2",
           "value",
-          "RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない",
+          "\"RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -5904,7 +7111,7 @@
         "arguments": [
           "$3",
           "value",
-          "RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+          "\"RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない\"",
           "eq"
         ],
         "trueBehavior": 2,
@@ -5915,7 +7122,7 @@
         "arguments": [
           "$3",
           "value",
-          "RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない",
+          "\"RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -5968,7 +7175,7 @@
         "arguments": [
           "$2",
           "value",
-          "RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+          "\"RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない\"",
           "eq"
         ],
         "trueBehavior": 2,
@@ -5979,7 +7186,7 @@
         "arguments": [
           "$2",
           "value",
-          "RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない",
+          "\"RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -5990,7 +7197,7 @@
         "arguments": [
           "$3",
           "value",
-          "RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+          "\"RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない\"",
           "eq"
         ],
         "trueBehavior": 2,
@@ -6001,7 +7208,7 @@
         "arguments": [
           "$3",
           "value",
-          "RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない",
+          "\"RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -6054,7 +7261,7 @@
         "arguments": [
           "$2",
           "value",
-          "RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+          "\"RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない\"",
           "eq"
         ],
         "trueBehavior": 2,
@@ -6065,7 +7272,7 @@
         "arguments": [
           "$2",
           "value",
-          "RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない",
+          "\"RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -6076,7 +7283,7 @@
         "arguments": [
           "$3",
           "value",
-          "RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+          "\"RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない\"",
           "eq"
         ],
         "trueBehavior": 2,
@@ -6087,7 +7294,7 @@
         "arguments": [
           "$3",
           "value",
-          "RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない",
+          "\"RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -6118,7 +7325,7 @@
         "arguments": [
           "$1",
           "value",
-          "T1b3",
+          "\"T1b3\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -6140,7 +7347,7 @@
         "arguments": [
           "$2",
           "value",
-          "RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+          "\"RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない\"",
           "eq"
         ],
         "trueBehavior": 2,
@@ -6151,7 +7358,7 @@
         "arguments": [
           "$2",
           "value",
-          "RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない",
+          "\"RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -6162,7 +7369,7 @@
         "arguments": [
           "$3",
           "value",
-          "RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+          "\"RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない\"",
           "eq"
         ],
         "trueBehavior": 2,
@@ -6173,7 +7380,7 @@
         "arguments": [
           "$3",
           "value",
-          "RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない",
+          "\"RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -6226,7 +7433,7 @@
         "arguments": [
           "$2",
           "value",
-          "RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+          "\"RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない\"",
           "eq"
         ],
         "trueBehavior": 2,
@@ -6237,7 +7444,7 @@
         "arguments": [
           "$2",
           "value",
-          "RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない",
+          "\"RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -6248,7 +7455,7 @@
         "arguments": [
           "$3",
           "value",
-          "RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+          "\"RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない\"",
           "eq"
         ],
         "trueBehavior": 2,
@@ -6259,7 +7466,7 @@
         "arguments": [
           "$3",
           "value",
-          "RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない",
+          "\"RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -6312,7 +7519,7 @@
         "arguments": [
           "$2",
           "value",
-          "RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+          "\"RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない\"",
           "eq"
         ],
         "trueBehavior": 2,
@@ -6323,7 +7530,7 @@
         "arguments": [
           "$2",
           "value",
-          "RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない",
+          "\"RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -6334,7 +7541,7 @@
         "arguments": [
           "$3",
           "value",
-          "RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+          "\"RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない\"",
           "eq"
         ],
         "trueBehavior": 2,
@@ -6345,7 +7552,7 @@
         "arguments": [
           "$3",
           "value",
-          "RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない",
+          "\"RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -6398,7 +7605,7 @@
         "arguments": [
           "$2",
           "value",
-          "RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+          "\"RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない\"",
           "eq"
         ],
         "trueBehavior": 2,
@@ -6409,7 +7616,7 @@
         "arguments": [
           "$2",
           "value",
-          "RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない",
+          "\"RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -6420,7 +7627,7 @@
         "arguments": [
           "$3",
           "value",
-          "RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+          "\"RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない\"",
           "eq"
         ],
         "trueBehavior": 2,
@@ -6431,7 +7638,7 @@
         "arguments": [
           "$3",
           "value",
-          "RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない",
+          "\"RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -6462,7 +7669,7 @@
         "arguments": [
           "$1",
           "value",
-          "T3a",
+          "\"T3a\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -6484,7 +7691,7 @@
         "arguments": [
           "$2",
           "value",
-          "RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+          "\"RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない\"",
           "eq"
         ],
         "trueBehavior": 2,
@@ -6495,7 +7702,7 @@
         "arguments": [
           "$2",
           "value",
-          "RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない",
+          "\"RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -6506,7 +7713,7 @@
         "arguments": [
           "$3",
           "value",
-          "RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+          "\"RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない\"",
           "eq"
         ],
         "trueBehavior": 2,
@@ -6517,7 +7724,7 @@
         "arguments": [
           "$3",
           "value",
-          "RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない",
+          "\"RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -6570,7 +7777,7 @@
         "arguments": [
           "$2",
           "value",
-          "RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+          "\"RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない\"",
           "eq"
         ],
         "trueBehavior": 2,
@@ -6581,7 +7788,7 @@
         "arguments": [
           "$2",
           "value",
-          "RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない",
+          "\"RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -6592,7 +7799,7 @@
         "arguments": [
           "$3",
           "value",
-          "RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+          "\"RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない\"",
           "eq"
         ],
         "trueBehavior": 2,
@@ -6603,7 +7810,7 @@
         "arguments": [
           "$3",
           "value",
-          "RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない",
+          "\"RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -6656,7 +7863,7 @@
         "arguments": [
           "$2",
           "value",
-          "RP2: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認める",
+          "\"RP2: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認める\"",
           "eq"
         ],
         "trueBehavior": 2,
@@ -6667,7 +7874,7 @@
         "arguments": [
           "$2",
           "value",
-          "RP4: 骨盤リンパ節を摘出し、転移を認める",
+          "\"RP4: 骨盤リンパ節を摘出し、転移を認める\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -6678,7 +7885,7 @@
         "arguments": [
           "$3",
           "value",
-          "RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+          "\"RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない\"",
           "eq"
         ],
         "trueBehavior": 2,
@@ -6689,7 +7896,7 @@
         "arguments": [
           "$3",
           "value",
-          "RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない",
+          "\"RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -6720,7 +7927,7 @@
         "arguments": [
           "$1",
           "value",
-          "T4",
+          "\"T4\"",
           "eq"
         ],
         "trueBehavior": 6,
@@ -6742,7 +7949,7 @@
         "arguments": [
           "$3",
           "value",
-          "RA2: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認める",
+          "\"RA2: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認める\"",
           "eq"
         ],
         "trueBehavior": 2,
@@ -6753,7 +7960,7 @@
         "arguments": [
           "$3",
           "value",
-          "RA4: 傍大動脈リンパ節を摘出し、転移を認める",
+          "\"RA4: 傍大動脈リンパ節を摘出し、転移を認める\"",
           "eq"
         ],
         "trueBehavior": 1,
@@ -6806,7 +8013,7 @@
         "arguments": [
           "$0",
           "value",
-          "IIIIA期",
+          "IVA期",
           "eq"
         ],
         "trueBehavior": 2,
@@ -6837,7 +8044,7 @@
         "arguments": [
           "$0",
           "value",
-          "IIIIB期",
+          "IVB期",
           "eq"
         ],
         "trueBehavior": "Abort",

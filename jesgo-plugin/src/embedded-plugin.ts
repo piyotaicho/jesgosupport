@@ -29,7 +29,7 @@ export type pluginInformation = {
  *  - 取得系 ビューアに渡すデータ(JSON, array or string)
  *  - 取得系 void
  */
-export async function main (docData: setterPluginArgument[], apicall: (docData: getterPluginArgument|updateDocument|updateDocument[], mode: boolean) => string, pluginInfo: pluginInformation): Promise<mainOutput> {
+export async function main (docData: setterPluginArgument[], targetPointer: string, apicall: (docData: getterPluginArgument|updateDocument|updateDocument[], mode: boolean) => string, pluginInfo: pluginInformation): Promise<mainOutput> {
   console.log(`${pluginInfo.filename}@${pluginInfo.version} (C) 2023 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
 
   // 更新モードなのでdocDataには表示されている全てのドキュメントが入っている
@@ -38,7 +38,7 @@ export async function main (docData: setterPluginArgument[], apicall: (docData: 
 
   if (docData) {
     // 実際の処理へ handlerはちゃんと処理したらupdateDocumentを返す
-    const values: unknown = await handler(docData, pluginInfo, getterAPIcall)
+    const values: unknown = await handler(docData, pluginInfo, targetPointer, getterAPIcall)
 
     // APIで返り値ドキュメントを処理(書き戻しモード)
     if (values && Array.isArray(values) && values.length > 0) {
@@ -122,7 +122,7 @@ function extractDocumentId (documentList: any[], extractType: ScriptTypeFormat =
  * @param getterAPIcall 取得系API
  * @returns 更新系APIに渡す更新オブジェクトの配列
  */
-async function handler (data: setterPluginArgument[], pluginInfo: pluginInformation, getterAPIcall?: (arg: getterPluginArgument) => string): Promise<updateDocument[]|undefined> {
+async function handler (data: setterPluginArgument[], pluginInfo: pluginInformation, targetPointer: string, getterAPIcall?: (arg: getterPluginArgument) => string): Promise<updateDocument[]|undefined> {
   // データ無し
   const dataLength = data.length
   if (dataLength === 0) {
@@ -380,7 +380,7 @@ async function handler (data: setterPluginArgument[], pluginInfo: pluginInformat
           target: {
             // /jesgo:error で確認あり
             // /jesgo:error/- で確認なし(追加)
-            '/jesgo:error': errorItem.errors
+            [targetPointer]: errorItem.errors
           }
         }
       )

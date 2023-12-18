@@ -356,7 +356,7 @@ export async function handler (data: setterPluginArgument[], getterAPIcall?: (ar
         {
           document_id: errorItem.documentId,
           target: {
-            '/jesgo:error': errorItem.errors
+            '/jesgo:error/-': errorItem.errors
           }
         }
       )

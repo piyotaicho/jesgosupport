@@ -6,14 +6,14 @@ const version = '0.9.1'
 const filename = 'check-CC-2023.ts'
 const targetDocumentType = 'CC'
 const scriptInformation: scriptInfo = {
-  plugin_name: '子宮頸がん登録チェック(2023年)',
-  plugin_version: version.split('.').slice(0, 2).join('.'),
+  plugin_name: '子宮頸がん登録確認 (2023-2024)',
+  plugin_version: '0.1', // version.split('.').slice(0, 2).join('.'),
   all_patient: true,
   attach_patient_info: true,
   show_upload_dialog: false,
   update_db: true,
   target_schema_id_string: '',
-  explain: '2023年症例子宮頸がん登録対応のチェックを行います'
+  explain: '2023年・2024年症例子宮頸がん登録対応のチェックを行います'
 }
 
 export async function init ():Promise<scriptInfo> {
@@ -40,5 +40,5 @@ export async function main (docData: setterPluginArgument[], apicall: (docData: 
     description: scriptInformation.explain,
     script: embeddedScript
   }
-  return await embeddedMain(docData, apicall, pluginInfo)
+  return await embeddedMain(docData, '/jesgo:error', apicall, pluginInfo)
 }
