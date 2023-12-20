@@ -25,7 +25,7 @@ interface instructionResult {
 type v1BlockType = 'oper'|'var'|'query'|'tr'|'sort'|'period'|'set'|'put'
 export type newBlockType = v1BlockType | BlockType
 
-type commandValueTypes = 'value'|'length'
+type commandValueTypes = 'value'|'length'|'number'
 type commandOperatorExpressions = 'eq'|'='|'gt'|'>'|'ge'|'>='|'lt'|'<'|'le'|'<='|'in'|'incl'|'re'|'regexp'
 type commandSetsOperators = 'add'|'union'|'intersect'|'difference'|'xor'
 type commandSortDirections = 'asc'|'ascend'|'desc'|'descend'
@@ -421,6 +421,9 @@ export class Converter {
         case 'length':
           this.variables[variableName] = [value.length]
           break
+        case 'number':
+          this.variables[variableName] = value.map(item => Number(item))
+          break
         default:
           this.variables[variableName] = value
       }
@@ -442,12 +445,19 @@ export class Converter {
   private commandOperators = (valueA: JsonObject[] = [], valueAtype:commandValueTypes = 'value', valueB: JsonObject[] = [], operator:commandOperatorExpressions) :boolean => {
     try {
       let valueOfA:JsonObject[]
+      let valueOfB:JsonObject[]
       switch (valueAtype) {
         case 'value':
           valueOfA = valueA
+          valueOfB = valueB
           break
         case 'length':
           valueOfA = [valueA.length]
+          valueOfB = valueB.map(item => Number(item)).filter(item => !Number.isNaN(item))
+          break
+        case 'number':
+          valueOfA = valueA.map(item => Number(item)).filter(item => !Number.isNaN(item))
+          valueOfB = valueB.map(item => Number(item)).filter(item => !Number.isNaN(item))
           break
         default:
           throw new SyntaxError(`不正な型指定${valueAtype}です.`)
@@ -458,34 +468,35 @@ export class Converter {
         case 'eq':
         case '=':
           // eslint-disable-next-line eqeqeq
-          return valueOfA[0] == valueB[0]
+          return valueOfA[0] == valueOfB[0]
         case 'gt':
         case '>':
-          return valueOfA[0] > valueB[0]
+          return valueOfA[0] > valueOfB[0]
         case 'ge':
         case '>=':
-          return valueOfA[0] >= valueB[0]
+          return valueOfA[0] >= valueOfB[0]
         case 'lt':
         case '<':
-          return valueOfA[0] < valueB[0]
+          return valueOfA[0] < valueOfB[0]
         case 'le':
         case '<=':
-          return valueOfA[0] <= valueB[0]
+          return valueOfA[0] <= valueOfB[0]
         // 集合演算
         case 'in':
-          return valueOfA.some(item => valueB.includes(item))
+          return valueOfA.some(item => valueOfB.includes(item))
         case 'incl':
-          return valueB.some(item => valueOfA.includes(item))
+          return valueOfB.some(item => valueOfA.includes(item))
         case 're':
         case 'regexp':
           return valueOfA.some(item => {
+            const source = item.toString()
             const expression = valueB[0].toString()
             // /.../オプション 形式の正規表現にも対応、ただしgは使用できない
             const patternMatch = expression.match(/^\/((?:[^/\\]+|\\.)*)\/([gimy]{0,4})$/)
             if (patternMatch) {
-              return RegExp(patternMatch[1], patternMatch[2].replace('g', '')).test(item.toString())
+              return RegExp(patternMatch[1], patternMatch[2].replace('g', '')).test(source)
             } else {
-              return RegExp(expression).test(item.toString())
+              return RegExp(expression).test(source)
             }
           })
         default:
@@ -532,19 +543,10 @@ export class Converter {
       const newValues:JsonObject[] = []
       let replacedAll = true
       for (const item of (this.variables[variableName] as JsonObject[])) {
-        let sourceValue:string = ''
         let replacedValue:string|undefined
 
-        switch (typeof item) {
-          case 'string':
-            sourceValue = item as string
-            break
-          case 'object':
-            sourceValue = JSON.stringify(item)
-            break
-          default:
-            sourceValue = item.toString()
-        }
+        // array, objectはJSONに変換
+        const sourceValue = (typeof item === 'object') ? JSON.stringify(item) : item.toString()
 
         for (const translation of translationTable) {
           if (translation.match(sourceValue)) {
@@ -559,15 +561,9 @@ export class Converter {
             throw new Error()
           }
 
-          switch (typeof item) {
-            case 'object':
-              newValues.push(JSON.parse(replacedValue))
-              break
-            default:
-              newValues.push(replacedValue)
-          }
+          newValues.push(typeof item === 'object' ? JSON.parse(replacedValue) : replacedValue)
         } catch {
-          // 置換できなかった場合は元の値を設定する
+          // 置換できなかった場合は元の値のまま
           newValues.push(item)
         }
       }
