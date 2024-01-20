@@ -20,12 +20,15 @@
         <el-button type="primary" round :icon="CaretRight" @click="next()"/>
       </el-tooltip>
     </div>
+    <div class="navigation_number">
+      <label><input type="checkbox" v-model="enableQuery"/>マスタクエリを適用</label>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { Upload, CaretLeft, CaretRight } from '@element-plus/icons-vue'
-// import { ref } from 'vue'
+import { ref } from 'vue'
 
 const props = withDefaults(
   defineProps<{
@@ -41,7 +44,8 @@ const emits = defineEmits<{
   (e: 'update:index', value: number): void,
   (e: 'loadJson'): void
 }>()
-// const caseNumber = ref(0)
+
+const enableQuery = ref(true)
 
 /**
  * prev() イベントハンドラ indexをひとつ前に移動
