@@ -28,12 +28,13 @@
 
 <script setup lang="ts">
 import { Upload, CaretLeft, CaretRight } from '@element-plus/icons-vue'
-import { ref } from 'vue'
+import { computed } from 'vue'
 
 const props = withDefaults(
   defineProps<{
     index: number,
     length?: number
+    apply?: boolean
   }>(),
   {
     index: -1,
@@ -43,9 +44,13 @@ const props = withDefaults(
 const emits = defineEmits<{
   (e: 'update:index', value: number): void,
   (e: 'loadJson'): void
+  (e: 'update:apply', value: boolean): void
 }>()
 
-const enableQuery = ref(true)
+const enableQuery = computed({
+  get: () => props?.apply === undefined ? true : props.apply,
+  set: (value:boolean) => emits('update:apply', value)
+})
 
 /**
  * prev() イベントハンドラ indexをひとつ前に移動
