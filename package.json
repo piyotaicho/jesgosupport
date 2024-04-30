@@ -45,7 +45,7 @@
     "html-loader": "^4.2.0",
     "json-loader": "^0.5.7",
     "raw-loader": "^4.0.2",
-    "typescript": "5.3.3",
+    "typescript": "5.4.5",
     "vite": "^5.0.8",
     "webpack-cli": "^5.1.4"
   }
