@@ -652,3 +652,7 @@ export async function processor (content: pulledDocument, rules: LogicRuleSet[])
     errors: errorMessages
   }
 }
+
+export function terminateProcessor (): void {
+  // 互換のための関数
+}

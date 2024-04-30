@@ -123,6 +123,9 @@ const storeProxyHandler:ProxyHandler<VariableStore> = {
   }
 }
 
+/*
+  コンパイラ
+*/
 export class Converter {
   private sourceDefinitions:SourceBlock[][]
   private compiledRules:instructionFunction[][]
@@ -159,14 +162,33 @@ export class Converter {
    * @param ruleset
    */
   private compiler (ruleset: LogicRuleSet[]) {
+    verbose('* compiler *')
+    // レジスタ変数の用意
+    for (let registerIndex = 0; registerIndex < 10; registerIndex++) {
+      const registerName = `${registerIndex}`
+      if (registerName in this.variables) {
+        Object.defineProperty(this.variables, registerName, {})
+      }
+    }
+
     // ルールを処理
     const rulesCount = ruleset.length
     for (let index = 0; index < rulesCount; index++) {
       const currentRule = ruleset[index]
+      verbose(`** compile ruleset ${index + 1}: ${currentRule.title}`)
 
-      // ソース定義をコピー
+      // ソースを仮定義
+      Object.keys(this.variables).filter(name => name.charAt(0) === '@').forEach(
+        name => delete this.variables[name]
+      )
       if (currentRule?.source) {
         this.sourceDefinitions.push([...currentRule.source])
+        for (let sourceIndex = 0; sourceIndex < currentRule.source.length; sourceIndex++) {
+          verbose(`*** parse source ${sourceIndex + 1}`)
+          if ((currentRule.source[sourceIndex]?.path || '') !== '') {
+            Object.defineProperty(this.variables, `@${sourceIndex + 1}`, { value: '', writable: false })
+          }
+        }
       } else {
         this.sourceDefinitions.push([])
       }
@@ -178,6 +200,7 @@ export class Converter {
         const compiledRule:((...args:any[]) => instructionResult)[] = []
 
         for (let counter = 0; counter < procedures.length; counter++) {
+          verbose(`*** parse step ${counter + 1}`)
           const procedure = procedures[counter]
 
           // パラメータの抽出 引数は参照では無く値をコピー
@@ -205,6 +228,7 @@ export class Converter {
           switch (command) {
             case 'var':
             case 'Variables':
+              verbose('**** directive: variables')
               valueType = params[2] || 'value' // 拡張
               variableName = params[1] || ''
               if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
@@ -225,6 +249,7 @@ export class Converter {
               break
             case 'oper':
             case 'Operators':
+              verbose('**** directive: operators')
               valueType = params[1]
               operator = params[3]
               if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
@@ -267,6 +292,7 @@ export class Converter {
               break
             case 'query':
             case 'Query':
+              verbose('**** directive: query')
               operator = params[1]
               variableName = params[2]
               if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
@@ -286,6 +312,7 @@ export class Converter {
               break
             case 'set':
             case 'Sets':
+              verbose('**** directive: set')
               operator = params[2]
               variableName = params[3]
               if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
@@ -324,6 +351,7 @@ export class Converter {
               break
             case 'sort':
             case 'Sort':
+              verbose('**** directive: sort')
               instruction = () => {
                 const valiableName = params[0] || ''
                 const path = params[1] || ''
@@ -335,6 +363,7 @@ export class Converter {
               break
             case 'tr':
             case 'Translation':
+              verbose('**** directive: translation')
               instruction = () => {
                 const vaiableName = params[0] || ''
                 const table = this.createTranslationTable(procedure.lookup || [])
@@ -345,6 +374,7 @@ export class Converter {
               break
             case 'period':
             case 'Period':
+              verbose('**** directive: period')
               variableName = params[3]
               operator = params[2] || 'months'
               if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
@@ -383,6 +413,7 @@ export class Converter {
               break
             case 'put':
             case 'Store':
+              verbose('**** directive: put')
               if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
                 const value = this.variables[params[0]]
                 instruction = () => {
@@ -398,6 +429,8 @@ export class Converter {
                 }
               }
               break
+            default:
+              throw new SyntaxError(`無効なディレクティブ: ${command}`)
           }
           compiledRule.push(instruction)
         }
@@ -853,6 +886,7 @@ export class Converter {
    * @returns $.csv - csvの行アレイ $.errors - エラーメッセージアレイ
    */
   public run = async (content:pulledDocument) :Promise<processorOutput|undefined> => {
+    verbose('* processor')
     if (!content) {
       throw new Error('ドキュメントが指定されていません.')
     }
@@ -894,11 +928,11 @@ export class Converter {
 
     // ユーザ変数 - 未実装だけどこっちでは余裕
 
-    // レジスタ変数の用意
+    // レジスタ変数の初期化
     for (let registerIndex = 0; registerIndex < 10; registerIndex++) {
       const registerName = `${registerIndex}`
       if (registerName in this.variables) {
-        Object.defineProperty(this.variables, registerName, {})
+        Object.defineProperty(this.variables, registerName, [])
       }
     }
 
@@ -908,18 +942,20 @@ export class Converter {
     // ブロックループ
     // eslint-disable-next-line no-labels
     blockLoop: for (let ruleIndex = 0; ruleIndex < ruleLength; ruleIndex++) {
-      // ローカル定数の初期化
+      // 上書き出来ないのでソースは一度すべて削除
       Object.keys(this.variables).filter(name => name.charAt(0) === '@').forEach(
         name => delete this.variables[name]
       )
+      // ソースの初期化
       const sourveValueDefinitions = this.sourceDefinitions[ruleIndex]
       if (sourveValueDefinitions) {
         for (let sourceIndex = 0; sourceIndex < sourveValueDefinitions.length; sourceIndex++) {
-          const sourceName = `@${sourceIndex}`
+          // ソース名は@1～なので indexに+1する
+          const sourceName = `@${sourceIndex + 1}`
           const path = sourveValueDefinitions[sourceIndex]?.path || ''
           switch (path) {
             case '':
-              Object.defineProperty(this.variables, sourceName, {})
+              // 空白のソースは未定義にする
               break
             case '$hash':
             case '$his_id':
@@ -946,6 +982,9 @@ export class Converter {
           this.variables[registerName] = []
         }
       }
+
+      console.log('Variable definition:')
+      console.dir(this.variables)
 
       // 実行ユニット
       let programCounter:number = 0
@@ -1086,4 +1125,36 @@ export function parseStringToStringArray (value: string): string[] {
   }
 
   return result
+}
+
+/** モジュール内広域変数 */
+let compiledRuleSets:Converter|undefined
+
+/**
+ * 後方互換マクロ実行ユニット
+ * @param {pulledDocument} 1症例分のオブジェクト
+ * @param {LogicRuleSet[]} ルールセット配列
+ * @returns {csv: string[], errors: string[]}
+ */
+// eslint-disable-next-line camelcase
+export async function processor (content: pulledDocument, rules: LogicRuleSet[]): Promise<undefined | processorOutput> {
+  if (compiledRuleSets === undefined) {
+    try {
+      compiledRuleSets = new Converter(rules)
+    } catch (e) {
+      console.error(e)
+      compiledRuleSets = undefined
+      return undefined
+    }
+  }
+  return compiledRuleSets.run(content)
+}
+
+/**
+ * マクロ実行ユニットを閉じる(必須)
+ */
+export function terminateProcessor (): void {
+  if (compiledRuleSets !== undefined) {
+    compiledRuleSets = undefined
+  }
 }
