@@ -58,6 +58,7 @@ const rulesetName = ref('')
 const selectedPreset = ref('')
 
 const masterQuery:Ref<string[]> = ref([])
+let removingQuery:boolean = false
 const masterBasePointer = ref('')
 const skipUnmatchedRecord = ref(false)
 const csvOffset = ref(0)
@@ -83,7 +84,7 @@ function applyPreset () {
   const index = configulationPresets.findIndex(item => item.title === selectedPreset.value)
 
   if (index >= 0) {
-    masterQuery.value = configulationPresets[index]?.masterQuery?.map(query => query.charAt(0) === '$' ? query.slice(1) : query) || ['']
+    masterQuery.value = [...configulationPresets[index]?.masterQuery?.map(query => query.charAt(0) === '$' ? query.slice(1) : query) || [], '']
     masterBasePointer.value = configulationPresets[index]?.masterBasePointer || '/'
     masterBasePointer.value = masterBasePointer.value.charAt(0) === '/' ? masterBasePointer.value.slice(1) : masterBasePointer.value
     csvOffset.value = configulationPresets[index]?.csvOffset || 0
@@ -92,6 +93,36 @@ function applyPreset () {
     errorPointer.value = errorPointer.value.charAt(0) === '/' ? errorPointer.value.slice(1) : errorPointer.value
   }
   selectedPreset.value = ''
+}
+
+function setQuery (index:number|string, value:string|undefined) {
+  // El-imputがclearしたときにinput('')をトリガするので広域フラグで回避する
+  if (value === undefined) {
+    // removeQuery
+    removingQuery = true
+    removeQuery(index)
+  } else {
+    // setQueryValue
+    if (removingQuery) {
+      removingQuery = false
+      return
+    }
+
+    const lastIndex = masterQuery.value.length
+    masterQuery.value[Number(index)] = value
+    if (value !== '' && Number(index) === lastIndex - 1) {
+      masterQuery.value.push('')
+    }
+  }
+}
+
+function removeQuery (index: number|string) {
+  console.log(`remove ${index}`)
+  masterQuery.value.splice(Number(index), 1)
+  if (masterQuery.value.length === 0) {
+    masterQuery.value.push('')
+  }
+  console.dir(masterQuery.value)
 }
 
 function commit () {
@@ -131,12 +162,12 @@ function closeMenu () {
         </el-select>
       </el-col>
     </el-row>
-    <template v-for="(value,index) in masterQuery" :key="index">
+    <template v-for="(value, index) in masterQuery" :key="index">
       <template v-if="index === 0">
         <el-row style="margin-top: 0.8rem;">
           <el-col :span="8" class="ruleset-config-label-column">マスタークエリ</el-col>
           <el-col :span="14">
-            <el-input v-model="masterQuery[0]" clearable @clear="masterQuery[0] = ''">
+            <el-input :model-value="value" @input="setQuery(0, $event)" clearable @clear="setQuery(0, undefined)">
               <template #prepend>$</template>
             </el-input>
           </el-col>
@@ -145,19 +176,12 @@ function closeMenu () {
       <template v-else>
         <el-row style="margin-top: 0.6rem;">
           <el-col :span="14" :offset="8">
-            <el-input v-model="masterQuery[index]" clearable @clear="masterQuery.splice(index, 1)">
+            <el-input :model-value="value" @input="setQuery(index, $event)" clearable @clear="setQuery(index, undefined)">
               <template #prepend>$</template>
             </el-input>
           </el-col>
         </el-row>
       </template>
-    </template>
-    <template v-if="masterQuery.slice(-1)[0] !== ''">
-      <el-row style="margin-top: 0.6rem;">
-        <el-col :span="14" :offset="8">
-            <el-input clearable @change="(event) => masterQuery.push(event)"/>
-          </el-col>
-      </el-row>
     </template>
     <el-row style="margin-top: 0.6rem;">
       <el-col :span="8" class="ruleset-config-label-column">クエリ展開ポインタ</el-col>

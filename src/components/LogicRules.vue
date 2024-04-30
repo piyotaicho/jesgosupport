@@ -5,8 +5,8 @@
       <el-col :span="11">
         <el-select v-model="currentRulesetTitle"
           placeholder="ルールを選択"
-          no-data-text="選択可能なルールがありません"
           >
+          <el-option :value="specialRuleTitle" :label="specialRuleTitle" />
           <el-option v-for="(title, index) in ruleTitles" :key="index"
             :value="title" :label="title" />
         </el-select>
@@ -52,6 +52,9 @@ const store = useStore()
 const props = defineProps<{ ruleTitle: string }>()
 const emit = defineEmits(['update:ruleTitle'])
 
+// 変数宣言ルールセットの名称(予約語)
+const specialRuleTitle = '変数宣言'
+
 /**
  * rules ルールすべて
  */
@@ -66,11 +69,19 @@ const ruleTitles: ComputedRef<string[]> = computed(() => store.getters.ruleTitle
  * currentRulesetTitle ルールの追加に対応
  */
 const currentRulesetTitle: WritableComputedRef<string> = computed({
-  get: () => props.ruleTitle || '',
+  get: () => {
+    if (props.ruleTitle === specialRuleTitle) {
+      return specialRuleTitle
+    } else {
+      return props.ruleTitle || ''
+    }
+  },
   set: (value: string) => {
-    if (value !== '') {
-      if (rules.value.findIndex(element => element.title === value) === -1) {
-        store.commit('addRule', { title: value })
+    if (value !== specialRuleTitle) {
+      if (value !== '') {
+        if (rules.value.findIndex(element => element.title === value) === -1) {
+          store.commit('addRule', { title: value })
+        }
       }
     }
     emit('update:ruleTitle', value)
@@ -80,7 +91,7 @@ const currentRulesetTitle: WritableComputedRef<string> = computed({
 /**
  * disabledControles 現在選択中のルールが無い
  */
-const disableControles: ComputedRef<boolean> = computed(() => currentRulesetTitle.value === '')
+const disableControles: ComputedRef<boolean> = computed(() => currentRulesetTitle.value === '' || currentRulesetTitle.value === specialRuleTitle)
 
 /**
  * currentRuleset 現在編集中のルールオブジェクト

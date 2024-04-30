@@ -4,7 +4,8 @@ import { CaretRight, Download, Upload } from '@element-plus/icons-vue'
 import { ref, computed, nextTick } from 'vue'
 import { useStore } from './store'
 import { ElMessageBox } from 'element-plus'
-import { processor } from './processor'
+// import { processor } from './processor'
+import { processor, terminateProcessor } from './newProcessor'
 import { userDownload, loadFile } from './utilities'
 import RulesetConfig from './RulesetConfig.vue'
 import ProgressBar from './ProgressBar.vue'
@@ -110,22 +111,35 @@ async function clearRuleset () {
 /**
  * スクリプトの実行トリガ
  */
-async function performProcessing (): Promise<void> {
-  if (store.getters.documentLength > 0 && store.getters.rules.length > 0) {
-    // ドキュメントとルールセットがないと実行しない
-    store.commit('clearCsvDocument')
-    store.commit('clearErrorDocument')
+function performProcessing (command?:string): void {
+  if (command === 'compile') {
+    //
+  }
+  if (store.getters.documentLength === 0 || store.getters.rules.length === 0) {
+    console.log('ドキュメントとスクリプトがありません')
+  }
+
+  store.commit('clearCsvDocument')
+  store.commit('clearErrorDocument')
+
+  const processBody = async () => {
+    // 状態表示用reactiveの設定
     totalCases.value = store.getters.documentLength
     processing.value = true
+    // ドキュメントの逐次処理
     for (let index = 0; index < store.getters.documentLength; index++) {
       if (processing.value) {
         caseIndex.value = index
         await processDocument(index)
       }
     }
+    //
+    terminateProcessor()
     caseIndex.value = -1
     processing.value = false
   }
+  // asyncに処理を渡す
+  processBody()
 }
 
 function cancel (): void {
@@ -187,7 +201,14 @@ async function processDocument (index:number) {
       </el-dialog>
     </div>
     <div>
-      <el-button type="primary" :icon="CaretRight" @click="performProcessing" :loading="processing" :disabled="processing">実行</el-button>
+      <!-- <el-dropdown split-button type="primary" @click="performProcessing" :disabled="processing">
+        実行<el-icon><CaretRight/></el-icon> -->
+        <el-button type="primary" :icon="CaretRight" @click="performProcessing()" :loading="processing" :disabled="processing">実行</el-button>
+        <!-- <template #dropdown>
+          <el-dropdown-item :disabled="processing" command="compile">コンパイルのみ実行</el-dropdown-item>
+          <el-dropdown-item disabled command="step">ステップ実行モード</el-dropdown-item>
+        </template> -->
+      <!-- </el-dropdown> -->
       <el-dialog
         :model-value="(processing || caseIndex >= 0)"
         :show-close="false"

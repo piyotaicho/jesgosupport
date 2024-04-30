@@ -83,6 +83,11 @@ div.dropdown-combo-input .el-select .el-input__wrapper {
 
 div.dropdown-combo-input .el-input-group__append {
   padding-left: 16.5px;
+  padding-right: 16px;
+}
+
+div.dropdown-combo-input .el-input-group__append .el-select__wrapper {
+  padding: 4px 6px;
 }
 
 div.dropdown-combo-input > .el-input__inner {

@@ -4,15 +4,15 @@
       <LogicRules v-model:ruleTitle="currentRulesetTitle"/>
     </div>
 
-    <div class="logic-section-ruleset" v-show="currentRulesetTitle !== ''">
+    <div class="logic-section-ruleset" v-show="currentRulesetTitle !== '' && currentRulesetTitle !== '変数宣言'">
       <div style="width: 100%;">
         <LogicSource v-for="(block, index) in sources" :key="index" :index="index" :block="block" @updateblock="updateSource"/>
       </div>
-    </div>
-    <div class="logic-section-ruleset" v-show="currentRulesetTitle !== ''">
       <!-- ロジックエディタ -->
       <LogicEditor v-model:blocks="procedures"/>
     </div>
+    <!-- <div class="logic-section-ruleset" v-show="currentRulesetTitle !== '' && currentRulesetTitle !== '変数宣言'">
+    </div> -->
   </div>
 </template>
 
