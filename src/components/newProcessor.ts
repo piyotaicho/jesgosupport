@@ -1,4 +1,4 @@
-import { JsonObject, LogicRuleSet, SourceBlock, LogicBlock, BlockType } from './types'
+import { JsonObject, LogicRuleSet, LogicBlock, BlockType } from './types'
 import { parseJesgo, verbose } from './utilities'
 
 interface pulledDocument {
@@ -124,11 +124,11 @@ const storeProxyHandler:ProxyHandler<VariableStore> = {
 }
 
 /*
-  コンパイラ
+  変換プロセッサ
 */
-export class Converter {
-  private sourceDefinitions:SourceBlock[][]
-  private compiledRules:instructionFunction[][]
+export class Processor {
+  // private sourceDefinitions:SourceBlock[][]
+  // private compiledRules:instructionFunction[][]
 
   private variableStore:VariableStore
   private variables:VariableProxy
@@ -138,68 +138,152 @@ export class Converter {
 
   /**
    * コンストラクター = コンパイラを実行
-   * @param ruleset
+   * @param ユーザ定義広域変数リスト
    */
-  constructor (ruleset: LogicRuleSet[]) {
-    if (!ruleset) {
-      throw new TypeError('ロジックが指定されていません.')
-    }
-
+  constructor (globalVariables?: string[]) {
     // 変数を初期化
     this.variableStore = {}
     this.variables = new Proxy(this.variableStore, storeProxyHandler)
-    this.sourceDefinitions = []
-    this.compiledRules = []
+    // this.sourceDefinitions = []
+    // this.compiledRules = []
 
     this.errorMessages = []
     this.csvRow = []
 
-    this.compiler(ruleset)
+    // レジスタ変数の用意
+    for (let registerIndex = 0; registerIndex < 10; registerIndex++) {
+      const registerName = `$${registerIndex}`
+      Object.defineProperty(this.variables, registerName, {})
+    }
+
+    // システム変数の定義
+    Object.defineProperty(this.variables, '$hash', { writable: false })
+    Object.defineProperty(this.variables, '$his_id', { writable: false })
+    Object.defineProperty(this.variables, '$name', { writable: false })
+    Object.defineProperty(this.variables, '$date_of_birth', { writable: false })
+    Object.defineProperty(this.variables, '$now', {
+      value: (():string[] => {
+        const now = new Date()
+        const nowYear = now.getFullYear()
+        const nowMonth = (now.getMonth() + 1).toString().padStart(2, '0')
+        const nowDate = (now.getDate() + 1).toString().padStart(2, '0')
+        return [`${nowYear}-${nowMonth}-${nowDate}`]
+      })(),
+      writable: false
+    })
+
+    // ユーザ定義広域変数の定義
+    if (globalVariables) {
+      for (const globalVariableName of globalVariables) {
+        if (globalVariableName.charAt(0) === '$') {
+          Object.defineProperty(this.variables, globalVariableName, { writable: true })
+        }
+      }
+    }
   }
 
   /**
-   * コードコンパイラ本体
+   * 逐次実行
+   * @param content JESGO取得ドキュメント単体
    * @param ruleset
+   * @returns $.csv - csvの行アレイ $.errors - エラーメッセージアレイ
    */
-  private compiler (ruleset: LogicRuleSet[]) {
-    verbose('* compiler *')
-    // レジスタ変数の用意
-    for (let registerIndex = 0; registerIndex < 10; registerIndex++) {
-      const registerName = `${registerIndex}`
-      if (registerName in this.variables) {
-        Object.defineProperty(this.variables, registerName, {})
-      }
+  public run (content: pulledDocument, ruleset: LogicRuleSet[]):processorOutput|undefined {
+    verbose('* processor')
+    if (!content) {
+      throw new Error('ドキュメントが指定されていません.')
     }
 
-    // ルールを処理
+    // 出力をクリア
+    this.errorMessages.splice(0)
+    this.csvRow.splice(0)
+
+    // ドキュメントベースのシステム変数の再定義
+    try {
+      // eslint-disable-next-line dot-notation
+      delete this.variables['$hash']
+      // eslint-disable-next-line dot-notation
+      delete this.variables['$his_id']
+      // eslint-disable-next-line dot-notation
+      delete this.variables['$name']
+      // eslint-disable-next-line dot-notation
+      delete this.variables['$date_of_birth']
+    } catch {}
+
+    Object.defineProperties(this.variables, {
+      $hash: {
+        value: [content?.hash || ''],
+        writable: false
+      },
+      $his_id: {
+        value: [content?.his_id || ''],
+        writable: false
+      },
+      $name: {
+        value: [content?.name || ''],
+        writable: false
+      },
+      $date_of_birth: {
+        value: [content?.date_of_birth || ''],
+        writable: false
+      }
+    })
+
+    // ルールを逐次処理
     const rulesCount = ruleset.length
     for (let index = 0; index < rulesCount; index++) {
       const currentRule = ruleset[index]
-      verbose(`** compile ruleset ${index + 1}: ${currentRule.title}`)
+      verbose(`** ruleset ${index + 1}: ${currentRule.title}`)
 
-      // ソースを仮定義
+      // レジスタ変数の初期化
+      for (let registerIndex = 0; registerIndex < 10; registerIndex++) {
+        const registerName = `$${registerIndex}`
+        if (registerName in this.variables) {
+          this.variables[registerName] = []
+        }
+      }
+
+      // ソースの初期化
       Object.keys(this.variables).filter(name => name.charAt(0) === '@').forEach(
         name => delete this.variables[name]
       )
       if (currentRule?.source) {
-        this.sourceDefinitions.push([...currentRule.source])
         for (let sourceIndex = 0; sourceIndex < currentRule.source.length; sourceIndex++) {
-          verbose(`*** parse source ${sourceIndex + 1}`)
-          if ((currentRule.source[sourceIndex]?.path || '') !== '') {
-            Object.defineProperty(this.variables, `@${sourceIndex + 1}`, { value: '', writable: false })
+          // ソース名は@1～なので indexに+1する
+          verbose(`*** parse source @${sourceIndex + 1}`)
+          const sourceName = `@${sourceIndex + 1}`
+          const path = currentRule.source[sourceIndex]?.path || ''
+          switch (path) {
+            case '':
+              // 空白pathはソース未定義にする
+              break
+            case '$hash':
+            case '$his_id':
+            case '$name':
+            case '$date_of_birth':
+              Object.defineProperty(this.variables, sourceName, {
+                value: this.variables[path],
+                writable: false
+              })
+              break
+            default:
+              Object.defineProperty(this.variables, sourceName, {
+                value: parseJesgo(content.documentList, path),
+                writable: false
+              })
           }
         }
-      } else {
-        this.sourceDefinitions.push([])
       }
+
+      verbose('*** variable definition:')
+      console.dir(this.variables)
 
       // コード部分を処理
       if (currentRule?.procedure) {
         const procedures:LogicBlock[] = currentRule.procedure
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const compiledRule:((...args:any[]) => instructionResult)[] = []
 
-        for (let counter = 0; counter < procedures.length; counter++) {
+        // eslint-disable-next-line no-labels
+        instructionLoop: for (let counter = 0; counter < procedures.length;) {
           verbose(`*** parse step ${counter + 1}`)
           const procedure = procedures[counter]
 
@@ -212,6 +296,7 @@ export class Converter {
           }
 
           let instruction:instructionFunction
+
           let operator:string = ''
           let valueType:string = ''
           let variableName:string = ''
@@ -432,9 +517,35 @@ export class Converter {
             default:
               throw new SyntaxError(`無効なディレクティブ: ${command}`)
           }
-          compiledRule.push(instruction)
+
+          // ステップの実行
+          const result = instruction()
+
+          verbose(`*** result ${result.behavior}`)
+          switch (result.behavior) {
+            case 'Exit':
+              if (!result.success) {
+                // 症例に対する処理の中止は処理の不成立にしかない
+                return undefined
+              }
+            // eslint-disable-next-line no-fallthrough
+            case 'Abort':
+              // 現在のルール処理を終了
+              // eslint-disable-next-line no-labels
+              break instructionLoop
+            default:
+              if (Number.isNaN(Number(result.behavior))) {
+                counter += Number(result.behavior)
+              } else {
+                counter++
+              }
+          }
         }
       }
+    }
+    return {
+      csv: this.csvRow,
+      errors: this.errorMessages
     }
   }
 
@@ -446,6 +557,9 @@ export class Converter {
    */
   private commandVariables = (value: JsonObject[] = [], variableName = '', variableType:commandValueTypes = 'value'): boolean => {
     try {
+      verbose(`**** set value into ${variableName}`)
+      console.dir(value)
+
       if (!variableName || variableName === '') {
         throw new SyntaxError('変数名が未指定です.')
       }
@@ -477,6 +591,10 @@ export class Converter {
    */
   private commandOperators = (valueA: JsonObject[] = [], valueAtype:commandValueTypes = 'value', valueB: JsonObject[] = [], operator:commandOperatorExpressions) :boolean => {
     try {
+      verbose(`**** operator ${operator}`)
+      console.dir(valueA)
+      console.dir(valueB)
+
       let valueOfA:JsonObject[]
       let valueOfB:JsonObject[]
       switch (valueAtype) {
@@ -549,6 +667,9 @@ export class Converter {
    * @returns
    */
   private commandQuery = (value: JsonObject[], query = '', variableName = ''): boolean => {
+    verbose(`**** query ${query} into ${variableName}`)
+    console.dir(value)
+
     try {
       if (!query || query === '') {
         return this.commandVariables(value, variableName)
@@ -573,6 +694,8 @@ export class Converter {
    */
   private commandTranslation = (variableName = '', translationTable: translationTableObject[]): boolean => {
     try {
+      verbose(`**** translate variable ${variableName}`)
+
       const newValues:JsonObject[] = []
       let replacedAll = true
       for (const item of (this.variables[variableName] as JsonObject[])) {
@@ -656,24 +779,26 @@ export class Converter {
    * @param mode
    * @returns
    */
-  private commandSort = (vaiableName = '', indexPath = '', mode:commandSortDirections = 'asc'): boolean => {
+  private commandSort = (variableName = '', indexPath = '', mode:commandSortDirections = 'asc'): boolean => {
     try {
+      verbose(`**** sort variable ${variableName}`)
+
       if (indexPath.trim() === '' || indexPath.trim() === '$') {
         return this.commandVariables(
           mode === 'asc' || mode === 'ascend'
-            ? (this.variables[vaiableName] as JsonObject[])
+            ? (this.variables[variableName] as JsonObject[])
                 .map(item => JSON.stringify(item))
                 .sort()
                 .map(item => JSON.parse(item))
-            : (this.variables[vaiableName] as JsonObject[])
+            : (this.variables[variableName] as JsonObject[])
                 .map(item => JSON.stringify(item))
                 .sort()
                 .reverse()
                 .map(item => JSON.parse(item)),
-          vaiableName
+          variableName
         )
       } else {
-        const sortedItems = (this.variables[vaiableName] as JsonObject[])
+        const sortedItems = (this.variables[variableName] as JsonObject[])
           .sort((a, b) => {
             const keya = JSON.stringify(parseJesgo(a, indexPath))
             const keyb = JSON.stringify(parseJesgo(b, indexPath))
@@ -684,7 +809,7 @@ export class Converter {
           mode === 'asc' || mode === 'ascend'
             ? sortedItems
             : sortedItems.reverse(),
-          vaiableName
+          variableName
         )
       }
     } catch (e:unknown) {
@@ -701,8 +826,10 @@ export class Converter {
    * @param vaiableName
    * @returns
    */
-  private commandSets = (valueA: JsonObject[], valueB: JsonObject[], operator:commandSetsOperators = 'add', valiableName = ''):boolean => {
+  private commandSets = (valueA: JsonObject[], valueB: JsonObject[], operator:commandSetsOperators = 'add', variableName = ''):boolean => {
     try {
+      verbose(`**** set operation ${variableName}`)
+
       const jsonsA:string[] = valueA.map(item => JSON.stringify(item))
       const jsonsB:string[] = valueB.map(item => JSON.stringify(item))
 
@@ -736,7 +863,7 @@ export class Converter {
           resultArray = [...jsonsA, ...jsonsB]
       }
 
-      return this.commandVariables(resultArray.map(item => JSON.parse(item)), valiableName)
+      return this.commandVariables(resultArray.map(item => JSON.parse(item)), variableName)
     } catch (e:unknown) {
       verbose(`Set operation: ${(e as Error).message}`, true)
       return false
@@ -752,6 +879,8 @@ export class Converter {
    */
   private commandPeroid = (valueA: JsonObject[], valueB: JsonObject[], operator:commandPeriodOperators = 'months', variableName = ''): boolean => {
     try {
+      verbose('**** period operation')
+
       // 日付フォーマットのパターンマッチ
       const datePattern = /(?<year>\d{4})[-/](?<month>0?[1-9]|1[0-2])[-/](?<date>0?[1-9]|[12][0-9]|3[01])/
 
@@ -824,6 +953,8 @@ export class Converter {
    */
   private commandStore = (values: JsonObject[], target: string = '$error', mode:commandStoreFieldSeparators = 'first'): boolean => {
     try {
+      verbose('**** store')
+
       /**
        * エクセルスタイルの列フォーマットを列番号0~に変換
        * @param col
@@ -879,163 +1010,6 @@ export class Converter {
       return false
     }
   }
-
-  /**
-   * コンパイル済みコードを実行する
-   * @param content JESGO取得ドキュメント単体
-   * @returns $.csv - csvの行アレイ $.errors - エラーメッセージアレイ
-   */
-  public run = async (content:pulledDocument) :Promise<processorOutput|undefined> => {
-    verbose('* processor')
-    if (!content) {
-      throw new Error('ドキュメントが指定されていません.')
-    }
-
-    // 出力をクリア
-    this.errorMessages.splice(0)
-    this.csvRow.splice(0)
-
-    // ドキュメント内広域変数を設定
-    // システム変数
-    Object.defineProperties(this.variables, {
-      $hash: {
-        value: [content?.hash || ''],
-        writable: false
-      },
-      $his_id: {
-        value: [content?.his_id || ''],
-        writable: false
-      },
-      $name: {
-        value: [content?.name || ''],
-        writable: false
-      },
-      $date_of_birth: {
-        value: [content?.date_of_birth || ''],
-        writable: false
-      },
-      $now: {
-        value: () => {
-          const now = new Date()
-          const nowYear = now.getFullYear()
-          const nowMonth = (now.getMonth() + 1).toString().padStart(2, '0')
-          const nowDate = (now.getDate() + 1).toString().padStart(2, '0')
-          return [`${nowYear}-${nowMonth}-${nowDate}`]
-        },
-        writable: false
-      }
-    })
-
-    // ユーザ変数 - 未実装だけどこっちでは余裕
-
-    // レジスタ変数の初期化
-    for (let registerIndex = 0; registerIndex < 10; registerIndex++) {
-      const registerName = `${registerIndex}`
-      if (registerName in this.variables) {
-        Object.defineProperty(this.variables, registerName, [])
-      }
-    }
-
-    const ruleLength = this.compiledRules.length
-    const sourceDocument:JsonObject[] = content.documentList
-
-    // ブロックループ
-    // eslint-disable-next-line no-labels
-    blockLoop: for (let ruleIndex = 0; ruleIndex < ruleLength; ruleIndex++) {
-      // 上書き出来ないのでソースは一度すべて削除
-      Object.keys(this.variables).filter(name => name.charAt(0) === '@').forEach(
-        name => delete this.variables[name]
-      )
-      // ソースの初期化
-      const sourveValueDefinitions = this.sourceDefinitions[ruleIndex]
-      if (sourveValueDefinitions) {
-        for (let sourceIndex = 0; sourceIndex < sourveValueDefinitions.length; sourceIndex++) {
-          // ソース名は@1～なので indexに+1する
-          const sourceName = `@${sourceIndex + 1}`
-          const path = sourveValueDefinitions[sourceIndex]?.path || ''
-          switch (path) {
-            case '':
-              // 空白のソースは未定義にする
-              break
-            case '$hash':
-            case '$his_id':
-            case '$name':
-            case '$date_of_birth':
-              Object.defineProperty(this.variables, sourceName, {
-                value: this.variables[path],
-                writable: false
-              })
-              break
-            default:
-              Object.defineProperty(this.variables, sourceName, {
-                value: parseJesgo(sourceDocument, path),
-                writable: false
-              })
-          }
-        }
-      }
-
-      // レジスタ変数の初期化
-      for (let registerIndex = 0; registerIndex < 10; registerIndex++) {
-        const registerName = `${registerIndex}`
-        if (registerName in this.variables) {
-          this.variables[registerName] = []
-        }
-      }
-
-      console.log('Variable definition:')
-      console.dir(this.variables)
-
-      // 実行ユニット
-      let programCounter:number = 0
-      const instructions = this.compiledRules[ruleIndex]
-      const maxCount = instructions.length
-
-      // インストラクションループ
-      // eslint-disable-next-line no-labels
-      instructionLoop: for (;programCounter < maxCount;) {
-        const instruction:instructionFunction = instructions[programCounter]
-
-        const result:instructionResult = await new Promise(resolve => {
-          setTimeout(() => {
-            resolve(instruction())
-          }, 0)
-        })
-
-        switch (result.behavior) {
-          case 'Exit':
-            if (!result.success) {
-              // 症例に対する処理の中止は処理の不成立にしかない
-              return undefined
-            }
-          // eslint-disable-next-line no-fallthrough
-          case 'Abort':
-            // 現在のルール処理を終了
-            // eslint-disable-next-line no-labels
-            break instructionLoop
-          default:
-            if (Number.isNaN(Number(result.behavior))) {
-              programCounter += Number(result.behavior)
-            } else {
-              programCounter++
-            }
-        }
-      }
-    }
-
-    return {
-      csv: this.csvRow,
-      errors: this.errorMessages
-    }
-  }
-
-  /**
-   * スクリプトの引数文字列が変数であるかをチェック
-   * @param value
-   * @returns
-   */
-  // eslint-disable-next-line no-useless-escape
-  private isVariableName = (value: string):boolean => /^(@\d+|\$[^.\[])/.test(value)
 }
 
 /**
@@ -1127,9 +1101,6 @@ export function parseStringToStringArray (value: string): string[] {
   return result
 }
 
-/** モジュール内広域変数 */
-let compiledRuleSets:Converter|undefined
-
 /**
  * 後方互換マクロ実行ユニット
  * @param {pulledDocument} 1症例分のオブジェクト
@@ -1138,23 +1109,7 @@ let compiledRuleSets:Converter|undefined
  */
 // eslint-disable-next-line camelcase
 export async function processor (content: pulledDocument, rules: LogicRuleSet[]): Promise<undefined | processorOutput> {
-  if (compiledRuleSets === undefined) {
-    try {
-      compiledRuleSets = new Converter(rules)
-    } catch (e) {
-      console.error(e)
-      compiledRuleSets = undefined
-      return undefined
-    }
-  }
-  return compiledRuleSets.run(content)
-}
+  const processor = new Processor()
 
-/**
- * マクロ実行ユニットを閉じる(必須)
- */
-export function terminateProcessor (): void {
-  if (compiledRuleSets !== undefined) {
-    compiledRuleSets = undefined
-  }
+  return processor.run(content, rules)
 }

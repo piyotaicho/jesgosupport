@@ -5,7 +5,7 @@ import { ref, computed, nextTick } from 'vue'
 import { useStore } from './store'
 import { ElMessageBox } from 'element-plus'
 // import { processor } from './processor'
-import { processor, terminateProcessor } from './newProcessor'
+import { processor } from './newProcessor'
 import { userDownload, loadFile } from './utilities'
 import RulesetConfig from './RulesetConfig.vue'
 import ProgressBar from './ProgressBar.vue'
@@ -134,7 +134,6 @@ function performProcessing (command?:string): void {
       }
     }
     //
-    terminateProcessor()
     caseIndex.value = -1
     processing.value = false
   }
