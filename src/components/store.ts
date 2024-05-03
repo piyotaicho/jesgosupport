@@ -134,7 +134,6 @@ export const store = createStore<State>({
         return -1
       }
       // ルールセットから変数の利用をカウント
-      console.log(`count var ${name}`)
       let count = 0
       const rules:LogicRuleSet[] = getters.rules
       for (const rule of rules) {

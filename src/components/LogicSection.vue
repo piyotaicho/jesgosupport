@@ -4,17 +4,17 @@
       <LogicRules v-model:ruleTitle="currentRulesetTitle"/>
     </div>
 
+    <!-- ユーザ定義のドキュメント変数 -->
+    <div class="logic-section-ruleset" v-if="currentRulesetTitle === '変数宣言'">
+      <VariableEditor/>
+    </div>
+
     <!-- ロジックエディタ -->
     <div class="logic-section-ruleset" v-show="currentRulesetTitle !== '' && currentRulesetTitle !== '変数宣言'">
       <div style="width: 100%; margin-right: 0.8rem;">
         <LogicSource v-for="(block, index) in sources" :key="index" :index="index" :block="block" @updateblock="updateSource"/>
       </div>
-      <LogicEditor v-model:blocks="procedures" :sourceCount="sourceCount"/>
-    </div>
-
-    <!-- ユーザ定義のドキュメント変数 -->
-    <div class="logic-section-ruleset" v-show="currentRulesetTitle === '変数宣言'">
-      <VariableEditor/>
+      <LogicEditor v-model:blocks="procedures" :sourceCount="sourceCount" :variables="store.getters.documentVariables"/>
     </div>
 </div>
 </template>
@@ -81,9 +81,9 @@ const sources: WritableComputedRef<SourceBlock[]> = computed({
 })
 
 /**
- * ルールのソース数 @1..
+ * ルールのソースの数
  */
-const sourceCount: ComputedRef<number> = computed(() => (currentRuleset.value?.source || []).length)
+const sourceCount: ComputedRef<number> = computed(() => sources.value.length - 1)
 
 function updateSource (index: number, value:SourceBlock) {
   const newBlock = [...sources.value]
