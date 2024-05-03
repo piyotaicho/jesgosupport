@@ -1,3 +1,4 @@
+import { ElMessageBox } from 'element-plus'
 import { JsonObject, LogicRuleSet, LogicBlock, BlockType } from './types'
 import { parseJesgo, verbose } from './utilities'
 
@@ -22,22 +23,22 @@ interface instructionResult {
 
 // 後方互換を保持してスクリプトコマンドを短縮
 // type BlockType = 'Operators'|'Variables'|'Query'|'Translation'|'Sort'|'Period'|'Sets'|'Store'
-type v1BlockType = 'oper'|'var'|'query'|'tr'|'sort'|'period'|'set'|'put'
+type v1BlockType = 'oper' | 'var' | 'query' | 'tr' | 'sort' | 'period' | 'set' | 'put'
 export type newBlockType = v1BlockType | BlockType
 
-type commandValueTypes = 'value'|'length'|'number'
-type commandOperatorExpressions = 'eq'|'='|'gt'|'>'|'ge'|'>='|'lt'|'<'|'le'|'<='|'in'|'incl'|'re'|'regexp'
-type commandSetsOperators = 'add'|'union'|'intersect'|'difference'|'xor'
-type commandSortDirections = 'asc'|'ascend'|'desc'|'descend'
-type commandPeriodOperators = 'years'|'years,roundup'|'months'|'months,roundup'|'weeks'|'weeks,roundup'|'days'
-type commandStoreFieldSeparators = 'first'|'whitespace'|'colon'|'comma'|'semicolon'
+type commandValueTypes = 'value' | 'length' | 'number'
+type commandOperatorExpressions = 'eq' | '=' | 'gt' | '>' | 'ge' | '>=' | 'lt' | '<' | 'le' | '<=' | 'in' | 'incl' | 're' | 'regexp'
+type commandSetsOperators = 'add' | 'union' | 'intersect' | 'difference' | 'xor'
+type commandSortDirections = 'asc' | 'ascend' | 'desc' | 'descend'
+type commandPeriodOperators = 'years' | 'years,roundup' | 'months' | 'months,roundup' | 'weeks' | 'weeks,roundup' | 'days'
+type commandStoreFieldSeparators = 'first' | 'whitespace' | 'colon' | 'comma' | 'semicolon'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type instructionFunction = (...args:any[]) => instructionResult
+type instructionFunction = (...args: any[]) => instructionResult
 
 type translationTableObject = {
-  match: (value:string) => boolean
-  func: (value:string) => string
+  match: (value: string) => boolean
+  func: (value: string) => string
 }
 
 /**
@@ -52,10 +53,10 @@ type VariableProxy = {
 /**
  * 変数保存オブジェクトのProxy handler
  */
-const storeProxyHandler:ProxyHandler<VariableStore> = {
-  has: (target:VariableStore, property:string) => property in target,
+const storeProxyHandler: ProxyHandler<VariableStore> = {
+  has: (target: VariableStore, property: string) => property in target,
 
-  get: (target:VariableStore, property:string) => {
+  get: (target: VariableStore, property: string) => {
     if (!(property in target)) {
       throw new TypeError(`変数"${property}"は未定義です.`)
     }
@@ -63,7 +64,7 @@ const storeProxyHandler:ProxyHandler<VariableStore> = {
   },
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  set: (target:VariableStore, property:string, value:any) => {
+  set: (target: VariableStore, property: string, value: any) => {
     if (!(property in target)) {
       throw new TypeError(`変数"${property}"は未定義です.`)
     }
@@ -78,7 +79,7 @@ const storeProxyHandler:ProxyHandler<VariableStore> = {
     return true
   },
 
-  defineProperty: (target:VariableStore, property:string, descriptor?:PropertyDescriptor) => {
+  defineProperty: (target: VariableStore, property: string, descriptor?: PropertyDescriptor) => {
     if (property in target) {
       throw new TypeError(`変数"${property}"は既に定義されています.`)
       return false
@@ -114,7 +115,7 @@ const storeProxyHandler:ProxyHandler<VariableStore> = {
     return true
   },
 
-  deleteProperty: (target:VariableStore, property:string) => {
+  deleteProperty: (target: VariableStore, property: string) => {
     if (!(property in target)) {
       throw new TypeError(`変数"${property}"は未定義です.`)
     }
@@ -130,11 +131,11 @@ export class Processor {
   // private sourceDefinitions:SourceBlock[][]
   // private compiledRules:instructionFunction[][]
 
-  private variableStore:VariableStore
-  private variables:VariableProxy
+  private variableStore: VariableStore
+  private variables: VariableProxy
 
-  public errorMessages:string[]
-  public csvRow:string[]
+  public errorMessages: string[]
+  public csvRow: string[]
 
   /**
    * コンストラクター = コンパイラを実行
@@ -162,7 +163,7 @@ export class Processor {
     Object.defineProperty(this.variables, '$name', { writable: false })
     Object.defineProperty(this.variables, '$date_of_birth', { writable: false })
     Object.defineProperty(this.variables, '$now', {
-      value: (():string[] => {
+      value: ((): string[] => {
         const now = new Date()
         const nowYear = now.getFullYear()
         const nowMonth = (now.getMonth() + 1).toString().padStart(2, '0')
@@ -188,357 +189,387 @@ export class Processor {
    * @param ruleset
    * @returns $.csv - csvの行アレイ $.errors - エラーメッセージアレイ
    */
-  public run (content: pulledDocument, ruleset: LogicRuleSet[]):processorOutput|undefined {
-    verbose('* processor')
-    if (!content) {
-      throw new Error('ドキュメントが指定されていません.')
+  public async run (content: pulledDocument, ruleset: LogicRuleSet[]): Promise<processorOutput | undefined> {
+    verbose('* PROCESSOR *')
+    try {
+      if (!content) {
+        throw new Error('ドキュメントが指定されていません.')
+      }
+
+      // 出力をクリア
+      this.errorMessages.splice(0)
+      this.csvRow.splice(0)
+
+      // ドキュメント変数の再定義
+      try {
+        // eslint-disable-next-line dot-notation
+        delete this.variables['$hash']
+        // eslint-disable-next-line dot-notation
+        delete this.variables['$his_id']
+        // eslint-disable-next-line dot-notation
+        delete this.variables['$name']
+        // eslint-disable-next-line dot-notation
+        delete this.variables['$date_of_birth']
+      } catch { }
+
+      Object.defineProperties(this.variables, {
+        $hash: {
+          value: [content?.hash || ''],
+          writable: false
+        },
+        $his_id: {
+          value: [content?.his_id || ''],
+          writable: false
+        },
+        $name: {
+          value: [content?.name || ''],
+          writable: false
+        },
+        $date_of_birth: {
+          value: [content?.date_of_birth || ''],
+          writable: false
+        }
+      })
+    } catch (e) {
+      console.error(e as Error)
+      ElMessageBox.alert((e as Error).message, '実行ユニット初期化でエラー')
+      return undefined
     }
 
-    // 出力をクリア
-    this.errorMessages.splice(0)
-    this.csvRow.splice(0)
-
-    // ドキュメントベースのシステム変数の再定義
-    try {
-      // eslint-disable-next-line dot-notation
-      delete this.variables['$hash']
-      // eslint-disable-next-line dot-notation
-      delete this.variables['$his_id']
-      // eslint-disable-next-line dot-notation
-      delete this.variables['$name']
-      // eslint-disable-next-line dot-notation
-      delete this.variables['$date_of_birth']
-    } catch {}
-
-    Object.defineProperties(this.variables, {
-      $hash: {
-        value: [content?.hash || ''],
-        writable: false
-      },
-      $his_id: {
-        value: [content?.his_id || ''],
-        writable: false
-      },
-      $name: {
-        value: [content?.name || ''],
-        writable: false
-      },
-      $date_of_birth: {
-        value: [content?.date_of_birth || ''],
-        writable: false
-      }
-    })
-
     // ルールを逐次処理
-    const rulesCount = ruleset.length
-    for (let index = 0; index < rulesCount; index++) {
+    for (let index = 0; index < ruleset.length; index++) {
       const currentRule = ruleset[index]
-      verbose(`** ruleset ${index + 1}: ${currentRule.title}`)
-
-      // レジスタ変数の初期化
-      for (let registerIndex = 0; registerIndex < 10; registerIndex++) {
-        const registerName = `$${registerIndex}`
-        if (registerName in this.variables) {
-          this.variables[registerName] = []
-        }
-      }
-
-      // ソースの初期化
-      Object.keys(this.variables).filter(name => name.charAt(0) === '@').forEach(
-        name => delete this.variables[name]
-      )
-      if (currentRule?.source) {
-        for (let sourceIndex = 0; sourceIndex < currentRule.source.length; sourceIndex++) {
-          // ソース名は@1～なので indexに+1する
-          verbose(`*** parse source @${sourceIndex + 1}`)
-          const sourceName = `@${sourceIndex + 1}`
-          const path = currentRule.source[sourceIndex]?.path || ''
-          switch (path) {
-            case '':
-              // 空白pathはソース未定義にする
-              break
-            case '$hash':
-            case '$his_id':
-            case '$name':
-            case '$date_of_birth':
-              Object.defineProperty(this.variables, sourceName, {
-                value: this.variables[path],
-                writable: false
-              })
-              break
-            default:
-              Object.defineProperty(this.variables, sourceName, {
-                value: parseJesgo(content.documentList, path),
-                writable: false
-              })
+      const currentRuleTitle = currentRule.title
+      verbose(`* ruleset '${currentRuleTitle}'`)
+      try {
+        // レジスタ変数の初期化
+        for (let registerIndex = 0; registerIndex < 10; registerIndex++) {
+          const registerName = `$${registerIndex}`
+          if (registerName in this.variables) {
+            this.variables[registerName] = []
           }
         }
-      }
 
-      verbose('*** variable definition:')
-      console.dir(this.variables)
+        // ソースの初期化
+        // 既にあるソース変数を削除
+        Object.keys(this.variables).filter(name => name.charAt(0) === '@').forEach(
+          name => delete this.variables[name]
+        )
+        // 設定された分だけを設定する
+        if (currentRule?.source) {
+          for (let sourceIndex = 0; sourceIndex < currentRule.source.length; sourceIndex++) {
+            // ソース名は@1～なので indexに+1する
+            verbose(`** parse source @${sourceIndex + 1}`)
+            const sourceName = `@${sourceIndex + 1}`
+            const path = currentRule.source[sourceIndex]?.path || ''
+            switch (path) {
+              case '':
+                // 存在しないとは思われるが空白pathはソース未定義にする
+                break
+              case '$hash':
+              case '$his_id':
+              case '$name':
+              case '$date_of_birth':
+                // ドキュメント変数の代入
+                Object.defineProperty(this.variables, sourceName, {
+                  value: this.variables[path],
+                  writable: false
+                })
+                break
+              default:
+                Object.defineProperty(this.variables, sourceName, {
+                  value: parseJesgo(content.documentList, path),
+                  writable: false
+                })
+            }
+          }
+        }
+
+        verbose('** variable definition:')
+        console.dir(this.variables)
+      } catch (e) {
+        console.error(e as Error)
+        ElMessageBox.alert((e as Error).message, `${currentRuleTitle} 初期化中にエラー`)
+        return undefined
+      }
 
       // コード部分を処理
       if (currentRule?.procedure) {
-        const procedures:LogicBlock[] = currentRule.procedure
+        const procedures: LogicBlock[] = currentRule.procedure
 
         // eslint-disable-next-line no-labels
         instructionLoop: for (let counter = 0; counter < procedures.length;) {
-          verbose(`*** parse step ${counter + 1}`)
           const procedure = procedures[counter]
 
-          // パラメータの抽出 引数は参照では無く値をコピー
-          const command = procedure.type as newBlockType
-          const params:string[] = []
+          try {
+            // パラメータの抽出 引数は参照では無く値をコピー
+            const command = procedure.type as newBlockType
+            const params: string[] = []
 
-          for (const item of procedure.arguments) {
-            params.push(item.toString())
-          }
+            verbose(`** step ${counter + 1} directive ${command}`)
 
-          let instruction:instructionFunction
+            for (const item of procedure.arguments) {
+              params.push(item.toString())
+            }
 
-          let operator:string = ''
-          let valueType:string = ''
-          let variableName:string = ''
+            let instruction: instructionFunction
 
-          const success:instructionResult = {
-            success: true,
-            behavior: procedure.trueBehavior.toString() || '+1'
-          }
-          const failed:instructionResult = {
-            success: false,
-            behavior: (procedure?.falseBehavior || 'Abort').toString()
-          }
+            let operator: string = ''
+            let valueType: string = ''
+            let variableName: string = ''
 
-          switch (command) {
-            case 'var':
-            case 'Variables':
-              verbose('**** directive: variables')
-              valueType = params[2] || 'value' // 拡張
-              variableName = params[1] || ''
-              if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
-                instruction = () => {
-                  const values = this.variables[params[0]]
-                  return this.commandVariables(values, variableName, valueType as commandValueTypes)
-                    ? success
-                    : failed
-                }
-              } else {
-                instruction = () => {
-                  const values = parseVariableValueArray(parseStringToStringArray(params[0])) as JsonObject[]
-                  return this.commandVariables(values, variableName, valueType as commandValueTypes)
-                    ? success
-                    : failed
-                }
-              }
-              break
-            case 'oper':
-            case 'Operators':
-              verbose('**** directive: operators')
-              valueType = params[1]
-              operator = params[3]
-              if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
-                if (params[2].charAt(0) === '$' || params[2].charAt(0)) {
+            const success: instructionResult = {
+              success: true,
+              behavior: procedure.trueBehavior.toString() || '+1'
+            }
+            const failed: instructionResult = {
+              success: false,
+              behavior: (procedure?.falseBehavior || 'Abort').toString()
+            }
+
+            switch (command) {
+              case 'var':
+              case 'Variables':
+                valueType = params[2] || 'value' // 拡張
+                variableName = params[1] || ''
+                if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
                   instruction = () => {
-                    const valueA = this.variables[params[0]]
-                    const valueB = this.variables[params[2]]
-                    return this.commandOperators(valueA, valueType as commandValueTypes, valueB, operator as commandOperatorExpressions)
+                    const values = this.variables[params[0]]
+                    return this.commandVariables(values, variableName, valueType as commandValueTypes)
                       ? success
                       : failed
                   }
                 } else {
                   instruction = () => {
-                    const valueA = this.variables[params[0]]
-                    const valueB = setValueAsStringArray(params[2])
-                    return this.commandOperators(valueA, valueType as commandValueTypes, valueB, operator as commandOperatorExpressions)
+                    const values = parseVariableValueArray(parseStringToStringArray(params[0])) as JsonObject[]
+                    return this.commandVariables(values, variableName, valueType as commandValueTypes)
                       ? success
                       : failed
                   }
                 }
-              } else {
-                if (params[2].charAt(0) === '$' || params[2].charAt(0)) {
+                break
+              case 'oper':
+              case 'Operators':
+                valueType = params[1]
+                operator = params[3]
+                if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
+                  if (params[2].charAt(0) === '$' || params[2].charAt(0) === '@') {
+                    instruction = () => {
+                      const valueA = this.variables[params[0]]
+                      const valueB = this.variables[params[2]]
+                      return this.commandOperators(valueA, valueType as commandValueTypes, valueB, operator as commandOperatorExpressions)
+                        ? success
+                        : failed
+                    }
+                  } else {
+                    instruction = () => {
+                      const valueA = this.variables[params[0]]
+                      const valueB = setValueAsStringArray(params[2])
+                      return this.commandOperators(valueA, valueType as commandValueTypes, valueB, operator as commandOperatorExpressions)
+                        ? success
+                        : failed
+                    }
+                  }
+                } else {
+                  if (params[2].charAt(0) === '$' || params[2].charAt(0) === '@') {
+                    instruction = () => {
+                      const valueA = setValueAsStringArray(params[0])
+                      const valueB = this.variables[params[2]]
+                      return this.commandOperators(valueA, valueType as commandValueTypes, valueB, operator as commandOperatorExpressions)
+                        ? success
+                        : failed
+                    }
+                  } else {
+                    instruction = () => {
+                      const valueA = setValueAsStringArray(params[0])
+                      const valueB = setValueAsStringArray(params[2])
+                      return this.commandOperators(valueA, valueType as commandValueTypes, valueB, operator as commandOperatorExpressions)
+                        ? success
+                        : failed
+                    }
+                  }
+                }
+                break
+              case 'query':
+              case 'Query':
+                operator = params[1]
+                variableName = params[2]
+                if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
                   instruction = () => {
-                    const valueA = setValueAsStringArray(params[0])
-                    const valueB = this.variables[params[2]]
-                    return this.commandOperators(valueA, valueType as commandValueTypes, valueB, operator as commandOperatorExpressions)
+                    const values = this.variables[params[0]]
+                    return this.commandQuery(values, operator, variableName)
                       ? success
                       : failed
                   }
                 } else {
                   instruction = () => {
-                    const valueA = setValueAsStringArray(params[0])
-                    const valueB = setValueAsStringArray(params[2])
-                    return this.commandOperators(valueA, valueType as commandValueTypes, valueB, operator as commandOperatorExpressions)
+                    return this.commandQuery(setValueAsStringArray(params[0]), operator, variableName)
                       ? success
                       : failed
                   }
                 }
-              }
-              break
-            case 'query':
-            case 'Query':
-              verbose('**** directive: query')
-              operator = params[1]
-              variableName = params[2]
-              if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
+                break
+              case 'set':
+              case 'Sets':
+                operator = params[2]
+                variableName = params[3]
+                if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
+                  if (params[2].charAt(0) === '$' || params[2].charAt(0)) {
+                    instruction = () => {
+                      const valueA = this.variables[params[0]]
+                      const valueB = this.variables[params[1]]
+                      return this.commandSets(valueA, valueB, operator as commandSetsOperators, variableName)
+                        ? success
+                        : failed
+                    }
+                  } else {
+                    instruction = () => {
+                      const valueA = this.variables[params[0]]
+                      return this.commandSets(valueA, setValueAsStringArray(params[1]), operator as commandSetsOperators, variableName)
+                        ? success
+                        : failed
+                    }
+                  }
+                } else {
+                  if (params[2].charAt(0) === '$' || params[2].charAt(0)) {
+                    instruction = () => {
+                      const valueB = this.variables[params[1]]
+                      return this.commandSets(setValueAsStringArray(params[0]), valueB, operator as commandSetsOperators, variableName)
+                        ? success
+                        : failed
+                    }
+                  } else {
+                    instruction = () => {
+                      return this.commandSets(setValueAsStringArray(params[0]), setValueAsStringArray(params[1]), operator as commandSetsOperators, variableName)
+                        ? success
+                        : failed
+                    }
+                  }
+                }
+                break
+              case 'sort':
+              case 'Sort':
                 instruction = () => {
-                  const values = this.variables[params[0]]
-                  return this.commandQuery(values, operator, variableName)
+                  const valiableName = params[0] || ''
+                  const path = params[1] || ''
+                  const operator = params[2] || 'asc'
+                  return this.commandSort(valiableName, path, operator as commandSortDirections)
                     ? success
                     : failed
                 }
-              } else {
+                break
+              case 'tr':
+              case 'Translation':
+                console.dir(procedure.lookup)
                 instruction = () => {
-                  return this.commandQuery(setValueAsStringArray(params[0]), operator, variableName)
+                  const vaiableName = params[0] || ''
+                  const table = this.createTranslationTable(procedure.lookup || [])
+                  return this.commandTranslation(vaiableName, table)
                     ? success
                     : failed
                 }
-              }
-              break
-            case 'set':
-            case 'Sets':
-              verbose('**** directive: set')
-              operator = params[2]
-              variableName = params[3]
-              if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
-                if (params[2].charAt(0) === '$' || params[2].charAt(0)) {
+                break
+              case 'period':
+              case 'Period':
+                variableName = params[3]
+                operator = params[2] || 'months'
+                if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
+                  if (params[1].charAt(0) === '$' || params[1].charAt(0)) {
+                    instruction = () => {
+                      const valueA = this.variables[params[0]]
+                      const valueB = this.variables[params[1]]
+                      return this.commandPeroid(valueA, valueB, operator as commandPeriodOperators, variableName)
+                        ? success
+                        : failed
+                    }
+                  } else {
+                    instruction = () => {
+                      const valueA = this.variables[params[0]]
+                      return this.commandPeroid(valueA, setValueAsStringArray(params[1]), operator as commandPeriodOperators, variableName)
+                        ? success
+                        : failed
+                    }
+                  }
+                } else {
+                  if (params[1].charAt(0) === '$' || params[1].charAt(0)) {
+                    instruction = () => {
+                      const valueB = this.variables[params[2]]
+                      return this.commandPeroid(setValueAsStringArray(params[0]), valueB, operator as commandPeriodOperators, variableName)
+                        ? success
+                        : failed
+                    }
+                  } else {
+                    instruction = () => {
+                      return this.commandPeroid(setValueAsStringArray(params[0]), setValueAsStringArray(params[1]), operator as commandPeriodOperators, variableName)
+                        ? success
+                        : failed
+                    }
+                  }
+                }
+                break
+              case 'put':
+              case 'Store':
+                if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
+                  const value = this.variables[params[0]]
                   instruction = () => {
-                    const valueA = this.variables[params[0]]
-                    const valueB = this.variables[params[1]]
-                    return this.commandSets(valueA, valueB, operator as commandSetsOperators, variableName)
+                    return this.commandStore(value, params[1] || '$error', params[2] as commandStoreFieldSeparators)
                       ? success
                       : failed
                   }
                 } else {
                   instruction = () => {
-                    const valueA = this.variables[params[0]]
-                    return this.commandSets(valueA, setValueAsStringArray(params[1]), operator as commandSetsOperators, variableName)
+                    return this.commandStore(setValueAsStringArray(params[0]), params[1] || '$error', params[2] as commandStoreFieldSeparators)
                       ? success
                       : failed
                   }
                 }
-              } else {
-                if (params[2].charAt(0) === '$' || params[2].charAt(0)) {
-                  instruction = () => {
-                    const valueB = this.variables[params[1]]
-                    return this.commandSets(setValueAsStringArray(params[0]), valueB, operator as commandSetsOperators, variableName)
-                      ? success
-                      : failed
-                  }
-                } else {
-                  instruction = () => {
-                    return this.commandSets(setValueAsStringArray(params[0]), setValueAsStringArray(params[1]), operator as commandSetsOperators, variableName)
-                      ? success
-                      : failed
-                  }
-                }
-              }
-              break
-            case 'sort':
-            case 'Sort':
-              verbose('**** directive: sort')
-              instruction = () => {
-                const valiableName = params[0] || ''
-                const path = params[1] || ''
-                const operator = params[2] || 'asc'
-                return this.commandSort(valiableName, path, operator as commandSortDirections)
-                  ? success
-                  : failed
-              }
-              break
-            case 'tr':
-            case 'Translation':
-              verbose('**** directive: translation')
-              instruction = () => {
-                const vaiableName = params[0] || ''
-                const table = this.createTranslationTable(procedure.lookup || [])
-                return this.commandTranslation(vaiableName, table)
-                  ? success
-                  : failed
-              }
-              break
-            case 'period':
-            case 'Period':
-              verbose('**** directive: period')
-              variableName = params[3]
-              operator = params[2] || 'months'
-              if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
-                if (params[1].charAt(0) === '$' || params[1].charAt(0)) {
-                  instruction = () => {
-                    const valueA = this.variables[params[0]]
-                    const valueB = this.variables[params[1]]
-                    return this.commandPeroid(valueA, valueB, operator as commandPeriodOperators, variableName)
-                      ? success
-                      : failed
-                  }
-                } else {
-                  instruction = () => {
-                    const valueA = this.variables[params[0]]
-                    return this.commandPeroid(valueA, setValueAsStringArray(params[1]), operator as commandPeriodOperators, variableName)
-                      ? success
-                      : failed
-                  }
-                }
-              } else {
-                if (params[1].charAt(0) === '$' || params[1].charAt(0)) {
-                  instruction = () => {
-                    const valueB = this.variables[params[2]]
-                    return this.commandPeroid(setValueAsStringArray(params[0]), valueB, operator as commandPeriodOperators, variableName)
-                      ? success
-                      : failed
-                  }
-                } else {
-                  instruction = () => {
-                    return this.commandPeroid(setValueAsStringArray(params[0]), setValueAsStringArray(params[1]), operator as commandPeriodOperators, variableName)
-                      ? success
-                      : failed
-                  }
-                }
-              }
-              break
-            case 'put':
-            case 'Store':
-              verbose('**** directive: put')
-              if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
-                const value = this.variables[params[0]]
-                instruction = () => {
-                  return this.commandStore(value, params[1] || '$error', params[2] as commandStoreFieldSeparators)
-                    ? success
-                    : failed
-                }
-              } else {
-                instruction = () => {
-                  return this.commandStore(setValueAsStringArray(params[0]), params[1] || '$error', params[2] as commandStoreFieldSeparators)
-                    ? success
-                    : failed
-                }
-              }
-              break
-            default:
-              throw new SyntaxError(`無効なディレクティブ: ${command}`)
-          }
+                break
+              default:
+                throw new SyntaxError(`無効な命令: ${command}`)
+            }
 
-          // ステップの実行
-          const result = instruction()
+            // ステップの実行 - ロックアップ防止のためsetTimeout = 0でラップ
+            const result: instructionResult = await new Promise(resolve => {
+              setTimeout(() => {
+                try {
+                  const result = instruction()
+                  resolve(result)
+                } catch (e) {
+                  console.error(e as Error)
+                  ElMessageBox.alert((e as Error).message, `'${currentRuleTitle}' @${counter + 1} でエラー`)
+                  resolve({
+                    behavior: 'Exit',
+                    success: false
+                  })
+                }
+              }, 0)
+            })
 
-          verbose(`*** result ${result.behavior}`)
-          switch (result.behavior) {
-            case 'Exit':
-              if (!result.success) {
-                // 症例に対する処理の中止は処理の不成立にしかない
-                return undefined
-              }
-            // eslint-disable-next-line no-fallthrough
-            case 'Abort':
-              // 現在のルール処理を終了
-              // eslint-disable-next-line no-labels
-              break instructionLoop
-            default:
-              if (Number.isNaN(Number(result.behavior))) {
-                counter += Number(result.behavior)
-              } else {
-                counter++
-              }
+            // 次のステップへ
+            verbose(`=> result: ${result.behavior}`)
+            switch (result.behavior) {
+              case 'Exit':
+                if (!result.success) {
+                  // 症例に対する処理の中止は処理の不成立の場合のみ
+                  return undefined
+                }
+              // Abortと同義になる
+              // eslint-disable-next-line no-fallthrough
+              case 'Abort':
+                // 現在のルール処理を終了
+                // eslint-disable-next-line no-labels
+                break instructionLoop
+              default:
+                if (!Number.isNaN(Number(result.behavior))) {
+                  counter += Number(result.behavior)
+                } else {
+                  counter++
+                }
+            }
+          } catch (e) {
+            console.error(e as Error)
+            ElMessageBox.alert((e as Error).message, `'${currentRuleTitle}' @${counter + 1} でエラー`)
+            return undefined
           }
         }
       }
@@ -555,30 +586,22 @@ export class Processor {
    * @param variableName
    * @returns {boolean}
    */
-  private commandVariables = (value: JsonObject[] = [], variableName = '', variableType:commandValueTypes = 'value'): boolean => {
-    try {
-      verbose(`**** set value into ${variableName}`)
-      console.dir(value)
-
-      if (!variableName || variableName === '') {
-        throw new SyntaxError('変数名が未指定です.')
-      }
-
-      switch (variableType) {
-        case 'length':
-          this.variables[variableName] = [value.length]
-          break
-        case 'number':
-          this.variables[variableName] = value.map(item => Number(item))
-          break
-        default:
-          this.variables[variableName] = value
-      }
-      return true
-    } catch (e: unknown) {
-      verbose(`Variables: ${(e as Error).message}`, true)
-      return false
+  private commandVariables = (value: JsonObject[] = [], variableName = '', variableType: commandValueTypes = 'value'): boolean => {
+    if (!variableName || variableName === '') {
+      throw new SyntaxError('変数名が未指定です.')
     }
+
+    switch (variableType) {
+      case 'length':
+        this.variables[variableName] = [value.length]
+        break
+      case 'number':
+        this.variables[variableName] = value.map(item => Number(item))
+        break
+      default:
+        this.variables[variableName] = value
+    }
+    return true
   }
 
   /**
@@ -589,73 +612,64 @@ export class Processor {
    * @param operator
    * @returns {boolean}
    */
-  private commandOperators = (valueA: JsonObject[] = [], valueAtype:commandValueTypes = 'value', valueB: JsonObject[] = [], operator:commandOperatorExpressions) :boolean => {
-    try {
-      verbose(`**** operator ${operator}`)
-      console.dir(valueA)
-      console.dir(valueB)
+  private commandOperators = (valueA: JsonObject[] = [], valueAtype: commandValueTypes = 'value', valueB: JsonObject[] = [], operator: commandOperatorExpressions): boolean => {
+    let valueOfA: JsonObject[]
+    let valueOfB: JsonObject[]
+    switch (valueAtype) {
+      case 'value':
+        valueOfA = valueA
+        valueOfB = valueB
+        break
+      case 'length':
+        valueOfA = [valueA.length]
+        valueOfB = valueB.map(item => Number(item)).filter(item => !Number.isNaN(item))
+        break
+      case 'number':
+        valueOfA = valueA.map(item => Number(item)).filter(item => !Number.isNaN(item))
+        valueOfB = valueB.map(item => Number(item)).filter(item => !Number.isNaN(item))
+        break
+      default:
+        throw new SyntaxError(`不正な型指定${valueAtype}です.`)
+    }
 
-      let valueOfA:JsonObject[]
-      let valueOfB:JsonObject[]
-      switch (valueAtype) {
-        case 'value':
-          valueOfA = valueA
-          valueOfB = valueB
-          break
-        case 'length':
-          valueOfA = [valueA.length]
-          valueOfB = valueB.map(item => Number(item)).filter(item => !Number.isNaN(item))
-          break
-        case 'number':
-          valueOfA = valueA.map(item => Number(item)).filter(item => !Number.isNaN(item))
-          valueOfB = valueB.map(item => Number(item)).filter(item => !Number.isNaN(item))
-          break
-        default:
-          throw new SyntaxError(`不正な型指定${valueAtype}です.`)
-      }
-
-      switch (operator) {
-        // 単純な比較演算子は先頭要素のみ(Number-Stringの型は自動変換に任せる)
-        case 'eq':
-        case '=':
-          // eslint-disable-next-line eqeqeq
-          return valueOfA[0] == valueOfB[0]
-        case 'gt':
-        case '>':
-          return valueOfA[0] > valueOfB[0]
-        case 'ge':
-        case '>=':
-          return valueOfA[0] >= valueOfB[0]
-        case 'lt':
-        case '<':
-          return valueOfA[0] < valueOfB[0]
-        case 'le':
-        case '<=':
-          return valueOfA[0] <= valueOfB[0]
-        // 集合演算
-        case 'in':
-          return valueOfA.some(item => valueOfB.includes(item))
-        case 'incl':
-          return valueOfB.some(item => valueOfA.includes(item))
-        case 're':
-        case 'regexp':
-          return valueOfA.some(item => {
-            const source = item.toString()
-            const expression = valueB[0].toString()
-            // /.../オプション 形式の正規表現にも対応、ただしgは使用できない
-            const patternMatch = expression.match(/^\/((?:[^/\\]+|\\.)*)\/([gimy]{0,4})$/)
-            if (patternMatch) {
-              return RegExp(patternMatch[1], patternMatch[2].replace('g', '')).test(source)
-            } else {
-              return RegExp(expression).test(source)
-            }
-          })
-        default:
-          throw new SyntaxError(`不正な演算子${operator}です.`)
-      }
-    } catch (e:unknown) {
-      verbose(`Operators: ${(e as Error).message}`, true)
-      return false
+    switch (operator) {
+      // 単純な比較演算子は先頭要素のみ(Number-Stringの型は自動変換に任せる)
+      case 'eq':
+      case '=':
+        // eslint-disable-next-line eqeqeq
+        return valueOfA[0] == valueOfB[0]
+      case 'gt':
+      case '>':
+        return valueOfA[0] > valueOfB[0]
+      case 'ge':
+      case '>=':
+        return valueOfA[0] >= valueOfB[0]
+      case 'lt':
+      case '<':
+        return valueOfA[0] < valueOfB[0]
+      case 'le':
+      case '<=':
+        return valueOfA[0] <= valueOfB[0]
+      // 集合演算
+      case 'in':
+        return valueOfA.some(item => valueOfB.includes(item))
+      case 'incl':
+        return valueOfB.some(item => valueOfA.includes(item))
+      case 're':
+      case 'regexp':
+        return valueOfA.some(item => {
+          const source = item.toString()
+          const expression = valueB[0].toString()
+          // /.../オプション 形式の正規表現にも対応、ただしgは使用できない
+          const patternMatch = expression.match(/^\/((?:[^/\\]+|\\.)*)\/([gimy]{0,4})$/)
+          if (patternMatch) {
+            return RegExp(patternMatch[1], patternMatch[2].replace('g', '')).test(source)
+          } else {
+            return RegExp(expression).test(source)
+          }
+        })
+      default:
+        throw new SyntaxError(`不正な演算子${operator}です.`)
     }
   }
 
@@ -667,18 +681,10 @@ export class Processor {
    * @returns
    */
   private commandQuery = (value: JsonObject[], query = '', variableName = ''): boolean => {
-    verbose(`**** query ${query} into ${variableName}`)
-    console.dir(value)
-
-    try {
-      if (!query || query === '') {
-        return this.commandVariables(value, variableName)
-      }
-      return this.commandVariables(parseJesgo(value, query), variableName)
-    } catch (e:unknown) {
-      verbose(`Query: ${(e as Error).message}`, true)
-      return false
+    if (!query || query === '') {
+      return this.commandVariables(value, variableName)
     }
+    return this.commandVariables(parseJesgo(value, query), variableName)
   }
 
   /**
@@ -693,42 +699,35 @@ export class Processor {
    * @returns
    */
   private commandTranslation = (variableName = '', translationTable: translationTableObject[]): boolean => {
-    try {
-      verbose(`**** translate variable ${variableName}`)
+    const newValues: JsonObject[] = []
+    let replacedAll = true
+    for (const item of (this.variables[variableName] as JsonObject[])) {
+      let replacedValue: string | undefined
 
-      const newValues:JsonObject[] = []
-      let replacedAll = true
-      for (const item of (this.variables[variableName] as JsonObject[])) {
-        let replacedValue:string|undefined
+      // array, objectはJSONに変換
+      const sourceValue = (typeof item === 'object') ? JSON.stringify(item) : item.toString()
 
-        // array, objectはJSONに変換
-        const sourceValue = (typeof item === 'object') ? JSON.stringify(item) : item.toString()
-
-        for (const translation of translationTable) {
-          if (translation.match(sourceValue)) {
-            replacedValue = translation.func(sourceValue)
-            break
-          }
-        }
-
-        try {
-          if (replacedValue === undefined) {
-            replacedAll = false
-            throw new Error()
-          }
-
-          newValues.push(typeof item === 'object' ? JSON.parse(replacedValue) : replacedValue)
-        } catch {
-          // 置換できなかった場合は元の値のまま
-          newValues.push(item)
+      for (const translation of translationTable) {
+        if (translation.match(sourceValue)) {
+          replacedValue = translation.func(sourceValue)
+          break
         }
       }
 
-      return replacedAll && this.commandVariables(newValues, variableName)
-    } catch (e:unknown) {
-      verbose(`Translation: ${(e as Error).message}`, true)
-      return false
+      try {
+        if (replacedValue === undefined) {
+          replacedAll = false
+          throw new Error()
+        }
+
+        newValues.push(typeof item === 'object' ? JSON.parse(replacedValue) : replacedValue)
+      } catch {
+        // 置換できなかった場合は元の値のまま
+        newValues.push(item)
+      }
     }
+
+    return replacedAll && this.commandVariables(newValues, variableName)
   }
 
   /**
@@ -736,8 +735,8 @@ export class Processor {
    * @param table 変換テーブルアレイ2xn
    * @returns
    */
-  private createTranslationTable = (table:string[][]): translationTableObject[] => {
-    const tableObject:translationTableObject[] = []
+  private createTranslationTable = (table: string[][]): translationTableObject[] => {
+    const tableObject: translationTableObject[] = []
 
     for (const [pattern, newvalue] of table) {
       // eslint-disable-next-line no-new-wrappers
@@ -761,7 +760,7 @@ export class Processor {
         const unquotedPattern = pattern.replace(/^(?<quote>["'`])(.*)\k<quote>$/, '$2')
         tableObject.push({
           // eslint-disable-next-line eqeqeq
-          match: (value:string) => value === unquotedPattern,
+          match: (value: string) => value === unquotedPattern,
           func: () => unquotedNewValue
         })
       }
@@ -779,42 +778,35 @@ export class Processor {
    * @param mode
    * @returns
    */
-  private commandSort = (variableName = '', indexPath = '', mode:commandSortDirections = 'asc'): boolean => {
-    try {
-      verbose(`**** sort variable ${variableName}`)
+  private commandSort = (variableName = '', indexPath = '', mode: commandSortDirections = 'asc'): boolean => {
+    if (indexPath.trim() === '' || indexPath.trim() === '$') {
+      return this.commandVariables(
+        mode === 'asc' || mode === 'ascend'
+          ? (this.variables[variableName] as JsonObject[])
+              .map(item => JSON.stringify(item))
+              .sort()
+              .map(item => JSON.parse(item))
+          : (this.variables[variableName] as JsonObject[])
+              .map(item => JSON.stringify(item))
+              .sort()
+              .reverse()
+              .map(item => JSON.parse(item)),
+        variableName
+      )
+    } else {
+      const sortedItems = (this.variables[variableName] as JsonObject[])
+        .sort((a, b) => {
+          const keya = JSON.stringify(parseJesgo(a, indexPath))
+          const keyb = JSON.stringify(parseJesgo(b, indexPath))
+          return keya === keyb ? 0 : ((keya > keyb) ? 1 : -1)
+        })
 
-      if (indexPath.trim() === '' || indexPath.trim() === '$') {
-        return this.commandVariables(
-          mode === 'asc' || mode === 'ascend'
-            ? (this.variables[variableName] as JsonObject[])
-                .map(item => JSON.stringify(item))
-                .sort()
-                .map(item => JSON.parse(item))
-            : (this.variables[variableName] as JsonObject[])
-                .map(item => JSON.stringify(item))
-                .sort()
-                .reverse()
-                .map(item => JSON.parse(item)),
-          variableName
-        )
-      } else {
-        const sortedItems = (this.variables[variableName] as JsonObject[])
-          .sort((a, b) => {
-            const keya = JSON.stringify(parseJesgo(a, indexPath))
-            const keyb = JSON.stringify(parseJesgo(b, indexPath))
-            return keya === keyb ? 0 : ((keya > keyb) ? 1 : -1)
-          })
-
-        return this.commandVariables(
-          mode === 'asc' || mode === 'ascend'
-            ? sortedItems
-            : sortedItems.reverse(),
-          variableName
-        )
-      }
-    } catch (e:unknown) {
-      verbose(`Sort: ${(e as Error).message}`, true)
-      return false
+      return this.commandVariables(
+        mode === 'asc' || mode === 'ascend'
+          ? sortedItems
+          : sortedItems.reverse(),
+        variableName
+      )
     }
   }
 
@@ -826,48 +818,41 @@ export class Processor {
    * @param vaiableName
    * @returns
    */
-  private commandSets = (valueA: JsonObject[], valueB: JsonObject[], operator:commandSetsOperators = 'add', variableName = ''):boolean => {
-    try {
-      verbose(`**** set operation ${variableName}`)
+  private commandSets = (valueA: JsonObject[], valueB: JsonObject[], operator: commandSetsOperators = 'add', variableName = ''): boolean => {
+    const jsonsA: string[] = valueA.map(item => JSON.stringify(item))
+    const jsonsB: string[] = valueB.map(item => JSON.stringify(item))
 
-      const jsonsA:string[] = valueA.map(item => JSON.stringify(item))
-      const jsonsB:string[] = valueB.map(item => JSON.stringify(item))
-
-      let resultArray:string[]
-      switch (operator) {
-        case 'union':
-          resultArray = jsonsB.reduce(
-            (accum, item) => [...accum, ...(accum.includes(item) ? [] : [item])],
-            [...jsonsA]
-          )
-          break
-        case 'intersect':
-          resultArray = jsonsA.filter(item => jsonsB.includes(item))
-          break
-        case 'difference':
-          resultArray = jsonsA.reduce(
-            (accum, item) => [...accum, ...(jsonsB.includes(item) ? [] : [item])],
-            [] as string[]
-          )
-          break
-        case 'xor':
-          resultArray = [...jsonsA, ...jsonsB].reduce(
-            (accum, item, _index, original) => [
-              ...accum,
-              ...(original.filter(value => value === item).length > 1 ? [] : [item])
-            ],
-            [] as string[]
-          )
-          break
-        default: // add
-          resultArray = [...jsonsA, ...jsonsB]
-      }
-
-      return this.commandVariables(resultArray.map(item => JSON.parse(item)), variableName)
-    } catch (e:unknown) {
-      verbose(`Set operation: ${(e as Error).message}`, true)
-      return false
+    let resultArray: string[]
+    switch (operator) {
+      case 'union':
+        resultArray = jsonsB.reduce(
+          (accum, item) => [...accum, ...(accum.includes(item) ? [] : [item])],
+          [...jsonsA]
+        )
+        break
+      case 'intersect':
+        resultArray = jsonsA.filter(item => jsonsB.includes(item))
+        break
+      case 'difference':
+        resultArray = jsonsA.reduce(
+          (accum, item) => [...accum, ...(jsonsB.includes(item) ? [] : [item])],
+          [] as string[]
+        )
+        break
+      case 'xor':
+        resultArray = [...jsonsA, ...jsonsB].reduce(
+          (accum, item, _index, original) => [
+            ...accum,
+            ...(original.filter(value => value === item).length > 1 ? [] : [item])
+          ],
+          [] as string[]
+        )
+        break
+      default: // add
+        resultArray = [...jsonsA, ...jsonsB]
     }
+
+    return this.commandVariables(resultArray.map(item => JSON.parse(item)), variableName)
   }
 
   /**
@@ -877,72 +862,65 @@ export class Processor {
    * @param mode
    * @param variableName 目的日に対して計算した値を保存, 日付として認識出来ないものは-1
    */
-  private commandPeroid = (valueA: JsonObject[], valueB: JsonObject[], operator:commandPeriodOperators = 'months', variableName = ''): boolean => {
-    try {
-      verbose('**** period operation')
+  private commandPeroid = (valueA: JsonObject[], valueB: JsonObject[], operator: commandPeriodOperators = 'months', variableName = ''): boolean => {
+    // 日付フォーマットのパターンマッチ
+    const datePattern = /(?<year>\d{4})[-/](?<month>0?[1-9]|1[0-2])[-/](?<date>0?[1-9]|[12][0-9]|3[01])/
 
-      // 日付フォーマットのパターンマッチ
-      const datePattern = /(?<year>\d{4})[-/](?<month>0?[1-9]|1[0-2])[-/](?<date>0?[1-9]|[12][0-9]|3[01])/
+    // 値の検証
+    const baseMatch = valueA[0].toString().match(datePattern)
+    if (baseMatch === null) {
+      throw new TypeError(`${valueA[0].toString()}は有効な日付文字列ではありません.`)
+    }
+    const baseDate = new Date(
+      Number(baseMatch.groups?.year || '1970'),
+      Number(baseMatch.groups?.month || '1') - 1,
+      Number(baseMatch.groups?.date || '1')
+    )
 
-      // 値の検証
-      const baseMatch = valueA[0].toString().match(datePattern)
-      if (baseMatch === null) {
-        throw new TypeError(`${valueA[0].toString()}は有効な日付文字列ではありません.`)
+    const result: JsonObject[] = []
+    for (const targetValue of valueB) {
+      const targetMatch = targetValue.toString().match(datePattern)
+      if (targetMatch === null) {
+        result.push('-1')
+        break
       }
-      const baseDate = new Date(
-        Number(baseMatch.groups?.year || '1970'),
-        Number(baseMatch.groups?.month || '1') - 1,
-        Number(baseMatch.groups?.date || '1')
+
+      const targetDate = new Date(
+        Number(targetMatch.groups?.year || '1970'),
+        Number(targetMatch.groups?.month || '1') - 1,
+        Number(targetMatch.groups?.date || '1')
       )
 
-      const result:JsonObject[] = []
-      for (const targetValue of valueB) {
-        const targetMatch = targetValue.toString().match(datePattern)
-        if (targetMatch === null) {
-          result.push('-1')
+      // 計算処理
+      let difference = 0
+      const roundup = operator.includes(',roundup')
+      switch (operator) {
+        case 'years':
+        case 'years,roundup':
+          difference = targetDate.getFullYear() - baseDate.getFullYear() +
+            (roundup && (targetDate.getTime() > baseDate.getTime()) ? 1 : 0)
           break
-        }
-
-        const targetDate = new Date(
-          Number(targetMatch.groups?.year || '1970'),
-          Number(targetMatch.groups?.month || '1') - 1,
-          Number(targetMatch.groups?.date || '1')
-        )
-
-        // 計算処理
-        let difference = 0
-        const roundup = operator.includes(',roundup')
-        switch (operator) {
-          case 'years':
-          case 'years,roundup':
-            difference = targetDate.getFullYear() - baseDate.getFullYear() +
-              (roundup && (targetDate.getTime() > baseDate.getTime()) ? 1 : 0)
-            break
-          case 'months':
-          case 'months,roundup':
-            difference = (targetDate.getFullYear() - baseDate.getFullYear()) * 12 +
-              (targetDate.getMonth() - baseDate.getMonth()) +
-              (roundup && (targetDate.getTime() > baseDate.getTime()) ? 1 : 0)
-            break
-          case 'weeks':
-          case 'weeks,roundup':
-          case 'days':
-            difference = (targetDate.getTime() - baseDate.getTime()) / (86400000) | 1
-            if (operator !== 'days') {
-              difference = difference / 7 | 1 + (roundup && difference % 7 !== 0 ? 1 : 0)
-            }
-            break
-          default:
-            difference = -1
-        }
-        result.push(difference.toString())
+        case 'months':
+        case 'months,roundup':
+          difference = (targetDate.getFullYear() - baseDate.getFullYear()) * 12 +
+            (targetDate.getMonth() - baseDate.getMonth()) +
+            (roundup && (targetDate.getTime() > baseDate.getTime()) ? 1 : 0)
+          break
+        case 'weeks':
+        case 'weeks,roundup':
+        case 'days':
+          difference = (targetDate.getTime() - baseDate.getTime()) / (86400000) | 1
+          if (operator !== 'days') {
+            difference = difference / 7 | 1 + (roundup && difference % 7 !== 0 ? 1 : 0)
+          }
+          break
+        default:
+          difference = -1
       }
-
-      return this.commandVariables(result, variableName) && result.includes('-1')
-    } catch (e:unknown) {
-      verbose(`Period: ${(e as Error).message}`, true)
-      return false
+      result.push(difference.toString())
     }
+
+    return this.commandVariables(result, variableName) && result.includes('-1')
   }
 
   /**
@@ -951,64 +929,57 @@ export class Processor {
    * @param target CSVの桁もしくはエラーバッファ
    * @param mode アレイの出力様式
    */
-  private commandStore = (values: JsonObject[], target: string = '$error', mode:commandStoreFieldSeparators = 'first'): boolean => {
-    try {
-      verbose('**** store')
-
-      /**
-       * エクセルスタイルの列フォーマットを列番号0~に変換
-       * @param col
-       * @returns
-       */
-      const xlcolToNum = (col: string): number => {
-        let num = 0
-        for (let pos = 0; pos < col.length; pos++) {
-          num *= 26
-          num += col.toUpperCase().charCodeAt(pos) - 64
-        }
-        return num - 1
+  private commandStore = (values: JsonObject[], target: string = '$error', mode: commandStoreFieldSeparators = 'first'): boolean => {
+    /**
+     * エクセルスタイルの列フォーマットを列番号0~に変換
+     * @param col
+     * @returns
+     */
+    const xlcolToNum = (col: string): number => {
+      let num = 0
+      for (let pos = 0; pos < col.length; pos++) {
+        num *= 26
+        num += col.toUpperCase().charCodeAt(pos) - 64
       }
-
-      // 値をflattenし、オブジェクトはJSON文字列化する
-      const flattenValues = values.flat(99).map(item => item.toString() !== '[object Object]' ? item.toString() : JSON.stringify(item))
-      let cellValue = ''
-      switch (mode) {
-        case 'first':
-          cellValue = flattenValues[0] || ''
-          break
-        case 'whitespace':
-          cellValue = flattenValues.join(' ')
-          break
-        case 'colon':
-          cellValue = flattenValues.join(':')
-          break
-        case 'comma':
-          cellValue = flattenValues.join(',')
-          break
-        case 'semicolon':
-        default:
-          cellValue = flattenValues.join(';')
-      }
-
-      if (target === '$error') {
-        this.errorMessages.push(cellValue)
-      } else {
-        if (/^[A-Z]+$/i.test(target)) {
-          const columnIndex = xlcolToNum(target)
-          this.csvRow[columnIndex] = cellValue
-        } else {
-          const columnIndex = Number(target)
-          if (Number.isNaN(columnIndex) || columnIndex <= 0) {
-            throw new TypeError('桁番号の指定が異常です.')
-          }
-          this.csvRow[columnIndex] = cellValue
-        }
-      }
-      return true
-    } catch (e:unknown) {
-      verbose(`Store: ${(e as Error).message}`, true)
-      return false
+      return num - 1
     }
+
+    // 値をflattenし、オブジェクトはJSON文字列化する
+    const flattenValues = values.flat(99).map(item => item.toString() !== '[object Object]' ? item.toString() : JSON.stringify(item))
+    let cellValue = ''
+    switch (mode) {
+      case 'first':
+        cellValue = flattenValues[0] || ''
+        break
+      case 'whitespace':
+        cellValue = flattenValues.join(' ')
+        break
+      case 'colon':
+        cellValue = flattenValues.join(':')
+        break
+      case 'comma':
+        cellValue = flattenValues.join(',')
+        break
+      case 'semicolon':
+      default:
+        cellValue = flattenValues.join(';')
+    }
+
+    if (target === '$error') {
+      this.errorMessages.push(cellValue)
+    } else {
+      if (/^[A-Z]+$/i.test(target)) {
+        const columnIndex = xlcolToNum(target)
+        this.csvRow[columnIndex] = cellValue
+      } else {
+        const columnIndex = Number(target)
+        if (Number.isNaN(columnIndex) || columnIndex <= 0) {
+          throw new TypeError('桁番号の指定が異常です.')
+        }
+        this.csvRow[columnIndex] = cellValue
+      }
+    }
+    return true
   }
 }
 
@@ -1017,24 +988,33 @@ export class Processor {
  * @param argValue
  * @returns
  */
-function setValueAsStringArray (argValue: unknown|unknown[]): string[] {
-  const value:string[] = []
-  let source:unknown|unknown[] = argValue
+function setValueAsStringArray (argValue: unknown | unknown[]): string[] {
+  const value: string[] = []
+  let source: unknown | unknown[] = argValue
 
-  if (argValue !== undefined) {
-    if (!Array.isArray(source)) {
-      source = [source]
+  const regex = /("[^"\\]*(?:\\.[^"\\]*)*"|\/(?:[^/\\]+|\\.)*\/[gimy]{0,4}|[^,\s]+)/g
+  const removeQuotes = /^"((?:\\"|[^"])*)"$/
+
+  if (source === undefined) {
+    return []
+  }
+
+  if (!Array.isArray(source)) {
+    source = [source]
+  }
+  for (let index = 0; index < (source as unknown[]).length; index++) {
+    if ((source as unknown[])[index] === null) {
+      // null値は問答無用でスキップする
+      continue
     }
-    for (let index = 0; index < (source as unknown[]).length; index++) {
-      if ((source as unknown[])[index] === null) {
-        // null値は問答無用でスキップする
-        continue
-      }
-      if (typeof (source as unknown[])[index] === 'object') {
-        value.push(JSON.stringify((source as unknown[])[index]))
-      } else {
-        value.push(((source as unknown[])[index] as string|number).toString())
-      }
+    if (typeof (source as unknown[])[index] === 'object') {
+      // オブジェクトはJSON文字列に変換
+      value.push(JSON.stringify((source as unknown[])[index]))
+    } else {
+      // その他文字列は切り出して配列化する
+      const sourceString = ((source as unknown[])[index] as string | number).toString()
+      const tokenisedString = (sourceString.match(regex) || []).map(item => item.replace(removeQuotes, '$1'))
+      value.push(...tokenisedString)
     }
   }
   return value
@@ -1058,9 +1038,9 @@ const parseVariableValueArray = (values: string[]): JsonObject[] => values.map(v
  * @returns {string[]}
  */
 export function parseStringToStringArray (value: string): string[] {
-  const result:string[] = []
-  let quoteType:string = ''
-  let currentItem:string = ''
+  const result: string[] = []
+  let quoteType: string = ''
+  let currentItem: string = ''
 
   const splitters = ' 　,\t'
   for (const char of value.trim()) {
@@ -1111,5 +1091,5 @@ export function parseStringToStringArray (value: string): string[] {
 export async function processor (content: pulledDocument, rules: LogicRuleSet[]): Promise<undefined | processorOutput> {
   const processor = new Processor()
 
-  return processor.run(content, rules)
+  return await processor.run(content, rules)
 }
