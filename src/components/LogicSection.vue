@@ -4,16 +4,19 @@
       <LogicRules v-model:ruleTitle="currentRulesetTitle"/>
     </div>
 
+    <!-- ロジックエディタ -->
     <div class="logic-section-ruleset" v-show="currentRulesetTitle !== '' && currentRulesetTitle !== '変数宣言'">
-      <div style="width: 100%;">
+      <div style="width: 100%; margin-right: 0.8rem;">
         <LogicSource v-for="(block, index) in sources" :key="index" :index="index" :block="block" @updateblock="updateSource"/>
       </div>
-      <!-- ロジックエディタ -->
-      <LogicEditor v-model:blocks="procedures"/>
+      <LogicEditor v-model:blocks="procedures" :sourceCount="sourceCount"/>
     </div>
-    <!-- <div class="logic-section-ruleset" v-show="currentRulesetTitle !== '' && currentRulesetTitle !== '変数宣言'">
-    </div> -->
-  </div>
+
+    <!-- ユーザ定義のドキュメント変数 -->
+    <div class="logic-section-ruleset" v-show="currentRulesetTitle === '変数宣言'">
+      <VariableEditor/>
+    </div>
+</div>
 </template>
 
 <script setup lang="ts">
@@ -23,6 +26,7 @@ import { LogicBlock, SourceBlock, LogicRuleSet } from './types'
 import LogicSource from './LogicSource.vue'
 import LogicEditor from './LogicEditor.vue'
 import LogicRules from './LogicRules.vue'
+import VariableEditor from './VariableEditor.vue'
 
 const store = useStore()
 
@@ -65,7 +69,7 @@ const sources: WritableComputedRef<SourceBlock[]> = computed({
         break
       }
     }
-    return [...sourcelist, { path: '' }].slice(0, 8) // 便宜上ソースは8個までとする
+    return [...sourcelist, { path: '' }] // ソースは無制限 .slice(0, 8) // 便宜上ソースは8個までとする
   },
   set: (newSources: SourceBlock[]) => {
     const newRule = Object.assign(
@@ -75,6 +79,11 @@ const sources: WritableComputedRef<SourceBlock[]> = computed({
     store.commit('upsertRule', newRule)
   }
 })
+
+/**
+ * ルールのソース数 @1..
+ */
+const sourceCount: ComputedRef<number> = computed(() => (currentRuleset.value?.source || []).length)
 
 function updateSource (index: number, value:SourceBlock) {
   const newBlock = [...sources.value]

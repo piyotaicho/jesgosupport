@@ -1,6 +1,6 @@
 import { InjectionKey } from 'vue'
 import { createStore, useStore as vuexUseStore, Store } from 'vuex'
-import { ErrorObject, JsonObject, CsvObject, LogicRuleSet, configObject } from './types'
+import { ErrorObject, JsonObject, CsvObject, LogicRuleSet, configObject, LogicBlock } from './types'
 import { parseJesgo } from './utilities'
 
 export interface State {
@@ -13,7 +13,8 @@ export interface State {
   RuleSet: LogicRuleSet[],
   // 表示の設定
   HighlightedPath: string,
-  caseIndex: number
+  caseIndex: number,
+  applyQuery: boolean
 }
 
 // eslint-disable-next-line symbol-description
@@ -29,13 +30,15 @@ export const store = createStore<State>({
     RuleSetConfig: {},
     RuleSet: [],
     HighlightedPath: '',
-    caseIndex: -1
+    caseIndex: -1,
+    applyQuery: false
   },
   getters: {
     // 表示関連のステート
     caseIndex: (state):number => state.caseIndex,
     highLightedPath: (state):string => state.HighlightedPath,
     // 症例ドキュメント関連のgetters
+    // マスタークエリをドキュメントに適用して取得
     filteredDocument: (state) => {
       /**
        * オブジェクトを生成する
@@ -87,6 +90,14 @@ export const store = createStore<State>({
         return state.JsonDocument
       }
     },
+    // 表示用JSONドキュメントを取得
+    displayDocument: (state, getters) => {
+      if (state.applyQuery) {
+        return getters.filteredDocument
+      } else {
+        return state.JsonDocument
+      }
+    },
     documentLength: (state, getters) => getters.filteredDocument.length, // Array.isArray(state.JsonDocument) ? state.JsonDocument.length : 0,
     document: (state, getters) => (index:number|undefined) => {
       const cursor = index === undefined ? state.caseIndex : index
@@ -113,9 +124,36 @@ export const store = createStore<State>({
     ruleTitles: (state):string[] => state.RuleSet.map(rule => rule.title),
     rulesetConfig: (state):configObject => state.RuleSetConfig || {},
     rulesetTitle: (state):string => state.RuleSetTitle || '',
+    documentVariables: (_, getters):string[] => (getters.rulesetConfig?.documentVariables || []),
+    docuemntVariableCount: (_, getters) => (name:string) => {
+      // 名前のチェック
+      if (!name || name === '') {
+        return -1
+      }
+      if (getters.documentVariables.indexOf(name) === -1) {
+        return -1
+      }
+      // ルールセットから変数の利用をカウント
+      console.log(`count var ${name}`)
+      let count = 0
+      const rules:LogicRuleSet[] = getters.rules
+      for (const rule of rules) {
+        const logicblocks:LogicBlock[] = rule.procedure || []
+        for (const block of logicblocks) {
+          const args = block.arguments
+          for (const arg of args) {
+            if (arg === name) {
+              count++
+            }
+          }
+        }
+      }
+      return count
+    },
     csvDocument: (state):CsvObject => state.CsvDocument,
     csvHeader: (state):string[] => state.CsvHeader,
-    errorDocument: (state) => state.ErrorDocument
+    errorDocument: (state) => state.ErrorDocument,
+    applyQuery: (state):boolean => state.applyQuery
   },
   mutations: {
     setIndex (state, newValue) {
@@ -214,8 +252,51 @@ export const store = createStore<State>({
     setRulesetConfig (state, newConfig: configObject) {
       state.RuleSetConfig = newConfig
     },
+    addDocumentVariable (state, name: string) {
+      console.log(`STORE: Add document variable ${name}`)
+
+      // 入力のチェック
+      let newname:string
+      if (name.charAt(0) === '$') {
+        newname = name.slice(1).trim()
+      } else {
+        newname = name.trim()
+      }
+      if (newname === '') {
+        return
+      }
+      newname = '$' + newname.replace(/[\s,.-@$;:\\'"]+/g, '_')
+      if (newname in ['$hash', '$his_id', '$name', '$date_of_birth', '$now']) {
+        throw new Error(`${newname}は予約語です.`)
+      }
+      // 変数の追加
+      const config = state.RuleSetConfig
+      const documentVariables = config?.documentVariables || []
+
+      if (!(newname in documentVariables)) {
+        documentVariables.push(newname)
+        state.RuleSetConfig.documentVariables = documentVariables
+      }
+    },
+    removeDocumentVariable (state, name: string) {
+      if (name in ['$hash', '$his_id', '$name', '$date_of_birth', '$now']) {
+        throw new Error(`${name}は予約語です.`)
+      }
+
+      const config = state.RuleSetConfig
+      const documentVariables = config?.documentVariables || []
+
+      const index = documentVariables.indexOf(name)
+      if (index >= 0) {
+        documentVariables.splice(index, 1)
+        state.RuleSetConfig.documentVariables = documentVariables
+      }
+    },
     setHighlight (state, path = '') {
       state.HighlightedPath = path
+    },
+    setApplyQuery (state, newValue: boolean) {
+      state.applyQuery = newValue
     }
   },
   actions: {

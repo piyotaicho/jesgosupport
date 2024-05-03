@@ -59,6 +59,7 @@ export interface configObject {
   masterQuery?: string[]
   masterBasePointer?: string
   skipUnmatchedRecord?: boolean
+  documentVariables?: string[]
   csvOffset?: number
   errorPointer?: string
   errorTargetSchemaId?: string
@@ -67,7 +68,6 @@ export interface configObject {
 export type setDescription = {
   title: string
   config: configObject
-  caseVariableNames?: string[]
 }
 
 // ルールセットファイル形式
