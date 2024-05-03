@@ -67,6 +67,7 @@ async function beforeFilter (typedstring: string) {
     :before-filter="beforeFilter"
     :props="{emitPath: false}"
     :value-on-clear="''"
+    :debounce="150"
     style="width: 100%;"
     />
 </template>

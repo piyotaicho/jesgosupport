@@ -23,7 +23,8 @@
             <el-col :span="4">
               <el-select v-model="argument2nd" placeholder="情報の種類を選択">
                 <el-option label="値" value="value"/>
-                <el-option label="数" value="count"/>
+                <el-option label="要素の数" value="count"/>
+                <el-option label="数値" value="number"/>
               </el-select>
             </el-col>
             <el-col :span="2" style="margin-top: 0.25rem; margin-left: 0.4rem;">が</el-col>
@@ -68,6 +69,14 @@
                 v-model="argument1st"
                 :options="variables"
                 />
+            </el-col>
+            <el-col :span="1" style="margin-top: 0.25rem; margin-left: 0.4rem;">の</el-col>
+            <el-col :span="5">
+              <el-select v-model="argument3rd" placeholder="種類">
+                <el-option label="値" value="value"/>
+                <el-option label="要素の数" value="count"/>
+                <el-option label="数値" value="number"/>
+              </el-select>
             </el-col>
             <el-col :span="2" style="margin-top: 0.25rem; margin-left: 0.4rem;">を</el-col>
           </el-row>
@@ -352,7 +361,7 @@ const blockColor = computed(() => {
   }
 })
 
-const writeableVariables:ComputedRef<CascaderOption[]> = computed(() => props.variables.filter(slot => (slot.value !== 'constant' && slot.value !== 'source')))
+const writeableVariables:ComputedRef<CascaderOption[]> = computed(() => props.variables.filter(slot => (slot.value !== 'constants' && slot.value !== 'sources')))
 
 const argument1st: WritableComputedRef<string> = computed({
   get: () => props.block.arguments[0] || '',
