@@ -150,8 +150,7 @@ function cancel (): void {
  * @param index
  */
 async function processDocument (index:number) {
-  const hash = store.getters.document(index)?.hash || ''
-
+  // ドキュメントにクエリを適用
   let returnObject: processorOutput|undefined
   try {
     returnObject = (await processor(store.getters.document(index), store.getters.rules))
@@ -161,21 +160,25 @@ async function processDocument (index:number) {
 
   // 処理済みデータを書き出し
   if (returnObject !== undefined) {
+    const hash = store.getters.document(index)?.hash || ''
     const { csv: csvRow, errors: errorMessages } = returnObject
     store.commit('addCsvDocument', csvRow)
-    const type = store.getters.jesgodocument(index)[0]?.患者台帳?.がん種
-    console.log(type)
-    store.commit('addErrorDocument', type
-      ? {
-          hash,
-          type,
-          errors: [...(errorMessages || [])]
-        }
-      : {
-          hash,
-          errors: [...(errorMessages || [])]
-        }
-    )
+    // const type = store.getters.jesgodocument(index)[0]?.患者台帳?.がん種
+    // store.commit('addErrorDocument', type
+    //   ? {
+    //       hash,
+    //       type,
+    //       errors: [...(errorMessages || [])]
+    //     }
+    //   : {
+    //       hash,
+    //       errors: [...(errorMessages || [])]
+    //     }
+    // )
+    store.commit('addErrorDocument', {
+      hash,
+      errors: [...(errorMessages || [])]
+    })
   }
 }
 </script>
