@@ -26,7 +26,7 @@ interface instructionResult {
 type v1BlockType = 'oper' | 'var' | 'query' | 'tr' | 'sort' | 'period' | 'set' | 'put'
 export type newBlockType = v1BlockType | BlockType
 
-type commandValueTypes = 'value' | 'length' | 'number'
+type commandValueTypes = 'value' | 'length' | 'count' | 'number'
 type commandOperatorExpressions = 'eq' | '=' | 'gt' | '>' | 'ge' | '>=' | 'lt' | '<' | 'le' | '<=' | 'in' | 'incl' | 're' | 'regexp'
 type commandSetsOperators = 'add' | 'union' | 'intersect' | 'difference' | 'xor'
 type commandSortDirections = 'asc' | 'ascend' | 'desc' | 'descend'
@@ -60,11 +60,11 @@ const storeProxyHandler: ProxyHandler<VariableStore> = {
     if (!(property in target)) {
       throw new TypeError(`変数"${property}"は未定義です.`)
     }
-    return parseVariableValueArray(target[property] || [])
+    return (target[property] || [])
   },
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  set: (target: VariableStore, property: string, value: any) => {
+  set: (target: VariableStore, property: string, value: any[]) => {
     if (!(property in target)) {
       throw new TypeError(`変数"${property}"は未定義です.`)
     }
@@ -75,7 +75,7 @@ const storeProxyHandler: ProxyHandler<VariableStore> = {
     }
 
     target[property]?.splice(0)
-    target[property]?.splice(0, 0, ...setValueAsStringArray(value))
+    target[property]?.splice(0, 0, ...value)
     return true
   },
 
@@ -341,7 +341,7 @@ export class Processor {
                   }
                 } else {
                   instruction = () => {
-                    const values = parseVariableValueArray(parseStringToStringArray(params[0])) as JsonObject[]
+                    const values = parseStringToStringArray(params[0]) as JsonObject[]
                     return this.commandVariables(values, variableName, valueType as commandValueTypes)
                       ? success
                       : failed
@@ -414,7 +414,7 @@ export class Processor {
                 operator = params[2]
                 variableName = params[3]
                 if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
-                  if (params[2].charAt(0) === '$' || params[2].charAt(0)) {
+                  if (params[2].charAt(0) === '$' || params[2].charAt(0) === '@') {
                     instruction = () => {
                       const valueA = this.variables[params[0]]
                       const valueB = this.variables[params[1]]
@@ -474,7 +474,7 @@ export class Processor {
                 variableName = params[3]
                 operator = params[2] || 'months'
                 if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
-                  if (params[1].charAt(0) === '$' || params[1].charAt(0)) {
+                  if (params[1].charAt(0) === '$' || params[1].charAt(0) === '@') {
                     instruction = () => {
                       const valueA = this.variables[params[0]]
                       const valueB = this.variables[params[1]]
@@ -491,7 +491,7 @@ export class Processor {
                     }
                   }
                 } else {
-                  if (params[1].charAt(0) === '$' || params[1].charAt(0)) {
+                  if (params[1].charAt(0) === '$' || params[1].charAt(0) === '@') {
                     instruction = () => {
                       const valueB = this.variables[params[2]]
                       return this.commandPeroid(setValueAsStringArray(params[0]), valueB, operator as commandPeriodOperators, variableName)
@@ -593,6 +593,7 @@ export class Processor {
 
     switch (variableType) {
       case 'length':
+      case 'count':
         this.variables[variableName] = [value.length]
         break
       case 'number':
@@ -621,6 +622,7 @@ export class Processor {
         valueOfB = valueB
         break
       case 'length':
+      case 'count':
         valueOfA = [valueA.length]
         valueOfB = valueB.map(item => Number(item)).filter(item => !Number.isNaN(item))
         break
@@ -1017,6 +1019,7 @@ function setValueAsStringArray (argValue: unknown | unknown[]): string[] {
       value.push(...tokenisedString)
     }
   }
+  console.dir(value)
   return value
 }
 
@@ -1076,6 +1079,9 @@ export function parseStringToStringArray (value: string): string[] {
     }
 
     currentItem += char
+  }
+  if (currentItem !== '') {
+    result.push(currentItem)
   }
 
   return result
