@@ -3,24 +3,30 @@
     <CaseNavigation
       :index="index"
       :length="maxIndex"
+      :apply="applyQuery"
       @update:index="updateIndex($event)"
+      @update:apply="applyQuery = $event"
       @loadJson="loadJsonDocument">
     </CaseNavigation>
     <div class="case-viewer-identifiers">
-      <div>
-        $hash: {{ caseHash }}
-      </div>
-      <div>
-        $his_id: {{ caseId }}
-      </div>
-      <div>
-        $name: {{ caseName }}
-      </div>
-      <div class="clickable" @click="copytoClipboard">
-        <el-tooltip placement="top-start" content="クリックでJSONパスをクリップボードにコピー">
-          強調表示パス: {{ store.getters.highLightedPath }}
-        </el-tooltip>
-      </div>
+      <el-row>
+        <el-col :span="5"><span>$hash: </span></el-col>
+        <el-col :span="19"><span>{{ caseHash }}</span></el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="5"><span>$his_id: </span></el-col>
+        <el-col :span="19"><span>{{ caseId }}</span></el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="5"><span>$name: </span></el-col>
+        <el-col :span="19"><span>{{ caseName }}</span></el-col>
+      </el-row>
+      <el-row @click="copytoClipboard">
+        <el-col :span="8">
+          <span>強調表示パス<el-icon><CopyDocument /></el-icon>: </span>
+        </el-col>
+        <el-col :span="16"><span>{{ store.getters.highLightedPath }}</span></el-col>
+      </el-row>
     </div>
     <JsonViewer :json="caseDocumentList"></JsonViewer>
   </div>
@@ -30,6 +36,7 @@
 import { computed, ComputedRef } from 'vue'
 import { useStore } from './store'
 import { ElMessageBox } from 'element-plus'
+import { CopyDocument } from '@element-plus/icons-vue'
 import { JsonObject } from './types'
 import { loadFile } from './utilities'
 import CaseNavigation from './CaseNavigation.vue'
@@ -47,6 +54,12 @@ interface jesgoOutput {
   name?: string,
   documentList: JsonObject
 }
+
+const applyQuery = computed({
+  get: () => store.getters.applyQuery,
+  set: (value) => store.commit('setApplyQuery', value)
+
+})
 
 const index = computed({
   get: () => store.getters.caseIndex,
