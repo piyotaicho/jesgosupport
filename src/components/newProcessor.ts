@@ -262,6 +262,7 @@ export class Processor {
             verbose(`** parse source @${sourceIndex + 1}`)
             const sourceName = `@${sourceIndex + 1}`
             const path = currentRule.source[sourceIndex]?.path || ''
+            const subpath = currentRule.source[sourceIndex]?.subpath
             switch (path) {
               case '':
                 // 存在しないとは思われるが空白pathはソース未定義にする
@@ -278,7 +279,7 @@ export class Processor {
                 break
               default:
                 Object.defineProperty(this.variables, sourceName, {
-                  value: parseJesgo(content.documentList, path),
+                  value: parseJesgo(content.documentList, subpath ? [path, subpath] : path),
                   writable: false
                 })
             }
