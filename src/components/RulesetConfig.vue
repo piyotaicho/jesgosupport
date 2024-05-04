@@ -128,6 +128,7 @@ function commit () {
   const newConfig: configObject = {
     masterQuery: masterQuery.value.map(query => '$' + query),
     masterBasePointer: '/' + masterBasePointer.value,
+    skipUnmatchedRecord: skipUnmatchedRecord.value,
     csvOffset: csvOffset.value,
     errorPointer: '/' + errorPointer.value,
     errorTargetSchemaId: errorTargetId.value
