@@ -1,7 +1,7 @@
 <template>
   <div class="footer">
     <div>
-      JESGOsupport version {{version}} / Copyright &copy; 2023 by P4mohnet
+      JESGOsupport version {{version}} / Copyright &copy; 2023-2024 by P4mohnet
     </div>
   </div>
 </template>
