@@ -67,7 +67,7 @@ const index = computed({
 })
 
 /**
- * maxIndex JSONドキュメント配列の症例数
+ * maxIndex 表示するドキュメントの症例数
  */
 const maxIndex = computed(() => store.getters.documentLength)
 
@@ -75,7 +75,7 @@ const maxIndex = computed(() => store.getters.documentLength)
  * indexで指定されたレコードドキュメント
  * @returns {JsonObject} ドキュメントが空白の場合は空オブジェクトを返す
  */
-const caseDocument: ComputedRef<JsonObject> = computed(() => store.getters.document(index.value))
+const caseDocument: ComputedRef<JsonObject> = computed(() => store.getters.displayDocument[index.value])
 
 /**
  * @returns {string} 症例レコードのハッシュ

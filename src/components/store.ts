@@ -37,9 +37,10 @@ export const store = createStore<State>({
     // 表示関連のステート
     caseIndex: (state):number => state.caseIndex,
     highLightedPath: (state):string => state.HighlightedPath,
+    applyQuery: (state):boolean => state.applyQuery,
     // 症例ドキュメント関連のgetters
-    // マスタークエリをドキュメントに適用して取得
-    filteredDocument: (state) => {
+    // マスタークエリをドキュメントに適用して取得・スキップはしない
+    queriedDocument: (state) => {
       /**
        * オブジェクトを生成する
        * @param path パス配列
@@ -56,38 +57,24 @@ export const store = createStore<State>({
           }
         }
       }
-      const queries = state.RuleSetConfig?.masterQuery || []
+      // クエリを抽出(そのまま抽出クエリについては削除する)
+      const queries = (state.RuleSetConfig?.masterQuery || []).filter(query => query !== '' && query !== '$')
       const mountPoint = state.RuleSetConfig?.masterBasePointer || '/'
-      // 処理を必要としない場合はドキュメントをそのまま出力
-      if (queries.length > 0 && !(queries.length === 1 && queries[0] === '$' && mountPoint === '/')) {
-        const mountPath = mountPoint.split('/').filter(segment => segment !== '')
-        const skipUnmatched = state.RuleSetConfig?.skipUnmatchedRecord || false
 
+      if (queries.length === 0 && mountPoint === '/') {
+        return state.JsonDocument || []
+      } else {
+        const mountPath = mountPoint.split('/').filter(segment => segment !== '')
         const filteredDocuments:JsonObject[] = []
 
         for (const caseDocument of state.JsonDocument) {
-          let documentList = (caseDocument as {documentList?: JsonObject[]})?.documentList
-          if (documentList && documentList.length > 0) {
+          let documentList = ((caseDocument as {documentList?: JsonObject[]})?.documentList || [])
+          if (queries.length > 0) {
             documentList = parseJesgo(documentList, queries)
-            if (!documentList || documentList.length === 0) {
-              // クエリにマッチしない
-              if (!skipUnmatched) {
-                filteredDocuments.push(Object.assign(caseDocument, { documentList: [mountValue(mountPath, [])].flat() }))
-              }
-            } else {
-              // マッチ
-              filteredDocuments.push(Object.assign(caseDocument, { documentList: [mountValue(mountPath, documentList)].flat() }))
-            }
-          } else {
-            if (!skipUnmatched) {
-              filteredDocuments.push(Object.assign(caseDocument, { documentList: [mountValue(mountPath, [])].flat() }))
-            }
           }
+          filteredDocuments.push(Object.assign(caseDocument, { documentList: [mountValue(mountPath, documentList)].flat() }))
         }
-
         return filteredDocuments
-      } else {
-        return state.JsonDocument
       }
     },
     // 表示用JSONドキュメントを取得
@@ -98,7 +85,7 @@ export const store = createStore<State>({
         return state.JsonDocument
       }
     },
-    documentLength: (state, getters) => getters.filteredDocument.length, // Array.isArray(state.JsonDocument) ? state.JsonDocument.length : 0,
+    documentLength: (_, getters) => getters.filteredDocument.length, // Array.isArray(state.JsonDocument) ? state.JsonDocument.length : 0,
     document: (state, getters) => (index:number|undefined) => {
       const cursor = index === undefined ? state.caseIndex : index
       if (getters.documentLength > 0) {
@@ -151,8 +138,7 @@ export const store = createStore<State>({
     },
     csvDocument: (state):CsvObject => state.CsvDocument,
     csvHeader: (state):string[] => state.CsvHeader,
-    errorDocument: (state) => state.ErrorDocument,
-    applyQuery: (state):boolean => state.applyQuery
+    errorDocument: (state) => state.ErrorDocument
   },
   mutations: {
     setIndex (state, newValue) {
