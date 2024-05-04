@@ -117,7 +117,6 @@ function setQuery (index:number|string, value:string|undefined) {
 }
 
 function removeQuery (index: number|string) {
-  console.log(`remove ${index}`)
   masterQuery.value.splice(Number(index), 1)
   if (masterQuery.value.length === 0) {
     masterQuery.value.push('')

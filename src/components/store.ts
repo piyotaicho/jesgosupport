@@ -242,8 +242,6 @@ export const store = createStore<State>({
       state.RuleSetConfig = newConfig
     },
     addDocumentVariable (state, name: string) {
-      console.log(`STORE: Add document variable ${name}`)
-
       // 入力のチェック
       let newname:string
       if (name.charAt(0) === '$') {
