@@ -50,8 +50,17 @@ export type documentFilter = {
   assignpath: string
 }
 
+export interface pulledDocument {
+  decline: boolean
+  documentList: object[]
+  hash: string
+  date_of_birth?: string
+  his_id?: string
+  name?: string
+}
+
 export interface processorOutput {
-  csv: string[],
+  csv: string[]
   errors?: string[]
 }
 

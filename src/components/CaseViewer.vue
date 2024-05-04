@@ -72,10 +72,10 @@ const index = computed({
 const maxIndex = computed(() => store.getters.documentLength)
 
 /**
- * indexで指定されたレコードドキュメント
+ * indexで指定された表示用レコードドキュメント
  * @returns {JsonObject} ドキュメントが空白の場合は空オブジェクトを返す
  */
-const caseDocument: ComputedRef<JsonObject> = computed(() => store.getters.displayDocument[index.value])
+const caseDocument: ComputedRef<JsonObject> = computed(() => store.getters.document())
 
 /**
  * @returns {string} 症例レコードのハッシュ
@@ -104,7 +104,7 @@ const caseName: ComputedRef<string> = computed(() => {
 /**
  * @returns {string} 症例レコードが保持するJSEGOドキュメント本体部分
  */
-const caseDocumentList: ComputedRef<JsonObject> = computed(() => store.getters.jesgodocument(index.value))
+const caseDocumentList: ComputedRef<JsonObject> = computed(() => (caseDocument.value as jesgoOutput).documentList)
 
 /**
  * イベントハンドラ index の値を更新しハイライトを解除する
@@ -123,6 +123,9 @@ function updateIndex (value: number) :void {
 async function copytoClipboard (): Promise<void> {
   const highLightedPath = store.getters.highLightedPath
   if (highLightedPath !== '') {
+    if (!applyQuery.value) {
+      await ElMessageBox.alert('コピーされたパスは実際と異なる可能性があります.', 'マスタクエリ未適応')
+    }
     await navigator.clipboard.writeText(highLightedPath)
   }
 }

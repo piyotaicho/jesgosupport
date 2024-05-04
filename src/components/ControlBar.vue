@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { processorOutput } from './types'
+import { pulledDocument, processorOutput } from './types'
 import { CaretRight, Download, Upload } from '@element-plus/icons-vue'
 import { ref, computed, nextTick } from 'vue'
 import { useStore } from './store'
@@ -150,31 +150,30 @@ function cancel (): void {
  * @param index
  */
 async function processDocument (index:number) {
-  // ドキュメントにクエリを適用
+  // ドキュメントに処理を適用
   let returnObject: processorOutput|undefined
+  // ドキュメントの直接取得
+  const jsonDocument:pulledDocument = store.getters.queriedDocument[index]
+
+  // 空白ドキュメントのスキップ指示あり
+  if (store.getters.rulesetConfig?.skipUnmatchedRecord === true) {
+    if ((jsonDocument?.documentList || []).length === 0) {
+      // ドキュメントがないのでスキップ
+      return undefined
+    }
+  }
+
   try {
-    returnObject = (await processor(store.getters.document(index), store.getters.rules))
+    returnObject = (await processor(jsonDocument, store.getters.rules))
   } catch (e) {
     console.error(e)
   }
 
   // 処理済みデータを書き出し
   if (returnObject !== undefined) {
-    const hash = store.getters.document(index)?.hash || ''
+    const hash = jsonDocument?.hash || ''
     const { csv: csvRow, errors: errorMessages } = returnObject
     store.commit('addCsvDocument', csvRow)
-    // const type = store.getters.jesgodocument(index)[0]?.患者台帳?.がん種
-    // store.commit('addErrorDocument', type
-    //   ? {
-    //       hash,
-    //       type,
-    //       errors: [...(errorMessages || [])]
-    //     }
-    //   : {
-    //       hash,
-    //       errors: [...(errorMessages || [])]
-    //     }
-    // )
     store.commit('addErrorDocument', {
       hash,
       errors: [...(errorMessages || [])]

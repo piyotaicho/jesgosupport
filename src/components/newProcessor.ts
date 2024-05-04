@@ -1,20 +1,6 @@
 import { ElMessageBox } from 'element-plus'
-import { JsonObject, LogicRuleSet, LogicBlock, BlockType } from './types'
+import { pulledDocument, processorOutput, JsonObject, LogicRuleSet, LogicBlock, BlockType } from './types'
 import { parseJesgo, verbose } from './utilities'
-
-interface pulledDocument {
-  decline: boolean
-  documentList: object[]
-  hash: string
-  date_of_birth?: string
-  his_id?: string
-  name?: string
-}
-
-interface processorOutput {
-  csv: string[]
-  errors?: string[]
-}
 
 interface instructionResult {
   success: boolean

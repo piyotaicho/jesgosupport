@@ -35,9 +35,13 @@ export const store = createStore<State>({
   },
   getters: {
     // 表示関連のステート
+    // プレビューで表示しているカーソル
     caseIndex: (state):number => state.caseIndex,
+    // ハイライト表示のパス
     highLightedPath: (state):string => state.HighlightedPath,
+    // プレビューにクエリの適応をするか
     applyQuery: (state):boolean => state.applyQuery,
+
     // 症例ドキュメント関連のgetters
     // マスタークエリをドキュメントに適用して取得・スキップはしない
     queriedDocument: (state) => {
@@ -52,8 +56,13 @@ export const store = createStore<State>({
         if (path.length === 0) {
           return value
         } else {
-          return {
-            [path[0]]: mountValue(path.slice(1), value)
+          if (path[0] === '-') {
+            // アレイとして下位を保持するのでここはスルーする
+            return mountValue(path.slice(1), value)
+          } else {
+            return {
+              [path[0]]: mountValue(path.slice(1), value)
+            }
           }
         }
       }
@@ -68,45 +77,40 @@ export const store = createStore<State>({
         const filteredDocuments:JsonObject[] = []
 
         for (const caseDocument of state.JsonDocument) {
-          let documentList = ((caseDocument as {documentList?: JsonObject[]})?.documentList || [])
+          const displayDocument: JsonObject = JSON.parse(JSON.stringify(caseDocument))
+          let documentList = ((displayDocument as {documentList?: JsonObject[]})?.documentList || [])
           if (queries.length > 0) {
             documentList = parseJesgo(documentList, queries)
           }
-          filteredDocuments.push(Object.assign(caseDocument, { documentList: [mountValue(mountPath, documentList)].flat() }))
+          filteredDocuments.push(Object.assign(displayDocument, { documentList: [mountValue(mountPath, documentList)].flat() }))
         }
         return filteredDocuments
       }
     },
-    // 表示用JSONドキュメントを取得
-    displayDocument: (state, getters) => {
-      if (state.applyQuery) {
-        return getters.filteredDocument
-      } else {
-        return state.JsonDocument
-      }
-    },
-    documentLength: (_, getters) => getters.filteredDocument.length, // Array.isArray(state.JsonDocument) ? state.JsonDocument.length : 0,
+    documentLength: (state) => Array.isArray(state.JsonDocument) ? state.JsonDocument.length : 0,
+    // indexを指定したドキュメント取得(表示用)
     document: (state, getters) => (index:number|undefined) => {
       const cursor = index === undefined ? state.caseIndex : index
       if (getters.documentLength > 0) {
         if (cursor >= 0 && cursor < getters.documentLength) {
-          return getters.filteredDocument[cursor]
+          if (state.applyQuery) {
+            return getters.queriedDocument[cursor]
+          } else {
+            return state.JsonDocument[cursor]
+          }
         }
       }
       return {}
     },
-    jesgodocument: (_, getters) => (index:number|undefined) => {
-      if (getters.document(index)?.documentList) {
-        const documentLists = getters.document(index)?.documentList as JsonObject[]
-        return documentLists
-      } else {
-        return []
-      }
-    },
+    // ソースプレビュー用
     parseJesgoDocument: (_, getters) => (jsonpath:string|string[], index:number|undefined, resultType:'value'|'pointer' = 'value') => {
-      const targetDocument = getters.jesgodocument(index)
-      return parseJesgo(targetDocument, jsonpath, resultType)
+      const cursor:number = index === undefined ? getters.caseIndex : index
+      return parseJesgo(
+        getters.queriedDocument[cursor].documentList,
+        jsonpath,
+        resultType)
     },
+    // ルールセット関係
     rules: (state):LogicRuleSet[] => state.RuleSet,
     ruleTitles: (state):string[] => state.RuleSet.map(rule => rule.title),
     rulesetConfig: (state):configObject => state.RuleSetConfig || {},
