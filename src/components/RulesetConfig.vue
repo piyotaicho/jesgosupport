@@ -65,6 +65,8 @@ const csvOffset = ref(0)
 const errorPointer = ref('')
 const errorTargetId = ref('')
 
+const documentVariables:string[] = []
+
 onMounted(() => {
   // 値をストアから取得
   const config:configObject = store.getters.rulesetConfig
@@ -75,6 +77,9 @@ onMounted(() => {
   masterQuery.value = config?.masterQuery?.map(query => query.charAt(0) === '$' ? query.slice(1) : query) || ['']
   masterBasePointer.value = config?.masterBasePointer?.charAt(0) === '/' ? config.masterBasePointer.slice(1) : ''
   skipUnmatchedRecord.value = config?.skipUnmatchedRecord || false
+
+  documentVariables.push(...(config?.documentVariables || []))
+
   csvOffset.value = config?.csvOffset || 0
   errorPointer.value = config?.errorPointer?.charAt(0) === '/' ? config.errorPointer.slice(1) : 'jesgo:error'
   errorTargetId.value = config?.errorTargetSchemaId || ''
@@ -129,6 +134,7 @@ function commit () {
     masterQuery: masterQuery.value.map(query => '$' + query),
     masterBasePointer: '/' + masterBasePointer.value,
     skipUnmatchedRecord: skipUnmatchedRecord.value,
+    documentVariables,
     csvOffset: csvOffset.value,
     errorPointer: '/' + errorPointer.value,
     errorTargetSchemaId: errorTargetId.value
