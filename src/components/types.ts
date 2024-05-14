@@ -32,10 +32,10 @@ export type LogicBlock = {
 }
 
 export const failableBlockTypes = [
-  'Operators',
-  'Query',
-  'Translation',
-  'Period'
+  'Operators' //,
+  // 'Query',
+  // 'Translation',
+  // 'Period'
 ]
 
 export type LogicRuleSet = {
