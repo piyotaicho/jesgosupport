@@ -82,7 +82,12 @@ export const store = createStore<State>({
           if (queries.length > 0) {
             documentList = parseJesgo(documentList, queries)
           }
-          filteredDocuments.push(Object.assign(displayDocument, { documentList: [mountValue(mountPath, documentList)].flat() }))
+          // 抽出ドキュメントがあればマウント、なければ空白とする
+          if (documentList.length !== 0) {
+            filteredDocuments.push(Object.assign(displayDocument, { documentList: [mountValue(mountPath, documentList)].flat() }))
+          } else {
+            filteredDocuments.push(Object.assign(displayDocument, { documentList: [] }))
+          }
         }
         return filteredDocuments
       }
