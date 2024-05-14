@@ -123,19 +123,22 @@ function performProcessing (command?:string): void {
   store.commit('clearErrorDocument')
 
   const processBody = async () => {
-    // 状態表示用reactiveの設定
-    totalCases.value = store.getters.documentLength
-    processing.value = true
-    // ドキュメントの逐次処理
-    for (let index = 0; index < store.getters.documentLength; index++) {
-      if (processing.value) {
-        caseIndex.value = index
-        await processDocument(index)
+    try {
+      // 状態表示用reactiveの設定
+      totalCases.value = store.getters.documentLength
+      processing.value = true
+      // ドキュメントの逐次処理
+      for (let index = 0; index < store.getters.documentLength; index++) {
+        if (processing.value) {
+          caseIndex.value = index
+          await processDocument(index)
+        }
       }
+    } finally {
+      caseIndex.value = -1
+      processing.value = false
     }
     //
-    caseIndex.value = -1
-    processing.value = false
   }
   // asyncに処理を渡す
   processBody()
@@ -167,6 +170,11 @@ async function processDocument (index:number) {
     returnObject = (await processor(jsonDocument, store.getters.rules))
   } catch (e) {
     console.error(e)
+    if ((e as Error)?.message) {
+      const messages = ((e as Error).message as string).split('\n')
+      ElMessageBox.alert(messages.slice(1).join('\n'), messages[0])
+    }
+    throw new Error()
   }
 
   // 処理済みデータを書き出し
