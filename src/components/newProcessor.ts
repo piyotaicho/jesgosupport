@@ -1,4 +1,3 @@
-import { ElMessageBox } from 'element-plus'
 import { pulledDocument, processorOutput, JsonObject, LogicRuleSet, LogicBlock, BlockType } from './types'
 import { parseJesgo, verbose } from './utilities'
 
@@ -34,7 +33,8 @@ type VariableStore = {
   [key: string]: string[]
 }
 type VariableProxy = {
-  [key: string]: JsonObject[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any[]
 }
 /**
  * 変数保存オブジェクトのProxy handler
@@ -57,24 +57,29 @@ const storeProxyHandler: ProxyHandler<VariableStore> = {
     const descriptor = Object.getOwnPropertyDescriptor(target, property)
     if (!(descriptor?.writable || false)) {
       throw new TypeError(`変数"${property}"は定数です.`)
-      return false
     }
 
-    target[property]?.splice(0)
-    target[property]?.splice(0, 0, ...value)
+    // 値は実態にstring[]として保存される、object/arrayはJSON文字列化する
+    target[property].splice(0, Infinity, ...value.map(item => {
+      if (typeof item === 'string' || typeof item === 'number') {
+        return item.toString()
+      } else if (typeof item === 'object') {
+        return JSON.stringify(item)
+      } else {
+        throw new TypeError(`${typeof item}は変数に代入出来ません.`)
+      }
+    }))
     return true
   },
 
   defineProperty: (target: VariableStore, property: string, descriptor?: PropertyDescriptor) => {
     if (property in target) {
       throw new TypeError(`変数"${property}"は既に定義されています.`)
-      return false
     }
 
     const propertyHeader = property.charAt(0)
     if (propertyHeader !== '@' && propertyHeader !== '$') {
       throw new SyntaxError('変数名は$で開始されている必要があります.')
-      return false
     }
 
     if (descriptor === undefined) {
@@ -218,8 +223,7 @@ export class Processor {
       })
     } catch (e) {
       console.error(e as Error)
-      ElMessageBox.alert((e as Error).message, '実行ユニット初期化でエラー')
-      return undefined
+      throw new Error('実行ユニット初期化でエラー\n' + (e as Error).message)
     }
 
     // ルールを逐次処理
@@ -276,8 +280,9 @@ export class Processor {
         console.dir(this.variables)
       } catch (e) {
         console.error(e as Error)
-        ElMessageBox.alert((e as Error).message, `${currentRuleTitle} 初期化中にエラー`)
-        return undefined
+        throw new Error(`${currentRuleTitle} 初期化中にエラー\n` + (e as Error).message)
+        // ElMessageBox.alert((e as Error).message, `${currentRuleTitle} 初期化中にエラー`)
+        // return undefined
       }
 
       // コード部分を処理
@@ -296,7 +301,7 @@ export class Processor {
             verbose(`** step ${counter + 1} directive ${command}`)
 
             for (const item of procedure.arguments) {
-              params.push(item.toString())
+              params.push((item || '').toString())
             }
 
             let instruction: instructionFunction
@@ -328,7 +333,7 @@ export class Processor {
                   }
                 } else {
                   instruction = () => {
-                    const values = parseStringToStringArray(params[0]) as JsonObject[]
+                    const values = parseStringToStringArray(params[0])
                     return this.commandVariables(values, variableName, valueType as commandValueTypes)
                       ? success
                       : failed
@@ -447,7 +452,6 @@ export class Processor {
                 break
               case 'tr':
               case 'Translation':
-                console.dir(procedure.lookup)
                 instruction = () => {
                   const vaiableName = params[0] || ''
                   const table = this.createTranslationTable(procedure.lookup || [])
@@ -516,21 +520,10 @@ export class Processor {
             }
 
             // ステップの実行 - ロックアップ防止のためsetTimeout = 0でラップ
-            const result: instructionResult = await new Promise(resolve => {
-              setTimeout(() => {
-                try {
-                  const result = instruction()
-                  resolve(result)
-                } catch (e) {
-                  console.error(e as Error)
-                  ElMessageBox.alert((e as Error).message, `'${currentRuleTitle}' @${counter + 1} でエラー`)
-                  resolve({
-                    behavior: 'Exit',
-                    success: false
-                  })
-                }
-              }, 0)
+            await new Promise(resolve => {
+              setTimeout(() => { resolve(undefined) }, 0)
             })
+            const result: instructionResult = instruction()
 
             // 次のステップへ
             verbose(`=> result: ${result.behavior}`)
@@ -555,8 +548,9 @@ export class Processor {
             }
           } catch (e) {
             console.error(e as Error)
-            ElMessageBox.alert((e as Error).message, `'${currentRuleTitle}' @${counter + 1} でエラー`)
-            return undefined
+            throw new Error(`'${currentRuleTitle}' @${counter + 1} でエラー\n` + (e as Error).message)
+            // ElMessageBox.alert((e as Error).message, `'${currentRuleTitle}' @${counter + 1} でエラー`)
+            // return undefined
           }
         }
       }
@@ -578,17 +572,20 @@ export class Processor {
       throw new SyntaxError('変数名が未指定です.')
     }
 
+    let newvalue:JsonObject[] = []
     switch (variableType) {
       case 'length':
       case 'count':
-        this.variables[variableName] = [value.length]
+        newvalue = [value.length.toString()]
         break
       case 'number':
-        this.variables[variableName] = value.map(item => Number(item))
+        newvalue = value.map(item => Number(item).toString())
         break
       default:
-        this.variables[variableName] = value
+        newvalue = value
     }
+    console.log(`Set ${variableName} = ${newvalue}(${newvalue.length})`)
+    this.variables[variableName] = newvalue
     return true
   }
 
@@ -600,7 +597,7 @@ export class Processor {
    * @param operator
    * @returns {boolean}
    */
-  private commandOperators = (valueA: JsonObject[] = [], valueAtype: commandValueTypes = 'value', valueB: JsonObject[] = [], operator: commandOperatorExpressions): boolean => {
+  private commandOperators = (valueA: string[] = [], valueAtype: commandValueTypes = 'value', valueB: string[] = [], operator: commandOperatorExpressions): boolean => {
     let valueOfA: JsonObject[]
     let valueOfB: JsonObject[]
     switch (valueAtype) {
@@ -647,8 +644,10 @@ export class Processor {
       case 're':
       case 'regexp':
         return valueOfA.some(item => {
+          // 数値が入っていることを想定してtoStringでマップする
           const source = item.toString()
           const expression = valueB[0].toString()
+
           // /.../オプション 形式の正規表現にも対応、ただしgは使用できない
           const patternMatch = expression.match(/^\/((?:[^/\\]+|\\.)*)\/([gimy]{0,4})$/)
           if (patternMatch) {
@@ -669,11 +668,21 @@ export class Processor {
    * @param variableName
    * @returns
    */
-  private commandQuery = (value: JsonObject[], query = '', variableName = ''): boolean => {
+  private commandQuery = (values: string[], query = '', variableName = ''): boolean => {
     if (!query || query === '') {
-      return this.commandVariables(value, variableName)
+      // クエリがなければコピーのみ
+      return this.commandVariables(values, variableName)
     }
-    return this.commandVariables(parseJesgo(value, query), variableName)
+
+    // 可能であれば値の中のJSONをパースしてオブジェクト階層化する
+    const sourceValues:string[] = values.map(item => {
+      try {
+        return JSON.parse(item)
+      } catch {
+        return item
+      }
+    })
+    return this.commandVariables(parseJesgo(sourceValues, query), variableName)
   }
 
   /**
@@ -688,13 +697,10 @@ export class Processor {
    * @returns
    */
   private commandTranslation = (variableName = '', translationTable: translationTableObject[]): boolean => {
-    const newValues: JsonObject[] = []
+    const newValues: string[] = []
     let replacedAll = true
-    for (const item of (this.variables[variableName] as JsonObject[])) {
+    for (const sourceValue of this.variables[variableName]) {
       let replacedValue: string | undefined
-
-      // array, objectはJSONに変換
-      const sourceValue = (typeof item === 'object') ? JSON.stringify(item) : item.toString()
 
       for (const translation of translationTable) {
         if (translation.match(sourceValue)) {
@@ -709,10 +715,10 @@ export class Processor {
           throw new Error()
         }
 
-        newValues.push(typeof item === 'object' ? JSON.parse(replacedValue) : replacedValue)
+        newValues.push(replacedValue)
       } catch {
         // 置換できなかった場合は元の値のまま
-        newValues.push(item)
+        newValues.push(sourceValue)
       }
     }
 
@@ -768,27 +774,29 @@ export class Processor {
    * @returns
    */
   private commandSort = (variableName = '', indexPath = '', mode: commandSortDirections = 'asc'): boolean => {
-    if (indexPath.trim() === '' || indexPath.trim() === '$') {
+    if (indexPath.trim() === '') {
+      // パス未指定 - 単純比較を行う
       return this.commandVariables(
         mode === 'asc' || mode === 'ascend'
-          ? (this.variables[variableName] as JsonObject[])
-              .map(item => JSON.stringify(item))
-              .sort()
-              .map(item => JSON.parse(item))
-          : (this.variables[variableName] as JsonObject[])
-              .map(item => JSON.stringify(item))
-              .sort()
-              .reverse()
-              .map(item => JSON.parse(item)),
+          ? this.variables[variableName].sort()
+          : this.variables[variableName].sort().reverse(),
         variableName
       )
     } else {
-      const sortedItems = (this.variables[variableName] as JsonObject[])
+      const sortedItems = [...this.variables[variableName]]
+        .map(item => {
+          try {
+            return JSON.parse(item)
+          } catch {
+            return item
+          }
+        })
         .sort((a, b) => {
-          const keya = JSON.stringify(parseJesgo(a, indexPath))
-          const keyb = JSON.stringify(parseJesgo(b, indexPath))
+          const keya = JSON.stringify(parseJesgo([a], indexPath))
+          const keyb = JSON.stringify(parseJesgo([b], indexPath))
           return keya === keyb ? 0 : ((keya > keyb) ? 1 : -1)
         })
+        .map(item => JSON.stringify(item))
 
       return this.commandVariables(
         mode === 'asc' || mode === 'ascend'
@@ -807,29 +815,26 @@ export class Processor {
    * @param vaiableName
    * @returns
    */
-  private commandSets = (valueA: JsonObject[], valueB: JsonObject[], operator: commandSetsOperators = 'add', variableName = ''): boolean => {
-    const jsonsA: string[] = valueA.map(item => JSON.stringify(item))
-    const jsonsB: string[] = valueB.map(item => JSON.stringify(item))
-
+  private commandSets = (valueA: string[], valueB: string[], operator: commandSetsOperators = 'add', variableName = ''): boolean => {
     let resultArray: string[]
     switch (operator) {
       case 'union':
-        resultArray = jsonsB.reduce(
+        resultArray = valueB.reduce(
           (accum, item) => [...accum, ...(accum.includes(item) ? [] : [item])],
-          [...jsonsA]
+          [...valueA]
         )
         break
       case 'intersect':
-        resultArray = jsonsA.filter(item => jsonsB.includes(item))
+        resultArray = valueA.filter(item => valueB.includes(item))
         break
       case 'difference':
-        resultArray = jsonsA.reduce(
-          (accum, item) => [...accum, ...(jsonsB.includes(item) ? [] : [item])],
+        resultArray = valueA.reduce(
+          (accum, item) => [...accum, ...(valueB.includes(item) ? [] : [item])],
           [] as string[]
         )
         break
       case 'xor':
-        resultArray = [...jsonsA, ...jsonsB].reduce(
+        resultArray = [...valueA, ...valueB].reduce(
           (accum, item, _index, original) => [
             ...accum,
             ...(original.filter(value => value === item).length > 1 ? [] : [item])
@@ -838,7 +843,7 @@ export class Processor {
         )
         break
       default: // add
-        resultArray = [...jsonsA, ...jsonsB]
+        resultArray = [...valueA, ...valueB]
     }
 
     return this.commandVariables(resultArray.map(item => JSON.parse(item)), variableName)
@@ -851,7 +856,7 @@ export class Processor {
    * @param mode
    * @param variableName 目的日に対して計算した値を保存, 日付として認識出来ないものは-1
    */
-  private commandPeroid = (valueA: JsonObject[], valueB: JsonObject[], operator: commandPeriodOperators = 'months', variableName = ''): boolean => {
+  private commandPeroid = (valueA: string[], valueB: string[], operator: commandPeriodOperators = 'months', variableName = ''): boolean => {
     // 日付フォーマットのパターンマッチ
     const datePattern = /(?<year>\d{4})[-/](?<month>0?[1-9]|1[0-2])[-/](?<date>0?[1-9]|[12][0-9]|3[01])/
 
@@ -866,7 +871,7 @@ export class Processor {
       Number(baseMatch.groups?.date || '1')
     )
 
-    const result: JsonObject[] = []
+    const result: string[] = []
     for (const targetValue of valueB) {
       const targetMatch = targetValue.toString().match(datePattern)
       if (targetMatch === null) {
@@ -1006,7 +1011,6 @@ function setValueAsStringArray (argValue: unknown | unknown[]): string[] {
       value.push(...tokenisedString)
     }
   }
-  console.dir(value)
   return value
 }
 
@@ -1030,16 +1034,16 @@ const parseVariableValueArray = (values: string[]): JsonObject[] => values.map(v
 export function parseStringToStringArray (value: string): string[] {
   const result: string[] = []
   let quoteType: string = ''
-  let currentItem: string = ''
+  let currentToken: string = ''
 
-  const splitters = ' 　,\t'
+  const delimiters = [' ', ',', '。', '、', '「', '」', '『', '』', '(', ')', '[', ']', '{', '}', '<', '>', '\t', '\r', '\n']
   for (const char of value.trim()) {
     // 非クオート状態で区切り文字(全角スペースも区切り文字扱い)
-    if (quoteType === '' && splitters.indexOf(char) >= 0) {
+    if (quoteType === '' && delimiters.includes(char)) {
       // スペースでの区切りが連続した場合は1つの区切りと看做す
-      if (char === ',' || currentItem !== '') {
-        result.push(currentItem)
-        currentItem = ''
+      if (char === ',' || currentToken !== '') {
+        result.push(currentToken)
+        currentToken = ''
       }
       continue
     }
@@ -1050,25 +1054,25 @@ export function parseStringToStringArray (value: string): string[] {
       if (quoteType === '') { // クオートイン
         quoteType = char
         // クオートも区切りとして扱う
-        if (currentItem !== '') {
-          result.push(currentItem)
-          currentItem = ''
+        if (currentToken !== '') {
+          result.push(currentToken)
+          currentToken = ''
         }
         continue
       } else { // クオートアウト 全角の “～” 形式にも対応する
         if (char === quoteType || (quoteType === '“' && char === '”')) {
           quoteType = ''
-          result.push(currentItem)
-          currentItem = ''
+          result.push(currentToken)
+          currentToken = ''
           continue
         }
       }
     }
 
-    currentItem += char
+    currentToken += char
   }
-  if (currentItem !== '') {
-    result.push(currentItem)
+  if (currentToken !== '') {
+    result.push(currentToken)
   }
 
   return result
