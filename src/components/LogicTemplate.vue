@@ -240,7 +240,7 @@
           </el-row>
           <el-row>
             <el-col>
-              <el-input placeholder="JSONPath文字列を入力(省略可)" clearable v-model="argument2nd" />
+              <el-input placeholder="JSONPath文字列を入力(省略時は値でソートします)" clearable v-model="argument2nd" />
             </el-col>
           </el-row>
           <el-row>
