@@ -169,6 +169,7 @@ export class Processor {
       for (const globalVariableName of globalVariables) {
         if (globalVariableName.charAt(0) === '$') {
           Object.defineProperty(this.variables, globalVariableName, { writable: true })
+          console.log(`Document variable ${globalVariableName}`)
         }
       }
     }
@@ -406,7 +407,7 @@ export class Processor {
                 operator = params[2]
                 variableName = params[3]
                 if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
-                  if (params[2].charAt(0) === '$' || params[2].charAt(0) === '@') {
+                  if (params[1].charAt(0) === '$' || params[1].charAt(0) === '@') {
                     instruction = () => {
                       const valueA = this.variables[params[0]]
                       const valueB = this.variables[params[1]]
@@ -423,7 +424,7 @@ export class Processor {
                     }
                   }
                 } else {
-                  if (params[2].charAt(0) === '$' || params[2].charAt(0)) {
+                  if (params[1].charAt(0) === '$' || params[1].charAt(0) === '@') {
                     instruction = () => {
                       const valueB = this.variables[params[1]]
                       return this.commandSets(setValueAsStringArray(params[0]), valueB, operator as commandSetsOperators, variableName)
@@ -698,7 +699,6 @@ export class Processor {
    */
   private commandTranslation = (variableName = '', translationTable: translationTableObject[]): boolean => {
     const newValues: string[] = []
-    let replacedAll = true
     for (const sourceValue of this.variables[variableName]) {
       let replacedValue: string | undefined
 
@@ -709,20 +709,15 @@ export class Processor {
         }
       }
 
-      try {
-        if (replacedValue === undefined) {
-          replacedAll = false
-          throw new Error()
-        }
-
-        newValues.push(replacedValue)
-      } catch {
-        // 置換できなかった場合は元の値のまま
+      if (replacedValue === undefined) {
+        console.log('no translation')
         newValues.push(sourceValue)
+      } else {
+        newValues.push(replacedValue)
       }
     }
 
-    return replacedAll && this.commandVariables(newValues, variableName)
+    return this.commandVariables(newValues, variableName)
   }
 
   /**
@@ -846,7 +841,7 @@ export class Processor {
         resultArray = [...valueA, ...valueB]
     }
 
-    return this.commandVariables(resultArray.map(item => JSON.parse(item)), variableName)
+    return this.commandVariables(resultArray, variableName)
   }
 
   /**
@@ -875,8 +870,7 @@ export class Processor {
     for (const targetValue of valueB) {
       const targetMatch = targetValue.toString().match(datePattern)
       if (targetMatch === null) {
-        result.push('-1')
-        break
+        throw new TypeError(`${targetValue.toString()}は有効な日付文字列ではありません.`)
       }
 
       const targetDate = new Date(
@@ -909,12 +903,12 @@ export class Processor {
           }
           break
         default:
-          difference = -1
+          throw new Error(`無効なオペレータ ${operator} です.`)
       }
       result.push(difference.toString())
     }
 
-    return this.commandVariables(result, variableName) && result.includes('-1')
+    return this.commandVariables(result, variableName)
   }
 
   /**
@@ -1085,8 +1079,8 @@ export function parseStringToStringArray (value: string): string[] {
  * @returns {csv: string[], errors: string[]}
  */
 // eslint-disable-next-line camelcase
-export async function processor (content: pulledDocument, rules: LogicRuleSet[]): Promise<undefined | processorOutput> {
-  const processor = new Processor()
+export async function processor (content: pulledDocument, rules: LogicRuleSet[], documentVariables?:string[]): Promise<undefined | processorOutput> {
+  const processor = new Processor(documentVariables)
 
   return await processor.run(content, rules)
 }

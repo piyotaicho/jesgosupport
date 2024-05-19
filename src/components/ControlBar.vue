@@ -167,7 +167,7 @@ async function processDocument (index:number) {
   }
 
   try {
-    returnObject = (await processor(jsonDocument, store.getters.rules))
+    returnObject = (await processor(jsonDocument, store.getters.rules, store.getters.documentVariables))
   } catch (e) {
     console.error(e)
     if ((e as Error)?.message) {

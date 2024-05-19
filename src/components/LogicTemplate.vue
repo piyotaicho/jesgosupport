@@ -138,7 +138,7 @@
                 :options="variables"
                 />
             </el-col>
-            <el-col :span="2" style="margin-top: 0.25rem; margin-left: 0.4rem;">と</el-col>
+            <el-col :span="4" style="margin-top: 0.25rem; margin-left: 0.4rem;">を基準に</el-col>
             <el-col :span="8">
               <EditableCascader
               v-model="argument2nd"
@@ -146,10 +146,10 @@
               :options="variables"
               />
             </el-col>
-            <el-col :span="4" style="margin-top: 0.25rem; margin-left: 0.4rem;">の差を</el-col>
+            <el-col :span="3" style="margin-top: 0.25rem; margin-left: 0.4rem;">の差を</el-col>
           </el-row>
           <el-row>
-            <el-col :span="8">
+            <el-col :span="7">
               <el-select v-model="argument3rd" placeholder="条件を選択">
                 <el-option label="年(切り捨て)" value="years"/>
                 <el-option label="年(切り上げ)" value="years,roundup"/>
@@ -160,7 +160,7 @@
                 <el-option label="日" value="days"/>
               </el-select>
             </el-col>
-            <el-col :span="2" style="margin-top: 0.25rem; margin-left: 0.4rem;">で</el-col>
+            <el-col :span="3" style="margin-top: 0.25rem; margin-left: 0.4rem;">として</el-col>
             <el-col :span="8">
               <SimpleCascader v-model="argument4th"
               placeholder="変数を選択"
