@@ -710,7 +710,6 @@ export class Processor {
       }
 
       if (replacedValue === undefined) {
-        console.log('no translation')
         newValues.push(sourceValue)
       } else {
         newValues.push(replacedValue)
