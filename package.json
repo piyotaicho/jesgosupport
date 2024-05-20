@@ -1,6 +1,6 @@
 {
   "name": "jesgosupport",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "private": true,
   "description": "JESGO向けJSONからCSVへの変換ルール設計ユーティリティとJESGOプラグイン",
   "author": {

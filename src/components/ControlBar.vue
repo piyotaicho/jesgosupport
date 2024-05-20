@@ -93,6 +93,8 @@ async function loadRuleset () {
       } else {
         throw new Error('このファイルは有効なルールセットが記載されたJSONファイルではないようです.')
       }
+      // ルールセットを読み込んだら、編集のルール選択をクリアしておく
+      store.commit('setCurrentRulesetTitle', '')
     }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e:any) {

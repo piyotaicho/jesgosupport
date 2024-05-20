@@ -14,7 +14,8 @@ export interface State {
   // 表示の設定
   HighlightedPath: string,
   caseIndex: number,
-  applyQuery: boolean
+  applyQuery: boolean,
+  currentRulesetTitle: string
 }
 
 // eslint-disable-next-line symbol-description
@@ -31,7 +32,8 @@ export const store = createStore<State>({
     RuleSet: [],
     HighlightedPath: '',
     caseIndex: -1,
-    applyQuery: false
+    applyQuery: false,
+    currentRulesetTitle: ''
   },
   getters: {
     // 表示関連のステート
@@ -41,6 +43,8 @@ export const store = createStore<State>({
     highLightedPath: (state):string => state.HighlightedPath,
     // プレビューにクエリの適応をするか
     applyQuery: (state):boolean => state.applyQuery,
+    // 編集中のルールセットタイトル
+    currentRulesetTitle: (state):string => state.currentRulesetTitle,
 
     // 症例ドキュメント関連のgetters
     // マスタークエリをドキュメントに適用して取得・スキップはしない
@@ -289,6 +293,9 @@ export const store = createStore<State>({
     },
     setApplyQuery (state, newValue: boolean) {
       state.applyQuery = newValue
+    },
+    setCurrentRulesetTitle (state, newValue: string) {
+      state.currentRulesetTitle = newValue
     }
   },
   actions: {

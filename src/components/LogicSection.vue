@@ -38,7 +38,10 @@ const rules:ComputedRef<LogicRuleSet[]> = computed(() => store.getters.rules)
 /**
  * currentRulesetTitle 現在編集中のルールのタイトル
  */
-const currentRulesetTitle:Ref<string> = ref('')
+const currentRulesetTitle:WritableComputedRef<string> = computed({
+  get: () => store.getters.currentRulesetTitle,
+  set: (value:string) => store.commit('setCurrentRulesetTitle', value)
+})
 
 /**
  * currentRuleset 現在編集中のルール
