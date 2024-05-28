@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, Ref, computed, WritableComputedRef, ComputedRef } from 'vue'
+import { Ref, computed, WritableComputedRef, ComputedRef } from 'vue'
 import { useStore } from './store'
 import { LogicBlock, SourceBlock, LogicRuleSet } from './types'
 import LogicSource from './LogicSource.vue'
