@@ -1,3 +1,5 @@
+import { runtimeCredit } from './runtime-common'
+
 export const dialogHTML = `
 <div id="plugin-dialog-content-top" style="display: flex; flex-direction: column;">
     <div style="display: flex; flex-direction: row; justify-content: space-around; margin-bottom: 0.5rem; padding-bottom: 0.3rem; border-bottom: 1px gray solid;">
@@ -7,10 +9,10 @@ export const dialogHTML = `
         </div>
         <div style="margin: auto;">
             <div>
-                <span style="font-size: 1.6rem;">JESGOサポートツールランタイム</span>
+                <span style="font-size: 1.6rem; font-weight: bold; color: #480049;">JESGOサポートツールランタイム</span>
             </div>
             <div>
-                <span style="font-size: 0.8rem;">Version 0.9.0 Copyright &copy; 2023 by P4mohnet</span>
+                <span style="font-size: 0.8rem;">${runtimeCredit}</span>
             </div>
         </div>
     </div>
@@ -21,29 +23,11 @@ export const dialogHTML = `
         </div>
     </div>
     <div id="plugin-processing" style="display: flex; flex-direction: column; justify-content: center;">
-        <div style="width: 90%; text-align: center; margin-bottom: 0.6rem;">
-            <span id="plugin-statusline1">変換処理中</span>
+        <div style="display: none; width: 90%; text-align: center; margin-bottom: 0.6rem;">
+            <span id="plugin-statusline1"></span>
         </div>
-        <div style="width: 90%; display: flex; flex-direction: row; justify-content: center; align-items: center; margin-bottom: 0.6rem;">
-            <div>
-                <label for="plugin-offset-value">CSVファイルの先頭オフセット行数</label>
-            </div>
-            <div style="margin-left: 0.8rem; margin-right: 0.8rem;">
-                <!-- <input id="plugin-offset-value" class="form-control" type="number" min="0" style="width: 5rem;" value="0"/> -->
-                <select id="plugin-offset-value" class="form-control" type="number" style="width: 5rem;" disabled>
-                    <option value="0" selected>なし</option>
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                    <option value="6">6</option>
-                    <option value="7">7</option>
-                    <option value="8">8</option>
-                    <option value="9">9</option>
-                    <option value="10">10</option>
-                </select>
-            </div>
+        <div style="width: 90%; text-align: center; margin-bottom: 0.6rem;">
+            <span id="plugin-statusline2">変換処理中</span>
         </div>
         <div style="width: 90%; text-align: center; margin-bottom: 0.6rem;">
             <button id="plugin-download" class="btn btn-primary" disabled>CSVファイルをダウンロード</button>

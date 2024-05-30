@@ -1,3 +1,5 @@
+import { runtimeCredit } from './runtime-common'
+
 export const dialogHTML = `
 <div style="display: flex; flex-direction: column;">
   <div style="display: flex; flex-direction: row; justify-content: space-around; margin-bottom: 0.5rem; padding-bottom: 0.3rem; border-bottom: 1px gray solid;">
@@ -10,7 +12,7 @@ export const dialogHTML = `
               <span style="font-size: 1.6rem; font-weight: bold; color: #480049;">JESGOサポートツールランタイム</span>
           </div>
           <div>
-              <span style="font-size: 0.8rem;">Version 1.0.4 Copyright &copy; 2023-2024 by P4mohnet</span>
+              <span style="font-size: 0.8rem;">${runtimeCredit}</span>
           </div>
       </div>
   </div>
@@ -18,9 +20,14 @@ export const dialogHTML = `
       <div>
           <select id="plugin-selection-mode" class="form-control">
               <option value="loadscript" selected>スクリプトファイルを指定して実行</option>
+              <hr/>
               <option value="CC">子宮頸がん腫瘍登録(2023)</option>
               <option value="EM">子宮体がん腫瘍登録(2023)</option>
               <option value="OV">卵巣がん腫瘍登録(2023)</option>
+              <hr/>
+              <option value="CCcheck">子宮頸がん確認(2023-2024)</option>
+              <option value="EMcheck">子宮体がん確認(2023-2024)</option>
+              <option value="OVcheck">卵巣がん確認(2023-2024)</option>
           </select>        
       </div>
       <div style="margin-left: 0.8rem; margin-right: 0.8rem;">
