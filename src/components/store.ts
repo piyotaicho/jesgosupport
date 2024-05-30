@@ -1,7 +1,7 @@
 import { InjectionKey } from 'vue'
 import { createStore, useStore as vuexUseStore, Store } from 'vuex'
 import { ErrorObject, JsonObject, CsvObject, LogicRuleSet, configObject, LogicBlock } from './types'
-import { parseJesgo } from './utilities'
+import { parseJesgo, dropNullValues, queryDocument } from './utilities'
 
 export interface State {
   JsonDocument: JsonObject[],
@@ -49,52 +49,7 @@ export const store = createStore<State>({
     // 症例ドキュメント関連のgetters
     // マスタークエリをドキュメントに適用して取得・スキップはしない
     queriedDocument: (state) => {
-      /**
-       * オブジェクトを生成する
-       * @param path パス配列
-       * @param value 最終的な値オブジェクト(JSONpathの出力なのでarray)
-       * @returns 生成されたオブジェクト
-       */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const mountValue = (path:string[], value:any):any => {
-        if (path.length === 0) {
-          return value
-        } else {
-          if (path[0] === '-') {
-            // アレイとして下位を保持するのでここはスルーする
-            return mountValue(path.slice(1), value)
-          } else {
-            return {
-              [path[0]]: mountValue(path.slice(1), value)
-            }
-          }
-        }
-      }
-      // クエリを抽出(そのまま抽出クエリについては削除する)
-      const queries = (state.RuleSetConfig?.masterQuery || []).filter(query => query !== '' && query !== '$')
-      const mountPoint = state.RuleSetConfig?.masterBasePointer || '/'
-
-      if (queries.length === 0 && mountPoint === '/') {
-        return state.JsonDocument || []
-      } else {
-        const mountPath = mountPoint.split('/').filter(segment => segment !== '')
-        const filteredDocuments:JsonObject[] = []
-
-        for (const caseDocument of state.JsonDocument) {
-          const displayDocument: JsonObject = JSON.parse(JSON.stringify(caseDocument))
-          let documentList = ((displayDocument as {documentList?: JsonObject[]})?.documentList || [])
-          if (queries.length > 0) {
-            documentList = parseJesgo(documentList, queries)
-          }
-          // 抽出ドキュメントがあればマウント、なければ空白とする
-          if (documentList.length !== 0) {
-            filteredDocuments.push(Object.assign(displayDocument, { documentList: [mountValue(mountPath, documentList)].flat() }))
-          } else {
-            filteredDocuments.push(Object.assign(displayDocument, { documentList: [] }))
-          }
-        }
-        return filteredDocuments
-      }
+      return queryDocument(state.JsonDocument, state.RuleSetConfig?.masterQuery, state.RuleSetConfig?.masterBasePointer)
     },
     documentLength: (state) => Array.isArray(state.JsonDocument) ? state.JsonDocument.length : 0,
     // indexを指定したドキュメント取得(表示用)
@@ -160,31 +115,8 @@ export const store = createStore<State>({
       }
     },
     setJsonDocument (state, jsonDocument) {
-      // 単独要素として null が存在するとき、状況に応じて情報を削除する: JESGO errata
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      function dropNullValues (sourceObject: any): any {
-        const sourceType = Object.prototype.toString.call(sourceObject)
-        if (sourceType === '[object Number]' || sourceType === '[object String]') {
-          return sourceObject
-        }
-        if (sourceType === '[object Array]') {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          return (sourceObject as any[])
-            .filter(item => Object.prototype.toString.call(item) !== '[object Null]')
-            .map(item => dropNullValues(item))
-        }
-        if (sourceType === '[object Object]') {
-          const properties = Object.keys(sourceObject as object)
-          const newObject: Record<string, string> = {}
-          for (const property of properties) {
-            if (Object.prototype.toString.call(sourceObject[property]) !== '[object Null]') {
-              newObject[property] = dropNullValues(sourceObject[property])
-            }
-          }
-          return newObject as object
-        }
-      }
-      state.JsonDocument = dropNullValues(jsonDocument)
+      // JESGOの初期Errataであるnullに対応：null要素を除去する
+      state.JsonDocument = dropNullValues(jsonDocument) as JsonObject[]
     },
     setCsvDocument (state, newValue) {
       state.CsvDocument.splice(0)

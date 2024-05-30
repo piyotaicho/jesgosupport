@@ -4,7 +4,6 @@ import { CaretRight, Download, Upload } from '@element-plus/icons-vue'
 import { ref, computed, nextTick } from 'vue'
 import { useStore } from './store'
 import { ElMessageBox } from 'element-plus'
-// import { processor } from './processor'
 import { processor } from './newProcessor'
 import { userDownload, loadFile } from './utilities'
 import RulesetConfig from './RulesetConfig.vue'
@@ -76,7 +75,7 @@ async function loadRuleset () {
         // version 0.x
         store.commit('setRuleSet', loadedRuleset)
         await ElMessageBox.alert(
-          'このソフトウエアでは旧バージョンでの保存はできません.',
+          'このソフトウエアでは旧バージョンでの保存はできません.また、旧バージョンのルールセットではエラーが出ることがあります.',
           '旧バージョンのルールセット',
           {
             confirmButtonText: 'OK'
@@ -208,14 +207,14 @@ async function processDocument (index:number) {
       <el-input style="width: 20rem;" v-model="rulesetTitle" placeholder="ルールセットの名称未設定"/>
       <el-dialog title="ルールセットの詳細設定"
         v-model="openMenu" :show-close="false" :close-on-click-modal="false">
-        <RulesetConfig v-if="openMenu" @close="openMenu = false"/>
+        <RulesetConfig v-if="openMenu" @close="() => openMenu = false"/>
       </el-dialog>
     </div>
     <div>
       <!-- <el-dropdown split-button type="primary" @click="performProcessing" :disabled="processing">
         実行<el-icon><CaretRight/></el-icon> -->
         <el-button type="primary" :icon="CaretRight" @click="performProcessing()" :loading="processing" :disabled="processing">実行</el-button>
-        <!-- <template #dropdown>
+        <!-- コンパイルとステップ実行は未実装 <template #dropdown>
           <el-dropdown-item :disabled="processing" command="compile">コンパイルのみ実行</el-dropdown-item>
           <el-dropdown-item disabled command="step">ステップ実行モード</el-dropdown-item>
         </template> -->

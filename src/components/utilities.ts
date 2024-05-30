@@ -1,4 +1,4 @@
-import { JsonObject } from './types'
+import { JsonObject, pulledDocument } from './types'
 import { JSONPath } from 'jsonpath-plus'
 
 /**
@@ -96,6 +96,90 @@ export function parseJesgo (jesgoDocument: JsonObject, jsonpath: string | string
   return result || []
 }
 
+/**
+ * ソースドキュメントアレイにjsonPathでクエリをかけマウントポインタにマウントする
+ * @param source ソースドキュメント配列
+ * @param path クエリjsonPath配列
+ * @param mountPoint 結果のマウントポイント
+ */
+export function queryDocument (source: pulledDocument[], path: string[]|undefined, mountPointer = '/'): pulledDocument[] {
+  /**
+   * オブジェクトをpathにマウントしてあたらしいオブジェクトを生成する
+   * @param path パス配列
+   * @param value 最終的な値オブジェクト(JSONpathの出力なのでarray)
+   * @returns 生成されたオブジェクト
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mountValue = (path:string[], value:any):any => {
+    if (path.length === 0) {
+      return value
+    } else {
+      if (path[0] === '-') {
+        // アレイとして下位を保持するのでここはスルーする
+        return mountValue(path.slice(1), value)
+      } else {
+        return {
+          [path[0]]: mountValue(path.slice(1), value)
+        }
+      }
+    }
+  }
+
+  const queries = (path || []).filter(item => item !== '' && item !== '$')
+  const mountPoint = mountPointer || '/'
+
+  if (queries.length === 0 && mountPoint === '/') {
+    // クエリもマウントポイントも無い場合はスルー(旧スクリプト)
+    return source || []
+  } else {
+    const mountPath = mountPoint.split('/').filter(segment => segment !== '')
+    const filteredDocuments:JsonObject[] = []
+
+    for (const caseDocument of source) {
+      const modifiedDocument: JsonObject = JSON.parse(JSON.stringify(caseDocument))
+      let documentList = ((modifiedDocument as {documentList?: JsonObject[]})?.documentList || [])
+      if (queries.length > 0) {
+        documentList = parseJesgo(documentList, queries)
+      }
+      // 抽出ドキュメントがあればマウント、なければドキュメントは空白とする
+      if (documentList.length !== 0) {
+        filteredDocuments.push(Object.assign(modifiedDocument, { documentList: [mountValue(mountPath, documentList)].flat() }))
+      } else {
+        filteredDocuments.push(Object.assign(modifiedDocument, { documentList: [] }))
+      }
+    }
+    return filteredDocuments as pulledDocument[]
+  }
+}
+
+/**
+ * 要素中にnullがあった場合にその要素を削除する(JESGO errata対応)
+ * @param source any
+ * @returns nullを除去したもの
+ */
+export function dropNullValues (source: unknown): unknown {
+  const sourceType = Object.prototype.toString.call(source)
+  if (sourceType === '[object Number]' || sourceType === '[object String]') {
+    return source
+  }
+  if (sourceType === '[object Array]') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (source as any[])
+      .filter(item => Object.prototype.toString.call(item) !== '[object Null]')
+      .map(item => dropNullValues(item))
+  }
+  if (sourceType === '[object Object]') {
+    const properties = Object.keys(source as object)
+    const sourceObject = source as Record<string, string>
+    const newObject: Record<string, string> = {}
+    for (const property of properties) {
+      if (Object.prototype.toString.call(sourceObject[property]) !== '[object Null]') {
+        newObject[property] = dropNullValues(sourceObject[property]) as string
+      }
+    }
+    return newObject as object
+  }
+}
 /**
  * console log のラッパー(開発者ツールが開いているときはダンプする)
  * @param message
