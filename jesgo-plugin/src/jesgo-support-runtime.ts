@@ -418,7 +418,7 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
               hash: caseData[0].hash,
               his_id: caseData[0]?.his_id,
               name: caseData[0]?.name,
-              documentId: documentId,
+              documentId,
               errors: result.errors
             })
           } else {
