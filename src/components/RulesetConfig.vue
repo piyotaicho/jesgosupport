@@ -100,7 +100,7 @@ function applyPreset () {
   selectedPreset.value = ''
 }
 
-function setQuery (index:number|string, value:string|undefined) {
+function setQuery (index:number|string, value?:string) {
   // El-imputがclearしたときにinput('')をトリガするので広域フラグで回避する
   if (value === undefined) {
     // removeQuery
@@ -110,13 +110,12 @@ function setQuery (index:number|string, value:string|undefined) {
     // setQueryValue
     if (removingQuery) {
       removingQuery = false
-      return
-    }
-
-    const lastIndex = masterQuery.value.length
-    masterQuery.value[Number(index)] = value
-    if (value !== '' && Number(index) === lastIndex - 1) {
-      masterQuery.value.push('')
+    } else {
+      const lastIndex = masterQuery.value.length
+      masterQuery.value[Number(index)] = value
+      if (value !== '' && Number(index) === lastIndex - 1) {
+        masterQuery.value.push('')
+      }
     }
   }
 }
@@ -173,7 +172,7 @@ function closeMenu () {
         <el-row style="margin-top: 0.8rem;">
           <el-col :span="8" class="ruleset-config-label-column">マスタークエリ</el-col>
           <el-col :span="14">
-            <el-input :model-value="value" @input="setQuery(0, $event)" clearable @clear="setQuery(0, undefined)">
+            <el-input :model-value="value" @input="setQuery(0, $event)" clearable @clear="() => setQuery(0)">
               <template #prepend>$</template>
             </el-input>
           </el-col>
@@ -182,7 +181,7 @@ function closeMenu () {
       <template v-else>
         <el-row style="margin-top: 0.6rem;">
           <el-col :span="14" :offset="8">
-            <el-input :model-value="value" @input="setQuery(index, $event)" clearable @clear="setQuery(index, undefined)">
+            <el-input :model-value="value" @input="setQuery(index, $event)" clearable @clear="() => setQuery(index)">
               <template #prepend>$</template>
             </el-input>
           </el-col>
@@ -192,7 +191,7 @@ function closeMenu () {
     <el-row style="margin-top: 0.6rem;">
       <el-col :span="8" class="ruleset-config-label-column">クエリ展開ポインタ</el-col>
       <el-col :span="14">
-        <el-input v-model="masterBasePointer" clearable @clear="masterBasePointer = ''">
+        <el-input v-model="masterBasePointer" clearable @clear="() => masterBasePointer = ''">
           <template #prepend>/</template>
         </el-input>
       </el-col>
@@ -212,7 +211,7 @@ function closeMenu () {
     <el-row style="margin-top: 0.6rem;">
       <el-col :span="8" class="ruleset-config-label-column">エラー保存先ポインタ</el-col>
       <el-col :span="14">
-        <el-input v-model="errorPointer" clearable @clear="errorPointer = 'jesgo:error'">
+        <el-input v-model="errorPointer" clearable @clear="() => errorPointer = 'jesgo:error'">
           <template #prepend>/</template>
         </el-input>
       </el-col>
