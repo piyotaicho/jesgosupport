@@ -1,25 +1,19 @@
-import { mainOutput, scriptInfo, getterPluginArgument, pulledDocument, updateDocument, setterPluginArgument } from './types'
+//
+// スクリプト内包型プラグインの共通ルーチン
+//
+import { mainOutput, getterPluginArgument, pulledDocument, updateDocument, setterPluginArgument } from './types'
 import { showModalDialog, createElementFromHtml } from './modal-dialog'
-import { dialogHTML } from './jesgo-support-runtime2-ui'
+import { dialogHTML } from './embedded-runtime-ui'
 import { processor } from '../../src/components/newProcessor'
 import { LogicRuleSet, configObject, fileRuleSetV1 } from '../../src/components/types'
 import { unparse as papaUnparse } from 'papaparse'
 import { queryDocument } from '../../src/components/utilities'
 import { JSONPath } from 'jsonpath-plus'
-// スクリプトプリセット
-import { scriptCC, scriptEM, scriptOV } from './support-scripts/scripts-v1'
 
-export async function init ():Promise<scriptInfo> {
-  return {
-    plugin_name: 'JESGO-supportランタイム',
-    plugin_version: '1.0',
-    all_patient: true,
-    attach_patient_info: true,
-    show_upload_dialog: false,
-    update_db: true,
-    target_schema_id_string: '',
-    explain: 'JESGOsupport(version 1.0)で作成されたスクリプトを実行してCSVファイルを作成、エラーを書き戻します.'
-  }
+export type pluginInformation = {
+  version: string
+  description: string
+  rulesetObject: fileRuleSetV1
 }
 
 /**
@@ -29,18 +23,21 @@ export async function init ():Promise<scriptInfo> {
  *  - 更新系(uploadなし) 表示されている全てのドキュメント
  *  - 更新系(uploadあり) uploadされたデータ
  * @param apicall APIcallback
+ * @param scriptInfo
  * @returns
  *  - 取得系 ビューアに渡すデータ(JSON, array or string)
  *  - 取得系 void
  */
-export async function main (docData: setterPluginArgument[], apicall: (docData: getterPluginArgument|updateDocument|updateDocument[], mode: boolean) => string): Promise<mainOutput> {
+export async function main (docData: setterPluginArgument[], apicall: (docData: getterPluginArgument|updateDocument|updateDocument[], mode: boolean) => string, pluginInfo: pluginInformation): Promise<mainOutput> {
+  console.log(`${pluginInfo.rulesetObject.title}@${pluginInfo.version} (C) 2023-2024 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
+
   // 更新モードなのでdocDataには表示されている全てのドキュメントが入っている
   const getterAPIcall = (request: getterPluginArgument) => apicall(request, true)
   const setterAPIcall = (request: updateDocument[]) => apicall(request, false)
 
   if (docData) {
     // 実際の処理へ handlerはちゃんと処理したらupdateDocumentを返す
-    const values: unknown = await handler(docData, getterAPIcall)
+    const values: unknown = await handler(docData, pluginInfo, getterAPIcall)
 
     // APIで返り値ドキュメントを処理(書き戻しモード)
     if (values && Array.isArray(values) && values.length > 0) {
@@ -50,10 +47,6 @@ export async function main (docData: setterPluginArgument[], apicall: (docData: 
     }
   }
   return undefined
-}
-
-export async function finalize (): Promise<void> {
-  // NOP
 }
 
 /**
@@ -69,84 +62,12 @@ function verbose (message = '', item:unknown) {
 }
 
 /**
- * JSONファイルをInput type="FILE"とFileReaderで読み込む
- * @returns string
- */
-async function loadJSONfile (): Promise<string> {
-  return await new Promise(resolve => {
-    const inputFile = document.createElement('input') as HTMLInputElement
-    inputFile.type = 'file'
-    inputFile.accept = 'application/json'
-
-    // FileReaderをセットアップ
-    const reader = new FileReader()
-    reader.addEventListener('load', () => {
-      resolve(reader.result as string)
-    },
-    {
-      once: true
-    })
-
-    // input type="file"のセットアップ
-    const changeEvent = () => {
-      const files = inputFile.files
-      if (files && files.length > 0) {
-        reader.readAsText(files[0])
-      }
-    }
-    const cancelEvent = () => {
-      inputFile.removeEventListener('change', changeEvent)
-      resolve('')
-    }
-
-    inputFile.addEventListener('change', changeEvent, { once: true })
-    inputFile.addEventListener('cancel', cancelEvent, { once: true })
-
-    // input type=file発火
-    inputFile.click()
-  })
-}
-
-/**
- * saveCSV dataURLを使ってファイルにダウンロードさせる(CSV専用)
- * @param data CSVテーブルの2次元配列
- */
-function saveCSV (data:unknown[], offset = 0, filename = 'JESGO出力データ.csv') {
-  if (data && Array.isArray(data) && data.length > 0) {
-    const offsettedData = []
-    for (let count = 0; count < offset; count++) {
-      offsettedData.push([])
-    }
-    offsettedData.push(...data)
-
-    const blob = new Blob([
-      papaUnparse(
-        offsettedData,
-        {
-          header: false,
-          delimiter: ',',
-          quoteChar: '"'
-        }
-      )
-    ], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const anchorElement = document.createElement('A') as HTMLAnchorElement
-    anchorElement.href = url
-    anchorElement.download = filename
-    anchorElement.click()
-  }
-}
-
-type ScriptTypeFormat = 'loadscript'|'CC'|'EM'|'OV'
-
-/**
  * 実行ハンドラ
  * @param APIからの返り値
  * @param getterAPIcall 取得系API
- * @param ダイアログのHTML
  * @returns 更新系APIに渡す更新オブジェクトの配列
  */
-async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: getterPluginArgument) => string): Promise<updateDocument[]|undefined> {
+async function handler (data: setterPluginArgument[], pluginInfo: pluginInformation, getterAPIcall?: (arg: getterPluginArgument) => string): Promise<updateDocument[]|undefined> {
   // データ無し
   const dataLength = data.length
   if (dataLength === 0) {
@@ -154,7 +75,11 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
   }
 
   // ダイアログの表示
-  const createDialogContent = (parent:Element) => parent.appendChild(createElementFromHtml(dialogHTML))
+  const divSource = dialogHTML
+    .replace('$$version$$', pluginInfo.version)
+    .replace('$$title$$', pluginInfo.rulesetObject.title || 'ランタイム')
+    .replace('$$description$$', pluginInfo.description || 'スクリプトを実行します')
+  const createDialogContent = (parent:Element) => parent.appendChild(createElementFromHtml(divSource))
 
   // ダイアログ内の変数
   type typeErrorBuffer = {
@@ -166,54 +91,11 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
     errors: string[]
   }
 
-  let rulesetConfig: configObject = {}
-  let rulesetTitle = ''
-  let script: LogicRuleSet[] = []
+  const rulesetConfig: configObject = pluginInfo.rulesetObject?.config || {}
+  const rulesetTitle: string = pluginInfo.rulesetObject?.title || 'スクリプト'
+  const script: LogicRuleSet[] = pluginInfo.rulesetObject?.rules || []
   const csvBuffer: string[][] = []
   const errorBuffer:typeErrorBuffer[] = []
-
-  // ダイアログボタンイベント
-  const loadScript = async () => await new Promise<unknown>(resolve => {
-    // DOMイベントを設定
-    const runButton = document.getElementById('plugin-process-script') as HTMLButtonElement
-    if (runButton) {
-      runButton.addEventListener('click', async () => {
-        // スクリプトの選択を確認
-        const scriptSelection = document.getElementById('plugin-selection-mode') as HTMLSelectElement
-        if (!scriptSelection) {
-          window.alert('プラグイン内部エラーです.')
-          throw new Error('DOM ERROR')
-        }
-
-        // 処理プリセットの設定
-        switch (scriptSelection.value as ScriptTypeFormat) {
-          case 'loadscript':
-            // eslint-disable-next-line no-case-declarations
-            const JSONstring = await loadJSONfile()
-            try {
-              if (JSONstring === '') {
-                throw new Error(undefined)
-              }
-              resolve(JSON.parse(JSONstring))
-            } catch (e) {
-              window.alert('スクリプトが正しいJSONフォーマットではありません.')
-            }
-            break
-          case 'CC':
-            resolve(scriptCC)
-            break
-          case 'EM':
-            resolve(scriptEM)
-            break
-          case 'OV':
-            resolve(scriptOV)
-            break
-          default:
-            throw new Error('SELECTから不正な値が取得されました.')
-        }
-      })
-    }
-  })
 
   // ダイアログ内処理
   const dialogProcedure = async () => {
@@ -228,42 +110,15 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
     dialogPage1.style.display = 'flex'
     dialogPage2.style.display = 'none'
 
-    // ページ1 - スクリプトのロード
-    try {
-      const loadedContent = (await loadScript()) as fileRuleSetV1|undefined
-
-      if (!loadedContent) {
-        throw new Error('有効なスクリプトがロードされませんでした、プラグインの処理を終了します.')
-      }
-
-      // eslint-disable-next-line no-prototype-builtins
-      if (Array.isArray(loadedContent) && (typeof (loadedContent[0]) === 'object' && loadedContent[0].hasOwnProperty('title'))) {
-        // 旧バージョンのルールセットは使用できない
-        throw new Error('旧バージョンのルールセットは使用できません. JESGO supportツールでバージョン1以上に修正してください.')
-      }
-
-      if (
-        loadedContent?.title === undefined ||
-        !(loadedContent?.rules && Array.isArray(loadedContent.rules))
-      ) {
-        throw new Error('このファイルは有効なルールセットが記載されたJSONファイルではないようです.')
-      }
-
-      // ルールセットファイルを分解して設定
-      rulesetTitle = loadedContent.title
-      rulesetConfig = loadedContent?.config || {}
-      script = loadedContent.rules
-    } catch (e: unknown) {
-      const message = (e as Error)?.message || 'エラーです'
-      window.alert(message)
-
+    // ページ1 - ダイアログボタンイベントを待期
+    await new Promise<void>(resolve => {
       const runButton = document.getElementById('plugin-process-script') as HTMLButtonElement
       if (runButton) {
-        runButton.disabled = true
+        runButton.addEventListener('click', () => resolve())
       }
-      return
-    }
+    })
 
+    // 取得ドキュメントリストの整理
     // 取得ドキュメントリストの作成 (抽出用スキーマ指定は1.0.4ではまだ実装無し1.1～を予定)
     const targets:getterPluginArgument[] = Array.from(new Set(data.map(item => item.case_id))).map(item => {
       return {
@@ -281,8 +136,11 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
     // 2ページ目のDOM取得と設定
     const statusline1 = document.getElementById('plugin-statusline1') as HTMLSpanElement
     const statusline2 = document.getElementById('plugin-statusline2') as HTMLSpanElement
+    const divCsvDownload = document.getElementById('plugin-div-csv-download') as HTMLInputElement
     const downloadButton = document.getElementById('plugin-download') as HTMLButtonElement
     const statusline3 = document.getElementById('plugin-statusline3') as HTMLSpanElement
+
+    divCsvDownload.style.display = 'none'
 
     downloadButton.addEventListener('click', () => {
       if (csvBuffer.length > 0) {
@@ -418,7 +276,7 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
   // ダイアログでの処理へ
   await showModalDialog(createDialogContent, dialogProcedure)
 
-  // updateドキュメントとしてエラーバッファーを生成して返す
+  // エラーバッファーをupdateドキュメントとして返す
   const returnValue: updateDocument[] = []
   for (const errorItem of errorBuffer) {
     // エラーの出力パスを設定
@@ -439,4 +297,34 @@ async function handler (data: setterPluginArgument[], getterAPIcall?: (arg: gett
     }
   }
   return returnValue
+}
+
+/**
+ * saveCSV dataURLを使ってファイルにダウンロードさせる(CSV専用)
+ * @param data CSVテーブルの2次元配列
+ */
+function saveCSV (data:unknown[], offset = 0, filename = 'JESGO出力データ.csv') {
+  if (data && Array.isArray(data) && data.length > 0) {
+    const offsettedData = []
+    for (let count = 0; count < offset; count++) {
+      offsettedData.push([])
+    }
+    offsettedData.push(...data)
+
+    const blob = new Blob([
+      papaUnparse(
+        offsettedData,
+        {
+          header: false,
+          delimiter: ',',
+          quoteChar: '"'
+        }
+      )
+    ], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const anchorElement = document.createElement('A') as HTMLAnchorElement
+    anchorElement.href = url
+    anchorElement.download = filename
+    anchorElement.click()
+  }
 }

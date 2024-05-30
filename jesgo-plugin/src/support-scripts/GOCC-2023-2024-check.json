@@ -1,0 +1,5996 @@
+{
+  "title": "子宮頸がんロジカルチェック(2023-2024)",
+  "config": {
+    "masterQuery": [
+      "$..患者台帳",
+      "$.[?(@.がん種 == \"子宮頸がん\")]",
+      "$"
+    ],
+    "masterBasePointer": "/患者台帳/-",
+    "skipUnmatchedRecord": false,
+    "documentVariables": [
+      "$腫瘍登録対象",
+      "$初回治療開始日",
+      "$腫瘍登録対象年",
+      "$年齢",      
+      "$治療施行状況",
+      "$FIGO",
+      "$T1a症例"
+    ],
+    "csvOffset": 6,
+    "errorPointer": "/jesgo:error",
+    "errorTargetSchemaId": "/schema/CC/root"
+  },
+  "rules": [
+    {
+      "title": "GO-CC_2021_20XX_basic_info",
+      "source": [
+        {
+          "path": "$.[0].患者台帳.[0].腫瘍登録対象"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].初回治療開始日"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.治療施行状況"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.FIGO"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Variables",
+          "arguments": [
+            "@1",
+            "$腫瘍登録対象",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象",
+            "value",
+            "はい",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Exit"
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@2",
+            "$初回治療開始日",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$初回治療開始日",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】初回治療開始日を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": "Abort"
+        },
+        {
+          "type": "Period",
+          "arguments": [
+            "$date_of_birth",
+            "$初回治療開始日",
+            "years",
+            "$年齢"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$年齢",
+            "value",
+            "10",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$年齢",
+            "value",
+            "99",
+            "le"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】患者年齢が10歳未満または100歳以上です",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$初回治療開始日",
+            "$腫瘍登録対象年",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$腫瘍登録対象年"
+          ],
+          "trueBehavior": 1,
+          "lookup": [
+            [
+              "/^(\\d{4})-(\\d{2})-(\\d{2})$/",
+              "$1"
+            ]
+          ]
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@3",
+            "$治療施行状況",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】治療施行状況を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "手術療法、薬物療法、放射線療法を実施せず",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】「手術療法、薬物療法、放射線療法を実施せず」が選択されています。腫瘍登録対象症例かご確認下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": "Abort"
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@4",
+            "$FIGO",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】FIGO分類を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": "Abort"
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "T1a1:脈管侵襲なし,T1a1:脈管侵襲あり,T1a2:脈管侵襲なし,T1a2:脈管侵襲あり,T1a(亜分類不明):脈管侵襲なし,T1a(亜分類不明):脈管侵襲あり",
+            "$T1a症例",
+            "value"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-CC_2021_2024_check_basic_info",
+      "description": "GO-CC_2021_2024_cervical_cancer: cTNM",
+      "source": [
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.cTNM.T.T"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.cTNM.T.T1a期 詳細入力"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.cTNM.N.N"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.cTNM.M.M"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.cTNM.M.L.[*]"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象年",
+            "value",
+            "2024",
+            "le"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】臨床進行期:cT分類を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 5
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@1",
+            "$T1a症例",
+            "intersect",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】cT1a症例の腫瘍の水平方向の広がりを入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】臨床進行期:cN分類を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】臨床進行期:cM分類を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@5",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "遠隔転移あり",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】転移部位の詳細を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": "Abort"
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】M0にもかかわらず、遠隔転移部位が登録されています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": "Abort"
+        }
+      ]
+    },
+    {
+      "title": "GO-CC_2021_2023_check_pTNM",
+      "description": "GO-CC_2021_2023_cervical_cancer: pTNM",
+      "source": [
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.pTNM.T.T"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.pTNM.T.T1a期 詳細入力"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.pTNM.N.RP"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.pTNM.N.RPX"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.pTNM.N.RA"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.pTNM.N.RAX"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.pTNM.M.M"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象年",
+            "value",
+            "2023",
+            "le"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "初回手術施行例",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】pT分類を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 5
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@1",
+            "$T1a症例",
+            "intersect",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】pT1a症例の腫瘍の水平方向の広がりが入力されていません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】pN分類:骨盤リンパ節（RP）を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@5",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@6",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】pN分類:傍大動脈リンパ節（RA）を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@7",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】pM分類を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-CC_2024_20XX_check_pTNM",
+      "description": "GO-CC_2024_20XX_cervical_cancer: pTNM",
+      "source": [
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.pTNM.T.T"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.pTNM.T.T1a期 詳細入力"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.pTNM.T.T1a期 腫瘍の厚さ"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.pTNM.N.RP"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.pTNM.N.RPX"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.pTNM.N.RA"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.pTNM.N.RAX"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.pTNM.M.M"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象年",
+            "value",
+            "2024",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象年",
+            "value",
+            "2024",
+            "le"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "初回手術施行例",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】pT分類を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 7
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@1",
+            "$T1a症例",
+            "intersect",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】pT1a症例の腫瘍の水平方向の広がりが入力されていません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】pT1a症例の腫瘍の厚さが入力されていません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@5",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】pN分類:骨盤リンパ節（RP）を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@6",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@7",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】pN分類:傍大動脈リンパ節（RA）を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@8",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】pM分類を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-CC_2021_2024_check_ypTNM",
+      "description": "GO-CC_2021_2024_cervical_cancer: ypTNM",
+      "source": [
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.ypTNM.T.T"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.ypTNM.T.T1a期 詳細入力"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.ypTNM.N.RP"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.ypTNM.N.RPX"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.ypTNM.N.RA"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.ypTNM.N.RAX"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.ypTNM.M.M"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象年",
+            "value",
+            "2024",
+            "le"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "術前治療後に手術施行",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】ypT分類を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 5
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@1",
+            "$T1a症例",
+            "intersect",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】ypT1a症例の腫瘍の水平方向の広がりが入力されていません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】ypN分類:骨盤リンパ節（RP）を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@5",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@6",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】ypN分類:傍大動脈リンパ節（RA）を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@7",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】ypM分類を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-CC_2021_2024_check_findings",
+      "description": "GO-CC_2021_2024_cervical_cancer: Findings",
+      "source": [
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.腫瘍最大腫瘍径.所見"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.腫瘍最大腫瘍径.診断方法"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.基靭帯浸潤.所見"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.基靭帯浸潤.診断方法"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.腟壁浸潤.所見"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.腟壁浸潤.診断方法"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.膀胱粘膜浸潤.所見"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.膀胱粘膜浸潤.診断方法"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.直腸粘膜浸潤.所見"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.直腸粘膜浸潤.診断方法"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.骨盤リンパ節転移.所見"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.骨盤リンパ節転移.診断方法"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.傍大動脈リンパ節転移.所見"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.傍大動脈リンパ節転移.診断方法"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.その他のリンパ節転移.所見"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.その他のリンパ節転移.診断方法"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.リンパ節以外の遠隔転移.所見"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.リンパ節以外の遠隔転移.診断方法"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象年",
+            "value",
+            "2024",
+            "le"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】診断所見:腫瘍最大径の所見を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】診断所見:腫瘍最大径の診断方法を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】診断所見:基靭帯浸潤の所見を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】診断所見:基靭帯浸潤の診断方法を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@5",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】診断所見:腟壁浸潤の所見を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@6",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】診断所見:腟壁浸潤の診断方法を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@7",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】診断所見:膀胱粘膜浸潤の所見を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@8",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】診断所見:膀胱粘膜浸潤の診断方法を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@9",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】診断所見:直腸粘膜浸潤の所見を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@10",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】診断所見:直腸粘膜浸潤の診断方法を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@11",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】診断所見:骨盤リンパ節転移の所見を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@12",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】診断所見:骨盤リンパ節転移の診断方法を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@13",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】診断所見:傍大動脈リンパ節転移の所見を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@14",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】診断所見:傍大動脈リンパ節転移の診断方法を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@15",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】診断所見:その他のリンパ節転移の所見を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@16",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】診断所見:その他のリンパ節転移の診断方法を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@17",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】診断所見:リンパ節以外の遠隔転移の所見を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@18",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】診断所見:リンパ節以外の遠隔転移の診断方法を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-CC_2021_2023_check_histology",
+      "description": "GO-CC_2021_2023_cervical_cancer: Histology",
+      "source": [
+        {
+          "path": "$.[0].患者台帳.[0].組織診断.組織型"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象年",
+            "value",
+            "2023",
+            "le"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】組織診断を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-CC_2024_20XX_check_histology",
+      "description": "GO-CC_2024_20XX_cervical_cancer: Histology",
+      "source": [
+        {
+          "path": "$.[0].患者台帳.[0].組織診断.組織型"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].組織診断.扁平上皮癌 詳細"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].組織診断.腺癌 詳細"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象年",
+            "value",
+            "2024",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象年",
+            "value",
+            "2024",
+            "le"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】組織診断を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": "Abort"
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "扁平上皮癌 HPV関連,扁平上皮癌 HPV非依存性,扁平上皮癌, NOS",
+            "$1",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@1",
+            "$1",
+            "intersect",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "腺癌 HPV関連,腺癌 HPV非依存性,腺癌, NOS",
+            "$2",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@1",
+            "$2",
+            "intersect",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$1",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】組織診断:扁平上皮癌 詳細欄を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$2",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】組織診断:腺癌 詳細欄を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": "Abort"
+        }
+      ]
+    },
+    {
+      "title": "GO-CC_2021_2024_check_treatment_info",
+      "description": "GO-CC_2021_2024_cervical_cancer:Treatment",
+      "source": [
+        {
+          "path": "$.[0].患者台帳.[0].初回治療.手術療法.[*].手術日"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].初回治療.薬物療法.[*].投与開始日"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].初回治療.放射線療法.[*].治療開始日"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].初回治療.手術療法.[*].実施手術.実施手術.[*].術式"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].初回治療.薬物療法.[*].治療区分"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].初回治療.放射線療法.[*].治療区分"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].初回治療.手術療法.[*].手術時間"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].初回治療.手術療法.[*].合併症の有無"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].初回治療.手術療法.[*].手術合併症.[*].転帰"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象年",
+            "value",
+            "2024",
+            "le"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@1",
+            "@2",
+            "union",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$1",
+            "@3",
+            "union",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】初回治療の詳細情報を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": "Abort"
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$1",
+            "$初回治療開始日",
+            "union",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sort",
+          "arguments": [
+            "$1",
+            "",
+            "asc"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$1",
+            "$.[0]",
+            "$2"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$初回治療開始日",
+            "@1",
+            "intersect",
+            "$3"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "初回手術施行例",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】初回手術施行例にも関わらず初回手術日が初回治療開始日と一致しません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 4,
+          "falseBehavior": 1 
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】治療前に進行期を決定した症例にも関わらず初回治療が手術療法となっています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$2",
+            "value",
+            "$初回治療開始日",
+            "eq"
+          ],
+          "trueBehavior": 4,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】初回治療の詳細において、初回治療開始日以前の日付が入力されています",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$2",
+            "value",
+            "$初回治療開始日",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】初回治療の詳細において、初回治療開始日以前の日付が入力されています",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】実施した手術について術式を登録して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@5",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】実施した薬物療法について治療区分を登録して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@6",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】実施した放射線治療について治療区分を登録して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "IA1期,IA2期,IA期(亜分類不明),IB1期",
+            "$4",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 6
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$FIGO",
+            "$4",
+            "intersect",
+            "$5"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$5",
+            "count",
+            "1",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】ⅠA1期からⅠB1期の症例に対して治療法が薬物療法しか入力されていません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 7
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 6
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@5",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 4,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@5",
+            "分子標的治療",
+            "difference",
+            "$6"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$6",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】薬物療法において分子標的治療しか入力されていません",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 10
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 9
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 8
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IA1期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 7
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】ⅠA1期の症例に対して治療法が放射線療法しか入力されていません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@6",
+            "count",
+            "0",
+            "ge"
+          ],
+          "trueBehavior": 5,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "腔内照射,同時化学放射線治療(腔内照射)",
+            "$7",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@6",
+            "$7",
+            "difference",
+            "$7"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$7",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】放射線療法において腔内照射ないし同時化学放射線治療(腔内照射)しか入力されていません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@1",
+            "$4",
+            "count"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@8",
+            "あり",
+            "intersect",
+            "$5"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 8,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@7",
+            "count",
+            "$4",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】全ての手術療法に対し手術時間が入力されていることを確認して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@8",
+            "count",
+            "$4",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】全ての手術療法に対し合併症の有無が入力されていることを確認して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$5",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@9",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】合併症が「あり」と登録されていますが、手術合併症の詳細情報が登録されていません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-CC_2021_2024_logicalcheck_FIGO_finding",
+      "description": "GO-CC_2021_2024_cervical_cancer: Logical check between FIGO and findings",
+      "source": [
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.腫瘍最大腫瘍径.所見"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.基靭帯浸潤.所見"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.腟壁浸潤.所見"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.膀胱粘膜浸潤.所見"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.直腸粘膜浸潤.所見"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.骨盤リンパ節転移.所見"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.傍大動脈リンパ節転移.所見"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.その他のリンパ節転移.所見"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.リンパ節以外の遠隔転移.所見"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.骨盤リンパ節転移.診断方法"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.傍大動脈リンパ節転移.診断方法"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象年",
+            "value",
+            "2024",
+            "le"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@1",
+            "$1",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$1"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "顕微鏡的病変",
+              "1"
+            ],
+            [
+              "～2㎝",
+              "2"
+            ],
+            [
+              "～4㎝",
+              "3"
+            ],
+            [
+              "～6㎝",
+              "4"
+            ],
+            [
+              "6㎝をこえる",
+              "5"
+            ],
+            [
+              "測定不能",
+              ""
+            ]
+          ]
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IB1期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$1",
+            "value",
+            "2",
+            "le"
+          ],
+          "trueBehavior": 10,
+          "falseBehavior": 9
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IB2期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$1",
+            "value",
+            "3",
+            "eq"
+          ],
+          "trueBehavior": 8,
+          "falseBehavior": 7
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IB3期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$1",
+            "value",
+            "4",
+            "ge"
+          ],
+          "trueBehavior": 6,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIA1期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$1",
+            "value",
+            "3",
+            "le"
+          ],
+          "trueBehavior": 4,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIA2期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$1",
+            "value",
+            "4",
+            "ge"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】診断所見:FIGO進行期と腫瘍最大径の所見が合致しません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@2",
+            "@3",
+            "union",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$2",
+            "@4",
+            "union",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$2",
+            "@5",
+            "union",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$2",
+            "@6",
+            "union",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$2",
+            "@7",
+            "union",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$2",
+            "@8",
+            "union",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$2",
+            "@9",
+            "union",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$2",
+            "あり",
+            "intersect",
+            "$3"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$3",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "IA1期,IA2期,IA期(亜分類不明),IB1期,IB2期,IB3期,IB期(亜分類不明)",
+            "$4",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$FIGO",
+            "$4",
+            "intersect",
+            "$4"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$4",
+            "count",
+            "1",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】IA期またはIB期であるにも関わらず、基靭帯、腟壁、膀胱粘膜、直腸粘膜、骨盤リンパ節、傍大動脈リンパ節、その他のリンパ節、遠隔転移のいずれかが「あり」となっています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@2",
+            "@4",
+            "union",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$2",
+            "@5",
+            "union",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$2",
+            "@6",
+            "union",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$2",
+            "@7",
+            "union",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$2",
+            "@8",
+            "union",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$2",
+            "@9",
+            "union",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$2",
+            "あり",
+            "intersect",
+            "$3"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$3",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "IIA1期,IIA2期,IIA期(亜分類不明)",
+            "$4",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$FIGO",
+            "$4",
+            "intersect",
+            "$4"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$4",
+            "count",
+            "1",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】IIA期であるにも関わらず、基靭帯、膀胱粘膜、直腸粘膜、骨盤リンパ節、傍大動脈リンパ節、その他のリンパ節、遠隔転移のいずれかが「あり」となっています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@4",
+            "@5",
+            "union",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$2",
+            "@6",
+            "union",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$2",
+            "@7",
+            "union",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$2",
+            "@8",
+            "union",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$2",
+            "@9",
+            "union",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$2",
+            "あり",
+            "intersect",
+            "$3"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$3",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "IIB期,IIIA期,IIIB期",
+            "$4",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$FIGO",
+            "$4",
+            "intersect",
+            "$4"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$4",
+            "count",
+            "1",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】IIB期、IIIA期、IIIB期であるにも関わらず、膀胱粘膜、直腸粘膜、骨盤リンパ節、傍大動脈リンパ節、その他のリンパ節、遠隔転移のいずれかが「あり」となっています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@3",
+            "なし",
+            "intersect",
+            "$3"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$3",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "IIA1期,IIA2期,IIIA期",
+            "$4",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$FIGO",
+            "$4",
+            "intersect",
+            "$4"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$4",
+            "count",
+            "1",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】IIA期、IIIA期であるにも関わらず、腟壁浸潤が「なし」となっています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@2",
+            "なし",
+            "intersect",
+            "$3"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$3",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "IIB期,IIIB期",
+            "$4",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$FIGO",
+            "$4",
+            "intersect",
+            "$4"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$4",
+            "count",
+            "1",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】IIB期、IIIB期であるにも関わらず、基靭帯浸潤が「なし」となっています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@6",
+            "なし",
+            "intersect",
+            "$3"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$3",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "IIIC1r期,IIIC1p期",
+            "$4",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$FIGO",
+            "$4",
+            "intersect",
+            "$4"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$4",
+            "count",
+            "1",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】IIIC1r期、IIIC1p期であるにも関わらず、骨盤リンパ節転移が「なし」となっています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@7",
+            "なし",
+            "intersect",
+            "$3"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$3",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "IIIC2r期,IIIC2p期",
+            "$4",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$FIGO",
+            "$4",
+            "intersect",
+            "$4"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$4",
+            "count",
+            "1",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】IIIC2r期、IIIC2p期であるにも関わらず、傍大動脈リンパ節転移が「なし」となっています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@8",
+            "@9",
+            "union",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$2",
+            "あり",
+            "intersect",
+            "$3"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$3",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IVA期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】IVA期であるにも関わらず、その他のリンパ節、遠隔転移のいずれかが「あり」となっています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@4",
+            "@5",
+            "union",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$2",
+            "なし",
+            "intersect",
+            "$3"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$3",
+            "count",
+            "2",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IVA期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】IVA期であるにも関わらず、膀胱粘膜、直腸粘膜浸潤のいずれも「なし」となっています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@8",
+            "@9",
+            "union",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$2",
+            "なし",
+            "intersect",
+            "$3"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$3",
+            "count",
+            "2",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IVB期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】IVB期であるにも関わらず、その他のリンパ節、遠隔転移のいずれも「なし」となっています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIIC1r期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@6",
+            "value",
+            "あり",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@10",
+            "value",
+            "病理診断",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】IIIC1r期であるにも関わらず、骨盤リンパ節転移の診断方法が「病理診断」となっています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIIC1p期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 6
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@6",
+            "value",
+            "あり",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "画像診断―MRI,画像診断―CT,画像診断―PET/CT",
+            "$5",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@10",
+            "$5",
+            "intersect",
+            "$5"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$5",
+            "count",
+            "1",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】IIIC1p期であるにも関わらず、骨盤リンパ節転移の診断方法が「画像診断」となっています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIIC2r期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@7",
+            "value",
+            "あり",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@11",
+            "value",
+            "病理診断",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】IIIC2r期であるにも関わらず、傍大動脈リンパ節転移の診断方法が「病理診断」となっています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIIC2p期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 6
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@7",
+            "value",
+            "あり",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "画像診断―MRI,画像診断―CT,画像診断―PET/CT",
+            "$5",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@11",
+            "$5",
+            "intersect",
+            "$5"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$5",
+            "count",
+            "1",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】IIIC2p期であるにも関わらず、傍大動脈リンパ節転移の診断方法が「画像診断」となっています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "初回手術施行例",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "IIIC1p期,IIIC2p期",
+            "$4",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$FIGO",
+            "$4",
+            "intersect",
+            "$4"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$4",
+            "count",
+            "1",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】治療開始前に進行期を決定した症例にも関わらずIIIC1p期またはIIIC2p期が選択されています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-CC_2021_2024_logicalcheck_cTNM_finding",
+      "description": "GO-CC_2021_2024_cervical_cancer: Logical check between cTNM and findings",
+      "source": [
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.cTNM.N.N"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.cTNM.M.M"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.cTNM.M.L.[*]"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.骨盤リンパ節転移.所見"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.傍大動脈リンパ節転移.所見"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.その他のリンパ節転移.所見"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].診断所見.リンパ節以外の遠隔転移.所見"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象年",
+            "value",
+            "2024",
+            "le"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@4",
+            "@5",
+            "union",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$1",
+            "あり",
+            "intersect",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "領域リンパ節転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$2",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】cNで領域リンパ節なしと選択されていますが、骨盤リンパ節転移または傍大動脈リンパ節転移がありとなっています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "骨盤および傍大動脈リンパ節転移を認める",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$2",
+            "count",
+            "2",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】cNで骨盤および傍大動脈リンパ節転移を認めるが選択されていますが、骨盤リンパ節転移と傍大動脈リンパ節転移の双方がありとなっていません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "骨盤リンパ節のみに転移を認める",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "あり",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】cNで骨盤リンパ節のみに転移を認めるが選択されていますが、骨盤リンパ節転移なしまたは不明となっています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "傍大動脈リンパ節のみに転移を認める",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@5",
+            "value",
+            "あり",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】cNで傍大動脈リンパ節のみに転移を認めるが選択されていますが、傍大動脈リンパ節転移なしまたは不明となっています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@6",
+            "@7",
+            "union",
+            "$3"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$3",
+            "あり",
+            "intersect",
+            "$3"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$3",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】cMで遠隔転移なしが選択されていますが、その他のリンパ節腫大あり、または、リンパ節以外の遠隔転移のいずれかがありとなっています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "遠隔転移あり",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】cMで遠隔転移ありが選択されていますが、その他のリンパ節腫大あり、および、リンパ節以外の遠隔転移でありが選択されていません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "遠隔転移あり",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@3",
+            "$4",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$4",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$4"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "L1: 縦隔リンパ節",
+              "1"
+            ],
+            [
+              "L2: 鎖骨上(下)リンパ節",
+              "2"
+            ],
+            [
+              "L3: 鼠径リンパ節",
+              "3"
+            ],
+            [
+              "L9: 上記以外のリンパ節",
+              "4"
+            ],
+            [
+              "M1: 肺",
+              "5"
+            ],
+            [
+              "M2: 肝臓",
+              "6"
+            ],
+            [
+              "M3: 腹膜播種",
+              "7"
+            ],
+            [
+              "M4: 脳",
+              "8"
+            ],
+            [
+              "M5: 骨",
+              "9"
+            ],
+            [
+              "M6: 子宮漿膜",
+              "11"
+            ],
+            [
+              "M7: 付属器",
+              "12"
+            ],
+            [
+              "M9: 上記以外の実質臓器・組織",
+              "10"
+            ]
+          ]
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$4",
+            "value",
+            "4",
+            "le"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@6",
+            "value",
+            "なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】cMで遠隔転移部位L1-9が選択されていますが、その他のリンパ節腫大が「なし」となっています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$4",
+            "value",
+            "5",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@7",
+            "value",
+            "なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】cMで遠隔転移部位M1-9が選択されていますが、リンパ節以外の遠隔転移が「なし」となっています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-CC_2021_2024_logicalcheck_ FIGO_cTNM",
+      "description": "GO-CC_2021_2024_cervical_cancer: Logical check between FIGO and cTNM",
+      "source": [
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.cTNM.T.T"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.cTNM.N.N"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.cTNM.M.M"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象年",
+            "value",
+            "2024",
+            "le"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T1a1:脈管侵襲なし",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T1a1:脈管侵襲あり",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "領域リンパ節転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IA1期",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】FIGO分類とcTNM分類が一致しません",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T1a2:脈管侵襲なし",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T1a2:脈管侵襲あり",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "領域リンパ節転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IA2期",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】FIGO分類とcTNM分類が一致しません",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T1b1",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "領域リンパ節転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IB1期",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】FIGO分類とcTNM分類が一致しません",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T1b2",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "領域リンパ節転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IB2期",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】FIGO分類とcTNM分類が一致しません",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T1b3",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "領域リンパ節転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IB3期",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】FIGO分類とcTNM分類が一致しません",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T2a1",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "領域リンパ節転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIA1期",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】FIGO分類とcTNM分類が一致しません",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T2a2",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "領域リンパ節転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIA2期",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】FIGO分類とcTNM分類が一致しません",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T2b",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "領域リンパ節転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIB期",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】FIGO分類とcTNM分類が一致しません",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T3a",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "領域リンパ節転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIIA期",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】FIGO分類とcTNM分類が一致しません",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T3b",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "領域リンパ節転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIIB期",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】FIGO分類とcTNM分類が一致しません",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T4",
+            "eq"
+          ],
+          "trueBehavior": 5,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "骨盤リンパ節のみに転移を認める",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIIC1r期",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】FIGO分類とcTNM分類が一致しません",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T4",
+            "eq"
+          ],
+          "trueBehavior": 6,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "傍大動脈リンパ節のみに転移を認める",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "骨盤および傍大動脈リンパ節転移を認める",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIIC2r期",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】FIGO分類とcTNM分類が一致しません",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T4",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IVA期",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】FIGO分類とcTNM分類が一致しません",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "遠隔転移あり",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IVB期",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】FIGO分類とcTNM分類が一致しません",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-CC_2021_2024_logicalcheck_FIGO_pTNM",
+      "description": "GO-CC_2021_2024_cervical_cancer: Logical check between FIGO and pTNM",
+      "source": [
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.pTNM.T.T"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.pTNM.N.RPX"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.pTNM.N.RAX"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.pTNM.M.M"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象年",
+            "value",
+            "2024",
+            "le"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T1a1:脈管侵襲なし",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T1a1:脈管侵襲あり",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 8
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 7
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IA1期",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】FIGO分類とpTNM分類が一致しませんがよろしいですか？",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T1a2:脈管侵襲なし",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T1a2:脈管侵襲あり",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 8
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 7
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IA2期",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】FIGO分類とpTNM分類が一致しませんがよろしいですか？",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T1b1",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 8
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 7
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IB1期",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】FIGO分類とpTNM分類が一致しませんがよろしいですか？",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T1b2",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 8
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 7
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IB2期",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】FIGO分類とpTNM分類が一致しませんがよろしいですか？",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T1b3",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 8
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 7
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IB3期",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】FIGO分類とpTNM分類が一致しませんがよろしいですか？",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T2a1",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 8
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 7
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIA1期",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】FIGO分類とpTNM分類が一致しませんがよろしいですか？",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T2a2",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 8
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 7
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIA2期",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】FIGO分類とpTNM分類が一致しませんがよろしいですか？",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T2b",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 8
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 7
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIB期",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】FIGO分類とpTNM分類が一致しませんがよろしいですか？",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T3a",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 8
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 7
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIIA期",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】FIGO分類とpTNM分類が一致しませんがよろしいですか？",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T3b",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 8
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 7
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "RP1: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "RP3: 骨盤リンパ節を摘出し、病理学的に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIIB期",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】FIGO分類とpTNM分類が一致しませんがよろしいですか？",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T4",
+            "eq"
+          ],
+          "trueBehavior": 8,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 7
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "RP2: 骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認める",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "RP4: 骨盤リンパ節を摘出し、転移を認める",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "RA1: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "RA3: 傍大動脈リンパ節を摘出し、病理学的に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIIC1p期",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】FIGO分類とpTNM分類が一致しませんがよろしいですか？",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T4",
+            "eq"
+          ],
+          "trueBehavior": 6,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "RA2: 傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認める",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "RA4: 傍大動脈リンパ節を摘出し、転移を認める",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIIC2p期",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】FIGO分類とpTNM分類が一致しませんがよろしいですか？",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "T4",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "遠隔転移なし",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IVA期",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】FIGO分類とpTNM分類が一致しませんがよろしいですか？",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "遠隔転移あり",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IVB期",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】FIGO分類とpTNM分類が一致しませんがよろしいですか？",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    }
+  ]
+}
