@@ -20,11 +20,11 @@ export const dialogHTML = `
       <div>
           <select id="plugin-selection-mode" class="form-control">
               <option value="loadscript" selected>スクリプトファイルを指定して実行</option>
-              <hr/>
+              <hr style="padding-top: 0.5rem; padding-bottom: 0.5rem;"/>
               <option value="CC">子宮頸がん腫瘍登録(2023)</option>
               <option value="EM">子宮体がん腫瘍登録(2023)</option>
               <option value="OV">卵巣がん腫瘍登録(2023)</option>
-              <hr/>
+              <hr style="padding-top: 0.5rem; padding-bottom: 0.5rem;"/>
               <option value="CCcheck">子宮頸がん確認(2023-2024)</option>
               <option value="EMcheck">子宮体がん確認(2023-2024)</option>
               <option value="OVcheck">卵巣がん確認(2023-2024)</option>
