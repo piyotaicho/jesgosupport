@@ -9,13 +9,13 @@ import { mainOutput, scriptInfo, getterPluginArgument, pulledDocument } from './
 import { showModalMessageBox } from './modal-dialog'
 
 const script_info: scriptInfo = {
-  plugin_name: 'JESGOサポートツール用データ出力',
-  plugin_version: '0.2',
+  plugin_name: '全患者文書出力',
+  plugin_version: '1.0',
   all_patient: true,
   attach_patient_info: true,
   update_db: false,
   show_upload_dialog: false,
-  explain: 'JESGO-supportが読み込むAPI生データを出力します.入力された患者の全情報が入っています.'
+  explain: 'JESGO-supportで読み込むAPI生データ(JSON)を全患者分出力します.入力された患者の全情報が入っています.'
 }
 
 export async function init () {

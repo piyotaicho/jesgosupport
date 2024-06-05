@@ -2021,7 +2021,7 @@
             "@7",
             "count",
             "$6",
-            "eq"
+            "ge"
           ],
           "trueBehavior": 2,
           "falseBehavior": 1
@@ -2041,7 +2041,7 @@
             "@8",
             "count",
             "$6",
-            "eq"
+            "ge"
           ],
           "trueBehavior": 2,
           "falseBehavior": 1
@@ -2723,7 +2723,7 @@
             "@7",
             "count",
             "$6",
-            "eq"
+            "ge"
           ],
           "trueBehavior": 2,
           "falseBehavior": 1
@@ -2743,7 +2743,7 @@
             "@8",
             "count",
             "$6",
-            "eq"
+            "ge"
           ],
           "trueBehavior": 2,
           "falseBehavior": 1
@@ -2783,48 +2783,6 @@
           "type": "Store",
           "arguments": [
             "【要確認】合併症が「あり」と登録されていますが、手術合併症の詳細情報が登録されていません。",
-            "$error",
-            "whitespace"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@1",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 4,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@10",
-            "count",
-            "$6",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 2
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@11",
-            "count",
-            "$6",
-            "eq"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Store",
-          "arguments": [
-            "【要修正】全ての手術療法に対し術式の選択において、様式および予定手術内容の入力を確認して下さい。",
             "$error",
             "whitespace"
           ],
