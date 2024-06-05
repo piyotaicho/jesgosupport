@@ -6,14 +6,14 @@ import { scriptCC, scriptEM, scriptOV, checkCC, checkEM, checkOV } from './suppo
 
 export async function init ():Promise<scriptInfo> {
   return {
-    plugin_name: 'JESGO-supportランタイム',
+    plugin_name: '腫瘍登録スクリプト一括実行',
     plugin_version: '1.0',
     all_patient: true,
     attach_patient_info: true,
     show_upload_dialog: false,
     update_db: true,
     target_schema_id_string: '',
-    explain: 'JESGOsupport(version 1.0~)で作成されたスクリプトを実行してCSVファイルを作成、エラーを書き戻します.'
+    explain: 'JESGOsupport(version 1.0~)で作成された腫瘍登録スクリプトを実行してCSVファイルを作成、エラーを書き戻します.'
   }
 }
 

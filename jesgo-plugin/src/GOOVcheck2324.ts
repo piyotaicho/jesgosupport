@@ -5,7 +5,7 @@ import { checkOV as checkRule } from './support-scripts/scripts-v1'
 
 export async function init ():Promise<scriptInfo> {
   return {
-    plugin_name: '卵巣がん登録確認(2023-2024)',
+    plugin_name: '卵巣がん個別チェック(2023-2024)',
     plugin_version: '1.0',
     all_patient: false,
     attach_patient_info: true,
