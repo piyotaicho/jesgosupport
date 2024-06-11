@@ -888,15 +888,6 @@
           "path": "$.[0].患者台帳.[0].初回治療.放射線療法.[*].治療区分"
         },
         {
-          "path": "$.[0].患者台帳.[0].初回治療.手術療法.[*].手術時間"
-        },
-        {
-          "path": "$.[0].患者台帳.[0].初回治療.手術療法.[*].合併症の有無"
-        },
-        {
-          "path": "$.[0].患者台帳.[0].初回治療.手術療法.[*].手術合併症.[*].転帰"
-        },
-        {
           "path": "$.[0].患者台帳.[0].初回治療.手術療法.[*].手術完遂度"
         },
         {
@@ -1041,7 +1032,7 @@
         {
           "type": "Sets",
           "arguments": [
-            "@11",
+            "@8",
             "腹腔鏡下病変生検・審査腹腔鏡,大網生検,腹腔鏡下に大網生検",
             "intersect",
             "$4"
@@ -1277,16 +1268,6 @@
           "trueBehavior": 1
         },
         {
-          "type": "Sets",
-          "arguments": [
-            "@8",
-            "あり",
-            "intersect",
-            "$5"
-          ],
-          "trueBehavior": 1
-        },
-        {
           "type": "Operators",
           "arguments": [
             "@1",
@@ -1294,87 +1275,13 @@
             "0",
             "eq"
           ],
-          "trueBehavior": 10,
+          "trueBehavior": 3,
           "falseBehavior": 1
         },
         {
           "type": "Operators",
           "arguments": [
             "@7",
-            "count",
-            "$4",
-            "ge"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "全ての手術療法に対し手術時間が入力されていることを確認して下さい。",
-            "$要確認項目",
-            "add",
-            "$要確認項目"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@8",
-            "count",
-            "$4",
-            "ge"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "全ての手術療法に対し合併症の有無が入力されていることを確認して下さい。",
-            "$要確認項目",
-            "add",
-            "$要確認項目"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$5",
-            "count",
-            "1",
-            "ge"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@9",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 2
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "合併症が「あり」と登録されていますが、手術合併症の詳細情報が登録されていません。",
-            "$要確認項目",
-            "add",
-            "$要確認項目"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@10",
             "count",
             "$4",
             "ge"

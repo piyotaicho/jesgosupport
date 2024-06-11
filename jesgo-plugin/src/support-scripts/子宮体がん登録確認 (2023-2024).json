@@ -1405,15 +1405,6 @@
           "path": "$.[0].患者台帳.[0].初回治療.放射線療法.[*].治療区分"
         },
         {
-          "path": "$.[0].患者台帳.[0].初回治療.手術療法.[*].手術時間"
-        },
-        {
-          "path": "$.[0].患者台帳.[0].初回治療.手術療法.[*].合併症の有無"
-        },
-        {
-          "path": "$.[0].患者台帳.[0].初回治療.手術療法.[*].手術合併症.[*].転帰"
-        },
-        {
           "path": "$.[0].患者台帳.[0].初回治療.手術療法.[0].実施手術.実施手術.[*].術式"
         }
       ],
@@ -1564,7 +1555,7 @@
         {
           "type": "Sets",
           "arguments": [
-            "@10",
+            "@7",
             "腹腔鏡下病変生検・審査腹腔鏡,大網生検,腹腔鏡下に大網生検",
             "intersect",
             "$4"
@@ -1735,6 +1726,16 @@
           "trueBehavior": 1
         },
         {
+          "type": "Sets",
+          "arguments": [
+            "@5",
+            "化学療法",
+            "difference",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
           "type": "Operators",
           "arguments": [
             "$1",
@@ -1742,7 +1743,7 @@
             "0",
             "eq"
           ],
-          "trueBehavior": 5,
+          "trueBehavior": 6,
           "falseBehavior": 1
         },
         {
@@ -1754,7 +1755,7 @@
             "eq"
           ],
           "trueBehavior": 1,
-          "falseBehavior": 4
+          "falseBehavior": 5
         },
         {
           "type": "Operators",
@@ -1765,7 +1766,7 @@
             "ge"
           ],
           "trueBehavior": 1,
-          "falseBehavior": 3
+          "falseBehavior": 4
         },
         {
           "type": "Operators",
@@ -1776,12 +1777,657 @@
             "eq"
           ],
           "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$2",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
           "falseBehavior": 2
         },
         {
           "type": "Store",
           "arguments": [
-            "【要確認】ⅠA1期からⅠⅠ期の症例に対して治療法が薬物療法しか入力されていません。",
+            "【要確認】ⅠA1期からⅠⅠ期の症例に対して治療法が化学療法しか入力されていません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "I期(亜分類不明),IA期",
+            "$2",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$FIGO",
+            "$2",
+            "intersect",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@5",
+            "ホルモン療法",
+            "difference",
+            "$3"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$2",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 6,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】Ⅰ期ないしⅠA1期の症例に対してホルモン療法しか入力されていません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@5",
+            "分子標的薬",
+            "difference",
+            "$4"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@5",
+            "免疫チェックポイント阻害薬",
+            "difference",
+            "$5"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@5",
+            "化学療法",
+            "difference",
+            "$6"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 7
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 6
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$4",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$5",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$6",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】薬物療法において分子標的治療ないし免疫チェックポイント阻害薬しか入力されていません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-EM_2024_20XX_check_treatment_info",
+      "description": "GO-EM_2024_20XX_endometrial_cancer:Treatment",
+      "source": [
+        {
+          "path": "$.[0].患者台帳.[0].初回治療.手術療法.[*].手術日"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].初回治療.薬物療法.[*].投与開始日"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].初回治療.放射線療法.[*].治療開始日"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].初回治療.手術療法.[*].実施手術.実施手術.[*].術式"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].初回治療.薬物療法.[*].治療区分"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].初回治療.放射線療法.[*].治療区分"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].初回治療.手術療法.[*].術式の選択.様式"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].初回治療.手術療法.[*].術式の選択.予定手術内容"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].初回治療.手術療法.[0].実施手術.実施手術.[*].術式"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象年",
+            "value",
+            "2024",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象年",
+            "value",
+            "2024",
+            "le"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@1",
+            "@2",
+            "union",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$1",
+            "@3",
+            "union",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】初回治療の詳細情報を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": "Abort"
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$1",
+            "$初回治療開始日",
+            "union",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sort",
+          "arguments": [
+            "$1",
+            "",
+            "asc"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$1",
+            "$.[0]",
+            "$2"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$初回治療開始日",
+            "@1",
+            "intersect",
+            "$3"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "初回手術施行例",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】初回手術施行例にも関わらず初回手術日が初回治療開始日と一致しません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "術前治療後に手術施行",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "手術未施行例",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@9",
+            "腹腔鏡下病変生検・審査腹腔鏡,大網生検,腹腔鏡下に大網生検",
+            "intersect",
+            "$4"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$4",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】術前治療後に手術施行、あるいは、手術未施行例も関わらず、初回治療として生検以外の手術療法が登録されています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$2",
+            "value",
+            "$初回治療開始日",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】初回治療の詳細において、初回治療開始日以前の日付が入力されています",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】実施した手術について術式を登録して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@5",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】実施した薬物療法について治療区分を登録して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@6",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】実施した放射線治療について治療区分を登録して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "I期(亜分類不明),IA期,IB期,II期",
+            "$1",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$FIGO",
+            "$1",
+            "intersect",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@5",
+            "化学療法",
+            "difference",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 6,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$2",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】ⅠA1期からⅠⅠ期の症例に対して治療法が化学療法しか入力されていません。",
             "$error",
             "whitespace"
           ],
@@ -1989,478 +2635,15 @@
           "type": "Variables",
           "arguments": [
             "@1",
-            "$6",
+            "$7",
             "count"
           ],
           "trueBehavior": 1
         },
         {
-          "type": "Sets",
-          "arguments": [
-            "@8",
-            "あり",
-            "intersect",
-            "$7"
-          ],
-          "trueBehavior": 1
-        },
-        {
           "type": "Operators",
           "arguments": [
             "@1",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 8,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@7",
-            "count",
-            "$6",
-            "ge"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Store",
-          "arguments": [
-            "【要確認】全ての手術療法に対し手術時間が入力されていることを確認して下さい。",
-            "$error",
-            "whitespace"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@8",
-            "count",
-            "$6",
-            "ge"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Store",
-          "arguments": [
-            "【要確認】全ての手術療法に対し合併症の有無が入力されていることを確認して下さい。",
-            "$error",
-            "whitespace"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$7",
-            "count",
-            "1",
-            "ge"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@9",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 2
-        },
-        {
-          "type": "Store",
-          "arguments": [
-            "【要確認】合併症が「あり」と登録されていますが、手術合併症の詳細情報が登録されていません。",
-            "$error",
-            "whitespace"
-          ],
-          "trueBehavior": 1
-        }
-      ]
-    },
-    {
-      "title": "GO-EM_2024_20XX_check_treatment_info",
-      "description": "GO-EM_2024_20XX_endometrial_cancer:Treatment",
-      "source": [
-        {
-          "path": "$.[0].患者台帳.[0].初回治療.手術療法.[*].手術日"
-        },
-        {
-          "path": "$.[0].患者台帳.[0].初回治療.薬物療法.[*].投与開始日"
-        },
-        {
-          "path": "$.[0].患者台帳.[0].初回治療.放射線療法.[*].治療開始日"
-        },
-        {
-          "path": "$.[0].患者台帳.[0].初回治療.手術療法.[*].実施手術.実施手術.[*].術式"
-        },
-        {
-          "path": "$.[0].患者台帳.[0].初回治療.薬物療法.[*].治療区分"
-        },
-        {
-          "path": "$.[0].患者台帳.[0].初回治療.放射線療法.[*].治療区分"
-        },
-        {
-          "path": "$.[0].患者台帳.[0].初回治療.手術療法.[*].手術時間"
-        },
-        {
-          "path": "$.[0].患者台帳.[0].初回治療.手術療法.[*].合併症の有無"
-        },
-        {
-          "path": "$.[0].患者台帳.[0].初回治療.手術療法.[*].手術合併症.[*].転帰"
-        },
-        {
-          "path": "$.[0].患者台帳.[0].初回治療.手術療法.[*].術式の選択.様式"
-        },
-        {
-          "path": "$.[0].患者台帳.[0].初回治療.手術療法.[*].術式の選択.予定手術内容"
-        },
-        {
-          "path": "$.[0].患者台帳.[0].初回治療.手術療法.[0].実施手術.実施手術.[*].術式"
-        }
-      ],
-      "procedure": [
-        {
-          "type": "Operators",
-          "arguments": [
-            "$腫瘍登録対象年",
-            "value",
-            "2024",
-            "ge"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$腫瘍登録対象年",
-            "value",
-            "2024",
-            "le"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "@1",
-            "@2",
-            "union",
-            "$1"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "$1",
-            "@3",
-            "union",
-            "$1"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$1",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 2
-        },
-        {
-          "type": "Store",
-          "arguments": [
-            "【要修正】初回治療の詳細情報を入力して下さい。",
-            "$error",
-            "whitespace"
-          ],
-          "trueBehavior": "Abort"
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "$1",
-            "$初回治療開始日",
-            "union",
-            "$1"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Sort",
-          "arguments": [
-            "$1",
-            "",
-            "asc"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Query",
-          "arguments": [
-            "$1",
-            "$.[0]",
-            "$2"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "$初回治療開始日",
-            "@1",
-            "intersect",
-            "$3"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$治療施行状況",
-            "value",
-            "初回手術施行例",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$3",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 2
-        },
-        {
-          "type": "Store",
-          "arguments": [
-            "【要修正】初回手術施行例にも関わらず初回治療が手術療法となっていません。",
-            "$error",
-            "whitespace"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$治療施行状況",
-            "value",
-            "術前治療後に手術施行",
-            "eq"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$治療施行状況",
-            "value",
-            "手術未施行例",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 5
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "@12",
-            "腹腔鏡下病変生検・審査腹腔鏡,大網生検,腹腔鏡下に大網生検",
-            "intersect",
-            "$4"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$3",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 3,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$4",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 4
-        },
-        {
-          "type": "Store",
-          "arguments": [
-            "【要確認】術前治療後に手術施行、あるいは、手術未施行例も関わらず、初回治療として生検以外の手術療法が登録されています。",
-            "$error",
-            "whitespace"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$2",
-            "value",
-            "$初回治療開始日",
-            "eq"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Store",
-          "arguments": [
-            "【要確認】初回治療の詳細において、初回治療開始日以前の日付が入力されています",
-            "$error",
-            "whitespace"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@1",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 3,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@4",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 2
-        },
-        {
-          "type": "Store",
-          "arguments": [
-            "【要修正】実施した手術について術式を登録して下さい。",
-            "$error",
-            "whitespace"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@2",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 3,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@5",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 2
-        },
-        {
-          "type": "Store",
-          "arguments": [
-            "【要修正】実施した薬物療法について治療区分を登録して下さい。",
-            "$error",
-            "whitespace"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@3",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 3,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@6",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 2
-        },
-        {
-          "type": "Store",
-          "arguments": [
-            "【要修正】実施した放射線治療について治療区分を登録して下さい。",
-            "$error",
-            "whitespace"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Variables",
-          "arguments": [
-            "I期(亜分類不明),IA期,IB期,II期",
-            "$1",
-            "value"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "$FIGO",
-            "$1",
-            "intersect",
-            "$1"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$1",
             "count",
             "0",
             "eq"
@@ -2471,258 +2654,9 @@
         {
           "type": "Operators",
           "arguments": [
-            "@1",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 4
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@2",
-            "count",
-            "1",
-            "ge"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@3",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 2
-        },
-        {
-          "type": "Store",
-          "arguments": [
-            "【要確認】ⅠA1期からⅠⅠ期の症例に対して治療法が薬物療法しか入力されていません。",
-            "$error",
-            "whitespace"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Variables",
-          "arguments": [
-            "I期(亜分類不明),IA期",
-            "$2",
-            "value"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "$FIGO",
-            "$2",
-            "intersect",
-            "$2"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "@5",
-            "ホルモン療法",
-            "difference",
-            "$3"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$2",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 6,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@1",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 5
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@2",
-            "count",
-            "1",
-            "ge"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 4
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@3",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$3",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Store",
-          "arguments": [
-            "【要確認】Ⅰ期ないしⅠA1期の症例に対してホルモン療法しか入力されていません。",
-            "$error",
-            "whitespace"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "@5",
-            "分子標的薬",
-            "difference",
-            "$4"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "@5",
-            "免疫チェックポイント阻害薬",
-            "difference",
-            "$5"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@1",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 6
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@2",
-            "count",
-            "1",
-            "ge"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 5
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@3",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 4
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$4",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 2
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$5",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Store",
-          "arguments": [
-            "【要確認】薬物療法において分子標的治療ないし免疫チェックポイント阻害薬しか入力されていません。",
-            "$error",
-            "whitespace"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Variables",
-          "arguments": [
-            "@1",
-            "$6",
-            "count"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "@8",
-            "あり",
-            "intersect",
-            "$7"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@1",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 8,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
             "@7",
             "count",
-            "$6",
+            "$7",
             "ge"
           ],
           "trueBehavior": 2,
@@ -2731,7 +2665,7 @@
         {
           "type": "Store",
           "arguments": [
-            "【要確認】全ての手術療法に対し手術時間が入力されていることを確認して下さい。",
+            "【要確認】全ての手術療法に対し術式の選択において、様式が入力されていることを確認して下さい。",
             "$error",
             "whitespace"
           ],
@@ -2742,7 +2676,7 @@
           "arguments": [
             "@8",
             "count",
-            "$6",
+            "$7",
             "ge"
           ],
           "trueBehavior": 2,
@@ -2751,38 +2685,7 @@
         {
           "type": "Store",
           "arguments": [
-            "【要確認】全ての手術療法に対し合併症の有無が入力されていることを確認して下さい。",
-            "$error",
-            "whitespace"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$7",
-            "count",
-            "1",
-            "ge"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@9",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 2
-        },
-        {
-          "type": "Store",
-          "arguments": [
-            "【要確認】合併症が「あり」と登録されていますが、手術合併症の詳細情報が登録されていません。",
+            "【要確認】全ての手術療法に対し術式の選択において、予定手術内容が入力されていることを確認して下さい。",
             "$error",
             "whitespace"
           ],
@@ -2924,6 +2827,17 @@
           ],
           "trueBehavior": 1,
           "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
         },
         {
           "type": "Operators",

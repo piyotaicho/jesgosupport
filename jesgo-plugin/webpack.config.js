@@ -4,7 +4,7 @@ module.exports = {
   mode: 'development',
   devtool: false,
   entry: {
-    'jesgo-supporttool-runtime': './jesgo-plugin/src/jesgo-support-runtime2.ts',
+    'jesgo-supporttool-runtime': './jesgo-plugin/src/jesgo-support-runtime.ts',
     'jesgo-supporttool-runtime-for-singlecase': './jesgo-plugin/src/jesgo-support-runtime-for-single.ts',
     'GOCCcheck2324-single': './jesgo-plugin/src/GOCCcheck2324.ts',
     'GOEMcheck2324-single': './jesgo-plugin/src/GOEMcheck2324.ts',

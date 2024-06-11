@@ -1,5 +1,5 @@
 import { mainOutput, scriptInfo, getterPluginArgument, updateDocument, setterPluginArgument } from './types'
-import { dialogHTML } from './jesgo-support-runtime2-ui'
+import { dialogHTML } from './jesgo-support-runtime-ui'
 import { handler, verbose, loadJSONfile } from './runtime-common'
 // スクリプトプリセット
 import { scriptCC, scriptEM, scriptOV, checkCC, checkEM, checkOV } from './support-scripts/scripts-v1'

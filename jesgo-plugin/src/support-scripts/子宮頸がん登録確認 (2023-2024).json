@@ -1698,15 +1698,6 @@
         },
         {
           "path": "$.[0].患者台帳.[0].初回治療.放射線療法.[*].治療区分"
-        },
-        {
-          "path": "$.[0].患者台帳.[0].初回治療.手術療法.[*].手術時間"
-        },
-        {
-          "path": "$.[0].患者台帳.[0].初回治療.手術療法.[*].合併症の有無"
-        },
-        {
-          "path": "$.[0].患者台帳.[0].初回治療.手術療法.[*].手術合併症.[*].転帰"
         }
       ],
       "procedure": [
@@ -2228,107 +2219,6 @@
           "type": "Store",
           "arguments": [
             "【要確認】放射線療法において腔内照射ないし同時化学放射線治療(腔内照射)しか入力されていません。",
-            "$error",
-            "whitespace"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Variables",
-          "arguments": [
-            "@1",
-            "$4",
-            "count"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "@8",
-            "あり",
-            "intersect",
-            "$5"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@1",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 8,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@7",
-            "count",
-            "$4",
-            "ge"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Store",
-          "arguments": [
-            "【要確認】全ての手術療法に対し手術時間が入力されていることを確認して下さい。",
-            "$error",
-            "whitespace"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@8",
-            "count",
-            "$4",
-            "ge"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Store",
-          "arguments": [
-            "【要確認】全ての手術療法に対し合併症の有無が入力されていることを確認して下さい。",
-            "$error",
-            "whitespace"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$5",
-            "count",
-            "1",
-            "ge"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@9",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 2
-        },
-        {
-          "type": "Store",
-          "arguments": [
-            "【要確認】合併症が「あり」と登録されていますが、手術合併症の詳細情報が登録されていません。",
             "$error",
             "whitespace"
           ],
@@ -3522,6 +3412,17 @@
           "type": "Operators",
           "arguments": [
             "$治療施行状況",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
             "value",
             "初回手術施行例",
             "eq"
@@ -3684,37 +3585,6 @@
         {
           "type": "Operators",
           "arguments": [
-            "@1",
-            "value",
-            "骨盤および傍大動脈リンパ節転移を認める",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$2",
-            "count",
-            "2",
-            "eq"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Store",
-          "arguments": [
-            "【要確認】cNで骨盤および傍大動脈リンパ節転移を認めるが選択されていますが、骨盤リンパ節転移と傍大動脈リンパ節転移の双方がありとなっていません。",
-            "$error",
-            "whitespace"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
             "@4",
             "value",
             "骨盤リンパ節のみに転移を認める",
@@ -3769,6 +3639,37 @@
           "type": "Store",
           "arguments": [
             "【要確認】cNで傍大動脈リンパ節のみに転移を認めるが選択されていますが、傍大動脈リンパ節転移なしまたは不明となっています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "骨盤および傍大動脈リンパ節転移を認める",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$2",
+            "count",
+            "2",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】cNで骨盤および傍大動脈リンパ節転移を認めるが選択されていますが、骨盤リンパ節転移と傍大動脈リンパ節転移の双方がありとなっていません。",
             "$error",
             "whitespace"
           ],
@@ -3896,65 +3797,95 @@
           "falseBehavior": "Abort",
           "lookup": [
             [
-              "L1: 縦隔リンパ節",
+              "/^L1(.+)$/",
               "1"
             ],
             [
-              "L2: 鎖骨上(下)リンパ節",
+              "/^L2(.+)$/",
               "2"
             ],
             [
-              "L3: 鼠径リンパ節",
+              "/^L3(.+)$/",
               "3"
             ],
             [
-              "L9: 上記以外のリンパ節",
+              "/^L9(.+)$/",
               "4"
             ],
             [
-              "M1: 肺",
+              "/^M1(.+)$/",
               "5"
             ],
             [
-              "M2: 肝臓",
+              "/^M2(.+)$/",
               "6"
             ],
             [
-              "M3: 腹膜播種",
+              "/^M3(.+)$/",
               "7"
             ],
             [
-              "M4: 脳",
+              "/^M4(.+)$/",
               "8"
             ],
             [
-              "M5: 骨",
+              "/^M5(.+)$/",
               "9"
             ],
             [
-              "M6: 子宮漿膜",
-              "11"
-            ],
-            [
-              "M7: 付属器",
-              "12"
-            ],
-            [
-              "M9: 上記以外の実質臓器・組織",
+              "/^M9(.+)$/",
               "10"
             ]
           ]
         },
         {
-          "type": "Operators",
+          "type": "Variables",
+          "arguments": [
+            "1,2,3,4",
+            "$5",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "5,6,7,8,9,10",
+            "$6",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
           "arguments": [
             "$4",
-            "value",
-            "4",
-            "le"
+            "$5",
+            "intersect",
+            "$5"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$4",
+            "$6",
+            "intersect",
+            "$6"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$5",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
         },
         {
           "type": "Operators",
@@ -3979,13 +3910,13 @@
         {
           "type": "Operators",
           "arguments": [
-            "$4",
-            "value",
-            "5",
-            "ge"
+            "$6",
+            "count",
+            "0",
+            "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
+          "trueBehavior": 3,
+          "falseBehavior": 1
         },
         {
           "type": "Operators",
@@ -4010,7 +3941,7 @@
       ]
     },
     {
-      "title": "GO-CC_2021_2024_logicalcheck_ FIGO_cTNM",
+      "title": "GO-CC_2021_2024_logicalcheck_FIGO_cTNM",
       "description": "GO-CC_2021_2024_cervical_cancer: Logical check between FIGO and cTNM",
       "source": [
         {
@@ -4034,6 +3965,28 @@
           ],
           "trueBehavior": 1,
           "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "初回手術施行例",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
         },
         {
           "type": "Operators",
@@ -4628,7 +4581,7 @@
             "T4",
             "eq"
           ],
-          "trueBehavior": 6,
+          "trueBehavior": 5,
           "falseBehavior": 1
         },
         {
@@ -4640,7 +4593,7 @@
             "eq"
           ],
           "trueBehavior": 1,
-          "falseBehavior": 5
+          "falseBehavior": 4
         },
         {
           "type": "Operators",
@@ -4651,7 +4604,7 @@
             "eq"
           ],
           "trueBehavior": 1,
-          "falseBehavior": 4
+          "falseBehavior": 3
         },
         {
           "type": "Operators",
@@ -4659,17 +4612,6 @@
             "$FIGO",
             "value",
             "IIIC1r期",
-            "eq"
-          ],
-          "trueBehavior": 3,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$FIGO",
-            "value",
-            "IIIC1p期",
             "eq"
           ],
           "trueBehavior": 2,
@@ -4692,7 +4634,7 @@
             "T4",
             "eq"
           ],
-          "trueBehavior": 7,
+          "trueBehavior": 6,
           "falseBehavior": 1
         },
         {
@@ -4715,7 +4657,7 @@
             "eq"
           ],
           "trueBehavior": 1,
-          "falseBehavior": 5
+          "falseBehavior": 4
         },
         {
           "type": "Operators",
@@ -4726,7 +4668,7 @@
             "eq"
           ],
           "trueBehavior": 1,
-          "falseBehavior": 4
+          "falseBehavior": 3
         },
         {
           "type": "Operators",
@@ -4734,17 +4676,6 @@
             "$FIGO",
             "value",
             "IIIC2r期",
-            "eq"
-          ],
-          "trueBehavior": 3,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$FIGO",
-            "value",
-            "IIIC2p期",
             "eq"
           ],
           "trueBehavior": 2,

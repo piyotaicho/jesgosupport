@@ -1285,6 +1285,16 @@
           "trueBehavior": 1
         },
         {
+          "type": "Sets",
+          "arguments": [
+            "@5",
+            "化学療法",
+            "difference",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
           "type": "Operators",
           "arguments": [
             "$1",
@@ -1292,7 +1302,7 @@
             "0",
             "eq"
           ],
-          "trueBehavior": 5,
+          "trueBehavior": 6,
           "falseBehavior": 1
         },
         {
@@ -1304,7 +1314,7 @@
             "eq"
           ],
           "trueBehavior": 1,
-          "falseBehavior": 4
+          "falseBehavior": 5
         },
         {
           "type": "Operators",
@@ -1315,7 +1325,7 @@
             "ge"
           ],
           "trueBehavior": 1,
-          "falseBehavior": 3
+          "falseBehavior": 4
         },
         {
           "type": "Operators",
@@ -1326,12 +1336,23 @@
             "eq"
           ],
           "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$2",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
           "falseBehavior": 2
         },
         {
           "type": "Sets",
           "arguments": [
-            "ⅠA1期からⅠⅠ期の症例に対して治療法が薬物療法しか入力されていません。",
+            "ⅠA1期からⅠⅠ期の症例に対して治療法が化学療法しか入力されていません。",
             "$要確認項目",
             "add",
             "$要確認項目"
@@ -1532,110 +1553,6 @@
           "type": "Sets",
           "arguments": [
             "薬物療法において分子標的治療ないし免疫チェックポイント阻害薬しか入力されていません。",
-            "$要確認項目",
-            "add",
-            "$要確認項目"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Variables",
-          "arguments": [
-            "@1",
-            "$6",
-            "count"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "@8",
-            "あり",
-            "intersect",
-            "$7"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@1",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 8,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@7",
-            "count",
-            "$6",
-            "ge"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "全ての手術療法に対し手術時間が入力されていることを確認して下さい。",
-            "$要確認項目",
-            "add",
-            "$要確認項目"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@8",
-            "count",
-            "$6",
-            "ge"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "全ての手術療法に対し合併症の有無が入力されていることを確認して下さい。",
-            "$要確認項目",
-            "add",
-            "$要確認項目"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$7",
-            "count",
-            "1",
-            "ge"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "@9",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 2
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "合併症が「あり」と登録されていますが、手術合併症の詳細情報が登録されていません。",
             "$要確認項目",
             "add",
             "$要確認項目"
