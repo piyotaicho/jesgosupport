@@ -294,7 +294,7 @@
         {
           "type": "Variables",
           "arguments": [
-            "IA期,IB期,IC期,IIA期",
+            "\"IA期\",\"IB期\",\"IC期\",\"IIA期\"",
             "$1",
             "value"
           ],
@@ -491,7 +491,7 @@
         {
           "type": "Variables",
           "arguments": [
-            "IA期,IB期,IC期,IIA期",
+            "\"IA期\",\"IB期\",\"IC期\",\"IIA期\"",
             "$1",
             "value"
           ],
@@ -1344,7 +1344,7 @@
           "type": "Sets",
           "arguments": [
             "@8",
-            "腹腔鏡下病変生検・審査腹腔鏡,大網生検,腹腔鏡下に大網生検",
+            "\"腹腔鏡下病変生検・審査腹腔鏡\",\"大網生検\",\"腹腔鏡下に大網生検\"",
             "intersect",
             "$4"
           ],
@@ -1370,12 +1370,12 @@
             "eq"
           ],
           "trueBehavior": 1,
-          "falseBehavior": 4
+          "falseBehavior": 5
         },
         {
           "type": "Store",
           "arguments": [
-            "【要確認】術前治療後に手術施行、あるいは、手術未施行例も関わらず、初回治療として生検以外の手術療法が登録されています。",
+            "【要確認】術前治療後に手術施行、あるいは、手術未施行例にも関わらず、初回治療として生検以外の手術療法が登録されています。",
             "$error",
             "whitespace"
           ],
@@ -1389,8 +1389,19 @@
             "$初回治療開始日",
             "eq"
           ],
-          "trueBehavior": 2,
+          "trueBehavior": 3,
           "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$4",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
         },
         {
           "type": "Store",

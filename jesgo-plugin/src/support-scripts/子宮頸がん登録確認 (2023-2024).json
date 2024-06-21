@@ -1978,7 +1978,7 @@
         {
           "type": "Variables",
           "arguments": [
-            "IA1期,IA2期,IA期(亜分類不明),IB1期",
+            "\"IA1期\",\"IA2期\",\"IA期(亜分類不明)\",\"IB1期\"",
             "$4",
             "value"
           ],
@@ -2188,7 +2188,7 @@
         {
           "type": "Variables",
           "arguments": [
-            "腔内照射,同時化学放射線治療(腔内照射)",
+            "\"腔内照射\",\"同時化学放射線治療(腔内照射)\"",
             "$7",
             "value"
           ],
@@ -2209,16 +2209,16 @@
           "arguments": [
             "$7",
             "count",
-            "1",
-            "ge"
+            "0",
+            "eq"
           ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
+          "trueBehavior": 1,
+          "falseBehavior": 2
         },
         {
           "type": "Store",
           "arguments": [
-            "【要確認】放射線療法において腔内照射ないし同時化学放射線治療(腔内照射)しか入力されていません。",
+            "【要確認】ⅠA1期の症例に対して放射線療法において腔内照射ないし同時化学放射線治療(腔内照射)しか入力されていません。",
             "$error",
             "whitespace"
           ],
@@ -2543,7 +2543,7 @@
         {
           "type": "Variables",
           "arguments": [
-            "IA1期,IA2期,IA期(亜分類不明),IB1期,IB2期,IB3期,IB期(亜分類不明)",
+            "\"IA1期\",\"IA2期\",\"IA期(亜分類不明)\",\"IB1期\",\"IB2期\",\"IB3期\",\"IB期(亜分類不明)\"",
             "$4",
             "value"
           ],
@@ -2663,7 +2663,7 @@
         {
           "type": "Variables",
           "arguments": [
-            "IIA1期,IIA2期,IIA期(亜分類不明)",
+            "\"IIA1期\",\"IIA2期\",\"IIA期(亜分類不明)\"",
             "$4",
             "value"
           ],
@@ -2773,7 +2773,7 @@
         {
           "type": "Variables",
           "arguments": [
-            "IIB期,IIIA期,IIIB期",
+            "\"IIB期\",\"IIIA期\",\"IIIB期\"",
             "$4",
             "value"
           ],
@@ -2833,7 +2833,7 @@
         {
           "type": "Variables",
           "arguments": [
-            "IIA1期,IIA2期,IIIA期",
+            "\"IIA1期\",\"IIA2期\",\"IIIA期\"",
             "$4",
             "value"
           ],
@@ -2893,7 +2893,7 @@
         {
           "type": "Variables",
           "arguments": [
-            "IIB期,IIIB期",
+            "\"IIB期\",\"IIIB期\"",
             "$4",
             "value"
           ],
@@ -2953,7 +2953,7 @@
         {
           "type": "Variables",
           "arguments": [
-            "IIIC1r期,IIIC1p期",
+            "\"IIIC1r期\",\"IIIC1p期\"",
             "$4",
             "value"
           ],
@@ -3013,7 +3013,7 @@
         {
           "type": "Variables",
           "arguments": [
-            "IIIC2r期,IIIC2p期",
+            "\"IIIC2r期\",\"IIIC2p期\"",
             "$4",
             "value"
           ],
@@ -3433,7 +3433,7 @@
         {
           "type": "Variables",
           "arguments": [
-            "IIIC1p期,IIIC2p期",
+            "\"IIIC1p期\",\"IIIC2p期\"",
             "$4",
             "value"
           ],
