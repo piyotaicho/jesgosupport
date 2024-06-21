@@ -7,7 +7,7 @@ import { scriptCC, scriptEM, scriptOV, checkCC, checkEM, checkOV } from './suppo
 export async function init ():Promise<scriptInfo> {
   return {
     plugin_name: '腫瘍登録スクリプト一括実行',
-    plugin_version: '1.0',
+    plugin_version: '1.2',
     all_patient: true,
     attach_patient_info: true,
     show_upload_dialog: false,

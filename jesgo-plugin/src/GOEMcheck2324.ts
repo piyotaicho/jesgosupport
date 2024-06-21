@@ -6,7 +6,7 @@ import { checkEM as checkRule } from './support-scripts/scripts-v1'
 export async function init ():Promise<scriptInfo> {
   return {
     plugin_name: '子宮体がん個別チェック(2023-2024)',
-    plugin_version: '1.0',
+    plugin_version: '1.2',
     all_patient: false,
     attach_patient_info: true,
     show_upload_dialog: false,
