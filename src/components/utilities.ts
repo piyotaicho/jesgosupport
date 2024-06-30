@@ -1,15 +1,21 @@
 import { JsonObject, pulledDocument } from './types'
 import { JSONPath } from 'jsonpath-plus'
+import Encoding from 'encoding-japanese'
 
 /**
 * userDownload ブラウザでダウンロードさせる
 * @param {string} data
 * @param {string} filename
 */
-export function userDownload (data: string, filename: string): void {
+export function userDownload (data: string, filename: string, shiftjiscsv = true): void {
   const blob = filename.toLowerCase().includes('.csv')
-    // Excelがアレ過ぎるのでCSVにはBOMをつける
-    ? new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), data], { type: 'text/csv' })
+    ? (
+        shiftjiscsv
+          // encoding-japaneseでシフトJISへ変換
+          ? new Blob([new Uint8Array(Encoding.convert(Encoding.stringToCode(data), { to: 'SJIS', from: 'UNICODE' }))], { type: 'text/csv' })
+          // Excelがアレ過ぎるのでUTF-8 CSVにはBOMをつける
+          : new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), data], { type: 'text/csv' })
+      )
     : new Blob([data], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')

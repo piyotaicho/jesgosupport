@@ -44,6 +44,7 @@ const clearCSV = () => {
 async function saveCSV ():Promise<void> {
   if (store.getters.csvDocument.length > 0) {
     const csvOffset = ref(store.getters.rulesetConfig?.csvOffset || 0)
+    const csvSJIS = ref(!(store.getters.rulesetConfig?.csvUnicode || false))
     await ElMessageBox({
       title: 'オフセットの設定',
       message: () => h('p', null, [
@@ -70,7 +71,8 @@ async function saveCSV ():Promise<void> {
           quotes: false
         }
       ),
-      'jesgo-support-CSV出力.csv'
+      'jesgo-support-CSV出力.csv',
+      csvSJIS.value
     )
   }
 }

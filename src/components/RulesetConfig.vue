@@ -8,7 +8,7 @@ const emit = defineEmits<{
   close: []
 }>()
 
-// プリセットリスト
+// プリセットリスト（ハードコード：そのうち別ファイルに移動する）
 interface presetObject extends configObject {
   title: string
 }
@@ -22,6 +22,7 @@ const configulationPresets:presetObject[] = [
     masterBasePointer: '/患者台帳/-',
     skipUnmatchedRecord: true,
     csvOffset: 6,
+    csvUnicode: false,
     errorTargetSchemaId: '/schema/CC/root',
     errorPointer: '/jesgo:error'
   },
@@ -34,6 +35,7 @@ const configulationPresets:presetObject[] = [
     masterBasePointer: '/患者台帳/-',
     skipUnmatchedRecord: true,
     csvOffset: 6,
+    csvUnicode: false,
     errorTargetSchemaId: '/schema/EM/root',
     errorPointer: '/jesgo:error'
   },
@@ -46,6 +48,7 @@ const configulationPresets:presetObject[] = [
     masterBasePointer: '/患者台帳/-',
     skipUnmatchedRecord: true,
     csvOffset: 6,
+    csvUnicode: false,
     errorTargetSchemaId: '/schema/OV/root',
     errorPointer: '/jesgo:error'
   }
@@ -62,6 +65,7 @@ let removingQuery:boolean = false
 const masterBasePointer = ref('')
 const skipUnmatchedRecord = ref(false)
 const csvOffset = ref(0)
+const csvSJIS = ref(true)
 const errorPointer = ref('')
 const errorTargetId = ref('')
 
@@ -81,6 +85,7 @@ onMounted(() => {
   documentVariables.push(...(config?.documentVariables || []))
 
   csvOffset.value = config?.csvOffset || 0
+  csvSJIS.value = !(config?.csvUnicode || false)
   errorPointer.value = config?.errorPointer?.charAt(0) === '/' ? config.errorPointer.slice(1) : 'jesgo:error'
   errorTargetId.value = config?.errorTargetSchemaId || ''
 })
@@ -93,6 +98,7 @@ function applyPreset () {
     masterBasePointer.value = configulationPresets[index]?.masterBasePointer || '/'
     masterBasePointer.value = masterBasePointer.value.charAt(0) === '/' ? masterBasePointer.value.slice(1) : masterBasePointer.value
     csvOffset.value = configulationPresets[index]?.csvOffset || 0
+    csvSJIS.value = !(configulationPresets[index]?.csvUnicode || false)
     errorTargetId.value = configulationPresets[index]?.errorTargetSchemaId || ''
     errorPointer.value = configulationPresets[index]?.errorPointer || '/jesgo:error'
     errorPointer.value = errorPointer.value.charAt(0) === '/' ? errorPointer.value.slice(1) : errorPointer.value
@@ -135,6 +141,7 @@ function commit () {
     skipUnmatchedRecord: skipUnmatchedRecord.value,
     documentVariables,
     csvOffset: csvOffset.value,
+    csvUnicode: !csvSJIS.value,
     errorPointer: '/' + errorPointer.value,
     errorTargetSchemaId: errorTargetId.value
   }
@@ -203,6 +210,10 @@ function closeMenu () {
     <el-row style="margin-top: 1.2rem;">
       <el-col :span="8" class="ruleset-config-label-column">CSV先頭行オフセット</el-col>
       <el-col :span="14"><el-input-number v-model="csvOffset" :min="0"/></el-col>
+    </el-row>
+    <el-row style="margin-top: 1.2rem;">
+      <el-col :span="8" class="ruleset-config-label-column">CSV文字コード</el-col>
+      <el-col :span="14"><el-checkbox v-model="csvSJIS" label="シフトJISで出力する"/></el-col>
     </el-row>
     <el-row style="margin-top: 1.2rem;">
       <el-col :span="8" class="ruleset-config-label-column">エラードキュメントスキーマ</el-col>

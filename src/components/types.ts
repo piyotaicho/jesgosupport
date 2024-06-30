@@ -70,6 +70,7 @@ export interface configObject {
   skipUnmatchedRecord?: boolean
   documentVariables?: string[]
   csvOffset?: number
+  csvUnicode?: boolean
   errorPointer?: string
   errorTargetSchemaId?: string
 }
