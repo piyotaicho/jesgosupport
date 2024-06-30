@@ -4,7 +4,7 @@ import { showModalDialog, createElementFromHtml } from './modal-dialog'
 import { unparse as papaUnparse } from 'papaparse'
 import { processor } from '../../src/components/newProcessor'
 import { LogicRuleSet, configObject, fileRuleSetV1 } from '../../src/components/types'
-import { queryDocument } from '../../src/components/utilities'
+import { queryDocument, userDownload } from '../../src/components/utilities'
 import { JSONPath } from 'jsonpath-plus'
 
 export const runtimeVersion = '1.0.4'
@@ -65,15 +65,16 @@ export async function loadJSONfile (): Promise<string> {
  * saveCSV dataURLを使ってファイルにダウンロードさせる(CSV専用)
  * @param data CSVテーブルの2次元配列
  */
-export function saveCSV (data:unknown[], offset = 0, filename = 'JESGO出力データ.csv') {
+export function saveCSV (data:unknown[], offset = 0, filename = 'JESGO出力データ.csv', csvSJIS = true) {
   if (data && Array.isArray(data) && data.length > 0) {
+    // オフセットを展開
     const offsettedData = []
     for (let count = 0; count < offset; count++) {
       offsettedData.push([])
     }
     offsettedData.push(...data)
 
-    const blob = new Blob([
+    userDownload(
       papaUnparse(
         offsettedData,
         {
@@ -81,13 +82,10 @@ export function saveCSV (data:unknown[], offset = 0, filename = 'JESGO出力デ�
           delimiter: ',',
           quoteChar: '"'
         }
-      )
-    ], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const anchorElement = document.createElement('A') as HTMLAnchorElement
-    anchorElement.href = url
-    anchorElement.download = filename
-    anchorElement.click()
+      ),
+      filename,
+      csvSJIS
+    )
   }
 }
 
@@ -184,7 +182,7 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
 
     downloadButton.addEventListener('click', () => {
       if (csvBuffer.length > 0) {
-        saveCSV(csvBuffer, rulesetConfig?.csvOffset || 0)
+        saveCSV(csvBuffer, rulesetConfig?.csvOffset || 0, undefined, !(rulesetConfig?.csvUnicode || false))
       }
     })
 
