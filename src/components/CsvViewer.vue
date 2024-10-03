@@ -113,7 +113,7 @@ function base26 (value: number): string {
 
 <template>
   <div class="csvViewer">
-    <table>
+    <table><tbody>
       <tr v-for="(line, lineIndex) in csvData" :key="lineIndex">
         <!-- 先頭行にメニューを配置 -->
         <template v-if="lineIndex === 0">
@@ -146,7 +146,7 @@ function base26 (value: number): string {
           </td>
         </template>
       </tr>
-    </table>
+    </tbody></table>
   </div>
 </template>
 

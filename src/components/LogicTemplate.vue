@@ -1,33 +1,50 @@
 <template>
-  <div class="Logic-block" :id="'logicBlock' + props.index.toString()" :style="{ backgroundColor: blockColor }">
-    <div class="Logic-block-linenumber" :id="'logicBlock' + props.index.toString()">
-      <el-icon @click="reorderBlock(-1)" class="clickable"><ArrowUpBold /></el-icon>
+  <div
+    class="Logic-block"
+    :id="'logicBlock' + props.index.toString()"
+    :style="{ backgroundColor: blockColor }"
+  >
+    <div
+      class="Logic-block-linenumber"
+      :id="'logicBlock' + props.index.toString()"
+    >
+      <el-icon @click="reorderBlock(-1)" class="clickable"
+        ><ArrowUpBold
+      /></el-icon>
       <div class="Logic-block-linenumber-number">{{ props.index + 1 }}</div>
       <el-icon @click="deleteBlock()" class="clickable"><CloseBold /></el-icon>
-      <el-icon @click="reorderBlock(+1)" class="clickable"><ArrowDownBold /></el-icon>
+      <el-icon @click="reorderBlock(+1)" class="clickable"
+        ><ArrowDownBold
+      /></el-icon>
     </div>
     <div class="Logic-block-content">
       <div class="Logic-block-logic">
         <template v-if="props.block.type == 'Operators'">
-        <!-- 条件分岐の操作 -->
+          <!-- 条件分岐の操作 -->
           <el-row>
-            <el-col style="font-weight: bold;">条件分岐を設定します</el-col>
+            <el-col style="font-weight: bold">条件分岐を設定します</el-col>
           </el-row>
           <el-row>
             <el-col :span="15">
-              <SimpleCascader v-model="argument1st" placeholder="値を選択"
-              :options="variables"
+              <SimpleCascader
+                v-model="argument1st"
+                placeholder="値を選択"
+                :options="variables"
               />
             </el-col>
-            <el-col :span="2" style="margin-top: 0.25rem; margin-left: 0.4rem;">の</el-col>
+            <el-col :span="2" style="margin-top: 0.25rem; margin-left: 0.4rem"
+              >の</el-col
+            >
             <el-col :span="4">
               <el-select v-model="argument2nd" placeholder="情報の種類を選択">
-                <el-option label="値" value="value"/>
-                <el-option label="要素の数" value="count"/>
-                <el-option label="数値" value="number"/>
+                <el-option label="値" value="value" />
+                <el-option label="要素の数" value="count" />
+                <el-option label="数値" value="number" />
               </el-select>
             </el-col>
-            <el-col :span="2" style="margin-top: 0.25rem; margin-left: 0.4rem;">が</el-col>
+            <el-col :span="2" style="margin-top: 0.25rem; margin-left: 0.4rem"
+              >が</el-col
+            >
           </el-row>
           <el-row>
             <el-col :span="15">
@@ -37,30 +54,39 @@
                 :options="variables"
               />
             </el-col>
-            <el-col :span="2" style="margin-top: 0.25rem; margin-left: 0.4rem;">の値</el-col>
+            <el-col :span="2" style="margin-top: 0.25rem; margin-left: 0.4rem"
+              >の値</el-col
+            >
           </el-row>
           <el-row>
             <el-col :span="12" :offset="10">
               <el-select v-model="argument4th" placeholder="条件を選択">
-                <el-option label="と同じ" value="eq"/>
-                <el-option label="より大きい" value="gt"/>
-                <el-option label="以上" value="ge"/>
-                <el-option label="より小さい" value="lt"/>
-                <el-option label="以下" value="le"/>
-                <el-option label="に含まれる" value="in"/>
-                <el-option label="を含む" value="incl"/>
-                <el-option label="にマッチする(正規表現)" value="regexp"/>
+                <el-option label="と同じ" value="eq" />
+                <el-option label="より大きい" value="gt" />
+                <el-option label="以上" value="ge" />
+                <el-option label="より小さい" value="lt" />
+                <el-option label="以下" value="le" />
+                <el-option label="に含まれる" value="in" />
+                <el-option label="を含む" value="incl" />
+                <el-option label="にマッチする(正規表現)" value="regexp" />
               </el-select>
             </el-col>
           </el-row>
-          <LogicTemplateFinishSelection v-model="trueBehavior">上記が成立した場合</LogicTemplateFinishSelection>
-          <LogicTemplateFinishSelection v-model="falseBehavior" allowExit v-if="isFalseBehavior">上記が成立しない場合</LogicTemplateFinishSelection>
+          <LogicTemplateFinishSelection v-model="trueBehavior"
+            >上記が成立した場合</LogicTemplateFinishSelection
+          >
+          <LogicTemplateFinishSelection
+            v-model="falseBehavior"
+            allowExit
+            v-if="isFalseBehavior"
+            >上記が成立しない場合</LogicTemplateFinishSelection
+          >
         </template>
 
         <template v-if="props.block.type == 'Variables'">
-        <!-- 変数の割り当て -->
+          <!-- 変数の割り当て -->
           <el-row>
-            <el-col style="font-weight: bold;">変数に値を割り当てます</el-col>
+            <el-col style="font-weight: bold">変数に値を割り当てます</el-col>
           </el-row>
           <el-row>
             <el-col :span="15">
@@ -68,65 +94,90 @@
                 placeholder="値を入力もしくは選択"
                 v-model="argument1st"
                 :options="variables"
-                />
+              />
             </el-col>
-            <el-col :span="1" style="margin-top: 0.25rem; margin-left: 0.4rem;">の</el-col>
+            <el-col :span="1" style="margin-top: 0.25rem; margin-left: 0.4rem"
+              >の</el-col
+            >
             <el-col :span="5">
               <el-select v-model="argument3rd" placeholder="種類">
-                <el-option label="値" value="value"/>
-                <el-option label="要素の数" value="count"/>
-                <el-option label="数値" value="number"/>
+                <el-option label="値" value="value" />
+                <el-option label="要素の数" value="count" />
+                <el-option label="数値" value="number" />
               </el-select>
             </el-col>
-            <el-col :span="2" style="margin-top: 0.25rem; margin-left: 0.4rem;">を</el-col>
+            <el-col :span="2" style="margin-top: 0.25rem; margin-left: 0.4rem"
+              >を</el-col
+            >
           </el-row>
           <el-row>
             <el-col :span="15">
-              <SimpleCascader v-model="argument2nd"
+              <SimpleCascader
+                v-model="argument2nd"
                 placeholder="変数を選択"
                 :options="writeableVariables"
               />
             </el-col>
-            <el-col :span="8" style="margin-top: 0.25rem; margin-left: 0.4rem;">に代入する</el-col>
+            <el-col :span="8" style="margin-top: 0.25rem; margin-left: 0.4rem"
+              >に代入する</el-col
+            >
           </el-row>
           <LogicTemplateFinishSelection v-model="trueBehavior" />
         </template>
 
         <template v-if="props.block.type == 'Query'">
-        <!-- サブパスの適用 -->
+          <!-- サブパスの適用 -->
           <el-row>
-            <el-col style="font-weight: bold;">変数に対してJSONPathによるクエリを適用します</el-col>
+            <el-col style="font-weight: bold"
+              >変数に対してJSONPathによるクエリを適用します</el-col
+            >
           </el-row>
           <el-row>
             <el-col :span="15">
-              <SimpleCascader v-model="argument1st"
+              <SimpleCascader
+                v-model="argument1st"
                 placeholder="値の元を選択"
                 :options="variables"
-                />
-              </el-col>
-            <el-col :span="8" style="margin-top: 0.25rem; margin-left: 0.4rem;">に以下を適用</el-col>
+              />
+            </el-col>
+            <el-col :span="8" style="margin-top: 0.25rem; margin-left: 0.4rem"
+              >に以下を適用</el-col
+            >
           </el-row>
           <el-row>
             <el-col>
-              <el-input placeholder="JSONPath文字列を入力" clearable v-model="argument2nd" />
+              <el-input
+                placeholder="JSONPath文字列を入力"
+                clearable
+                v-model="argument2nd"
+              />
             </el-col>
           </el-row>
           <el-row>
             <el-col :span="15">
-              <SimpleCascader v-model="argument3rd" placeholder="変数を選択"
+              <SimpleCascader
+                v-model="argument3rd"
+                placeholder="変数を選択"
                 :options="writeableVariables"
-                />
+              />
             </el-col>
-            <el-col :span="8" style="margin-top: 0.25rem; margin-left: 0.4rem;">に代入する</el-col>
+            <el-col :span="8" style="margin-top: 0.25rem; margin-left: 0.4rem"
+              >に代入する</el-col
+            >
           </el-row>
           <LogicTemplateFinishSelection v-model="trueBehavior" />
-          <LogicTemplateFinishSelection v-model="falseBehavior" allowExit v-if="isFalseBehavior">処理が失敗した場合</LogicTemplateFinishSelection>
+          <LogicTemplateFinishSelection
+            v-model="falseBehavior"
+            allowExit
+            v-if="isFalseBehavior"
+            >処理が失敗した場合</LogicTemplateFinishSelection
+          >
         </template>
 
         <template v-if="props.block.type == 'Period'">
-        <!-- 日付計算 -->
+          <!-- 日付計算 -->
           <el-row>
-            <el-col style="font-weight: bold;">
+            <el-col style="font-weight: bold">
               日付を保持した値の差分を計算します
             </el-col>
           </el-row>
@@ -136,46 +187,57 @@
                 v-model="argument1st"
                 placeholder="基準日"
                 :options="variables"
-                />
-            </el-col>
-            <el-col :span="4" style="margin-top: 0.25rem; margin-left: 0.4rem;">を基準に</el-col>
-            <el-col :span="8">
-              <EditableCascader
-              v-model="argument2nd"
-              placeholder="目的日"
-              :options="variables"
               />
             </el-col>
-            <el-col :span="3" style="margin-top: 0.25rem; margin-left: 0.4rem;">の差を</el-col>
+            <el-col :span="4" style="margin-top: 0.25rem; margin-left: 0.4rem"
+              >を基準に</el-col
+            >
+            <el-col :span="8">
+              <EditableCascader
+                v-model="argument2nd"
+                placeholder="目的日"
+                :options="variables"
+              />
+            </el-col>
+            <el-col :span="3" style="margin-top: 0.25rem; margin-left: 0.4rem"
+              >の差を</el-col
+            >
           </el-row>
           <el-row>
             <el-col :span="7">
               <el-select v-model="argument3rd" placeholder="条件を選択">
-                <el-option label="年(切り捨て)" value="years"/>
-                <el-option label="年(切り上げ)" value="years,roundup"/>
-                <el-option label="月(切り捨て)" value="months"/>
-                <el-option label="月(切り上げ)" value="months,roundup"/>
-                <el-option label="週(切り捨て)" value="weeks"/>
-                <el-option label="週(切り上げ)" value="weeks,roundup"/>
-                <el-option label="日" value="days"/>
+                <el-option label="年(切り捨て)" value="years" />
+                <el-option label="年(切り上げ)" value="years,roundup" />
+                <el-option label="月(切り捨て)" value="months" />
+                <el-option label="月(切り上げ)" value="months,roundup" />
+                <el-option label="週(切り捨て)" value="weeks" />
+                <el-option label="週(切り上げ)" value="weeks,roundup" />
+                <el-option label="日" value="days" />
               </el-select>
             </el-col>
-            <el-col :span="3" style="margin-top: 0.25rem; margin-left: 0.4rem;">として</el-col>
+            <el-col :span="3" style="margin-top: 0.25rem; margin-left: 0.4rem"
+              >として</el-col
+            >
             <el-col :span="8">
-              <SimpleCascader v-model="argument4th"
-              placeholder="変数を選択"
-              :options="writeableVariables"
+              <SimpleCascader
+                v-model="argument4th"
+                placeholder="変数を選択"
+                :options="writeableVariables"
               />
             </el-col>
-            <el-col :span="4" style="margin-top: 0.25rem; margin-left: 0.4rem;">に代入</el-col>
+            <el-col :span="4" style="margin-top: 0.25rem; margin-left: 0.4rem"
+              >に代入</el-col
+            >
           </el-row>
           <LogicTemplateFinishSelection v-model="trueBehavior" />
         </template>
 
         <template v-if="props.block.type == 'Sets'">
-        <!-- 集合演算 -->
+          <!-- 集合演算 -->
           <el-row>
-            <el-col style="font-weight: bold;">値集合と値集合の理論演算を行います</el-col>
+            <el-col style="font-weight: bold"
+              >値集合と値集合の理論演算を行います</el-col
+            >
           </el-row>
           <el-row>
             <el-col :span="18">
@@ -185,7 +247,9 @@
                 :options="variables"
               />
             </el-col>
-            <el-col :span="2" style="margin-top: 0.25rem; margin-left: 0.4rem;">と</el-col>
+            <el-col :span="2" style="margin-top: 0.25rem; margin-left: 0.4rem"
+              >と</el-col
+            >
           </el-row>
           <el-row>
             <el-col :span="18">
@@ -193,37 +257,43 @@
                 v-model="argument2nd"
                 placeholder="値2"
                 :options="variables"
-                />
+              />
             </el-col>
-            <el-col :span="2" style="margin-top: 0.25rem; margin-left: 0.4rem;">の</el-col>
+            <el-col :span="2" style="margin-top: 0.25rem; margin-left: 0.4rem"
+              >の</el-col
+            >
           </el-row>
           <el-row>
             <el-col :span="8">
               <el-select v-model="argument3rd" placeholder="演算方法を選択">
-                <el-option label="単純連結" value="add"/>
-                <el-option label="和集合" value="union"/>
-                <el-option label="積集合" value="intersect"/>
-                <el-option label="差集合" value="difference"/>
-                <el-option label="排他的論理和" value="xor"/>
+                <el-option label="単純連結" value="add" />
+                <el-option label="和集合" value="union" />
+                <el-option label="積集合" value="intersect" />
+                <el-option label="差集合" value="difference" />
+                <el-option label="排他的論理和" value="xor" />
               </el-select>
             </el-col>
-            <el-col :span="2" style="margin-top: 0.25rem; margin-left: 0.4rem;">を</el-col>
+            <el-col :span="2" style="margin-top: 0.25rem; margin-left: 0.4rem"
+              >を</el-col
+            >
             <el-col :span="8">
               <SimpleCascader
                 v-model="argument4th"
                 placeholder="変数を選択"
                 :options="writeableVariables"
-                />
+              />
             </el-col>
-            <el-col :span="4" style="margin-top: 0.25rem; margin-left: 0.4rem;">に代入</el-col>
+            <el-col :span="4" style="margin-top: 0.25rem; margin-left: 0.4rem"
+              >に代入</el-col
+            >
           </el-row>
           <LogicTemplateFinishSelection v-model="trueBehavior" />
         </template>
 
         <template v-if="props.block.type == 'Sort'">
-        <!-- 並び替え -->
+          <!-- 並び替え -->
           <el-row>
-            <el-col style="font-weight: bold;">変数の値をソートします</el-col>
+            <el-col style="font-weight: bold">変数の値をソートします</el-col>
           </el-row>
           <el-row>
             <el-col :span="18">
@@ -231,68 +301,112 @@
                 v-model="argument1st"
                 placeholder="値の元を選択"
                 :options="writeableVariables"
-                />
+              />
             </el-col>
-            <el-col :span="4" style="margin-top: 0.25rem; margin-left: 0.4rem;">の値を</el-col>
+            <el-col :span="4" style="margin-top: 0.25rem; margin-left: 0.4rem"
+              >の値を</el-col
+            >
           </el-row>
           <el-row>
-            <el-col style="margin-top: 0.25rem;">以下のJSONPathの値で(省略可)</el-col>
+            <el-col style="margin-top: 0.25rem"
+              >以下のJSONPathの値で(省略可)</el-col
+            >
           </el-row>
           <el-row>
             <el-col>
-              <el-input placeholder="JSONPath文字列を入力(省略時は値でソートします)" clearable v-model="argument2nd" />
+              <el-input
+                placeholder="JSONPath文字列を入力(省略時は値でソートします)"
+                clearable
+                v-model="argument2nd"
+              />
             </el-col>
           </el-row>
           <el-row>
             <el-col :span="8">
               <el-select v-model="argument3rd" placeholder="並べ替えの方向">
-                <el-option label="昇順" value="asc"/>
-                <el-option label="降順" value="desc"/>
+                <el-option label="昇順" value="asc" />
+                <el-option label="降順" value="desc" />
               </el-select>
             </el-col>
-            <el-col :span="12" style="margin-top: 0.25rem;">に並べ替えます</el-col>
+            <el-col :span="12" style="margin-top: 0.25rem"
+              >に並べ替えます</el-col
+            >
           </el-row>
           <LogicTemplateFinishSelection v-model="trueBehavior" />
         </template>
 
         <template v-if="props.block.type == 'Translation'">
-        <!-- 値の置換 -->
+          <!-- 値の置換 -->
           <el-row>
-            <el-col style="font-weight: bold;">変数の値をテーブルで置換します</el-col>
+            <el-col style="font-weight: bold"
+              >変数の値をテーブルで置換します</el-col
+            >
           </el-row>
           <el-row>
             <el-col :span="12">
               <SimpleCascader
-              v-model="argument1st"
-              placeholder="元の変数を選択"
-              :options="writeableVariables"
+                v-model="argument1st"
+                placeholder="元の変数を選択"
+                :options="writeableVariables"
               />
             </el-col>
-            <el-col :span="11" style="margin-top: 0.25rem; margin-left: 0.4rem;">を以下に従って変換します</el-col>
+            <el-col :span="11" style="margin-top: 0.25rem; margin-left: 0.4rem"
+              >を以下に従って変換します</el-col
+            >
           </el-row>
           <el-row>
             <el-col>
               <table class="translation-table">
-                <tr>
-                  <th></th>
-                  <th>元の値</th><th>変換後の値</th>
-                </tr>
-                <tr v-for="(element, index) of translationTable" :key="index">
-                  <th><el-icon class="clickable" @click="deleteTranslation(index)"><CloseBold /></el-icon></th>
-                  <td><el-input v-model.lazy="element[0]" @update:model-value="setTranslation(index, element[0], element[1])"/></td>
-                  <td><el-input v-model.lazy="element[1]" @update:model-value="setTranslation(index, element[0], element[1])"/></td>
-                </tr>
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>元の値</th>
+                    <th>変換後の値</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(element, index) of translationTable" :key="index">
+                    <th>
+                      <el-icon
+                        class="clickable"
+                        @click="deleteTranslation(index)"
+                        ><CloseBold
+                      /></el-icon>
+                    </th>
+                    <td>
+                      <el-input
+                        v-model.lazy="element[0]"
+                        @update:model-value="
+                          setTranslation(index, element[0], element[1])
+                        "
+                      />
+                    </td>
+                    <td>
+                      <el-input
+                        v-model.lazy="element[1]"
+                        @update:model-value="
+                          setTranslation(index, element[0], element[1])
+                        "
+                      />
+                    </td>
+                  </tr>
+                </tbody>
               </table>
             </el-col>
           </el-row>
           <LogicTemplateFinishSelection v-model="trueBehavior" />
-          <LogicTemplateFinishSelection v-model="falseBehavior" allowExit v-if="isFalseBehavior">置換が行われなかった場合</LogicTemplateFinishSelection>
+          <LogicTemplateFinishSelection
+            v-model="falseBehavior"
+            allowExit
+            v-if="isFalseBehavior"
+            >置換が行われなかった場合</LogicTemplateFinishSelection
+          >
         </template>
 
         <template v-if="props.block.type == 'Store'">
-        <!-- 出力 -->
+          <!-- 出力 -->
           <el-row>
-            <el-col style="font-weight: bold;">値を出力に割り当てます</el-col>
+            <el-col style="font-weight: bold">値を出力に割り当てます</el-col>
           </el-row>
           <el-row>
             <el-col :span="11">
@@ -300,27 +414,33 @@
                 v-model="argument1st"
                 placeholder="値を入力もしくは選択"
                 :options="variables"
-                />
+              />
             </el-col>
-            <el-col :span="1" style="margin-top: 0.25rem; margin-left: 0.4rem;">を</el-col>
+            <el-col :span="1" style="margin-top: 0.25rem; margin-left: 0.4rem"
+              >を</el-col
+            >
             <el-col :span="7">
               <EditableCascader
                 v-model.trim="argument2nd"
                 placeholder="CSVの桁を入力"
-                :options="[{label: 'エラー出力', value:'$error'}]"
-                />
+                :options="[{ label: 'エラー出力', value: '$error' }]"
+              />
             </el-col>
-            <el-col :span="4" style="margin-top: 0.25rem; margin-left: 0.4rem;">に出力</el-col>
+            <el-col :span="4" style="margin-top: 0.25rem; margin-left: 0.4rem"
+              >に出力</el-col
+            >
           </el-row>
           <el-row>
-            <el-col :span="5" style="margin-top: 0.25rem; margin-left: 0.4rem;">配列データは</el-col>
+            <el-col :span="5" style="margin-top: 0.25rem; margin-left: 0.4rem"
+              >配列データは</el-col
+            >
             <el-col :span="12">
               <el-select placeholder="出力方法を指定" v-model="argument3rd">
-                <el-option label="最初の値のみを出力" value="first"/>
-                <el-option label="空白で区切って出力" value="whitespace"/>
-                <el-option label="カンマで区切って出力" value="comma"/>
-                <el-option label="セミコロンで区切って出力" value="semicolon"/>
-                <el-option label="コロンで区切って出力" value="colon"/>
+                <el-option label="最初の値のみを出力" value="first" />
+                <el-option label="空白で区切って出力" value="whitespace" />
+                <el-option label="カンマで区切って出力" value="comma" />
+                <el-option label="セミコロンで区切って出力" value="semicolon" />
+                <el-option label="コロンで区切って出力" value="colon" />
               </el-select>
             </el-col>
           </el-row>
@@ -341,16 +461,16 @@ import SimpleCascader from './SimpleCascader.vue'
 import LogicTemplateFinishSelection from './LogicTemplateFinishSelection.vue'
 
 const props = defineProps<{
-  index: number,
-  block: LogicBlock,
-  sourceCount?: undefined|number,
-  variables: CascaderOption[]
+  index: number;
+  block: LogicBlock;
+  sourceCount?: undefined | number;
+  variables: CascaderOption[];
 }>()
 
 const emits = defineEmits<{
-  (e: 'update:block', value: LogicBlock): void,
-  (e: 'delete', index: number): void,
-  (e: 'reorder', index: number, offset: number): void
+  (e: 'update:block', value: LogicBlock): void;
+  (e: 'delete', index: number): void;
+  (e: 'reorder', index: number, offset: number): void;
 }>()
 
 const blockColor = computed(() => {
@@ -361,7 +481,11 @@ const blockColor = computed(() => {
   }
 })
 
-const writeableVariables:ComputedRef<CascaderOption[]> = computed(() => props.variables.filter(slot => (slot.value !== 'constants' && slot.value !== 'sources')))
+const writeableVariables: ComputedRef<CascaderOption[]> = computed(() =>
+  props.variables.filter(
+    (slot) => slot.value !== 'constants' && slot.value !== 'sources'
+  )
+)
 
 const argument1st: WritableComputedRef<string> = computed({
   get: () => props.block.arguments[0] || '',
@@ -383,7 +507,7 @@ const argument4th: WritableComputedRef<string> = computed({
   set: (value) => setArguments(3, value)
 })
 
-const translationTable:ComputedRef<string[][]> = computed(() => {
+const translationTable: ComputedRef<string[][]> = computed(() => {
   if (props.block?.lookup === undefined) {
     return [['', '']]
   } else {
@@ -436,7 +560,7 @@ function setArguments (index: number, value: string) {
  * deleteTranslation 変換テーブルの行を削除
  * @param {number} index
  */
-function deleteTranslation (index:number) {
+function deleteTranslation (index: number) {
   const newTable = [...translationTable.value]
   if (newTable.length === 1) {
     newTable.splice(index, 1, ['', ''])
@@ -453,7 +577,7 @@ function deleteTranslation (index:number) {
  * @param {string} op1
  * @param {string} op2
  */
-function setTranslation (index:number, op1:string, op2:string) {
+function setTranslation (index: number, op1: string, op2: string) {
   const newTable = [...translationTable.value]
   if (index !== newTable.length - 1) {
     newTable.splice(index, 1, [op1.trim(), op2.trim()])
@@ -469,12 +593,12 @@ function setTranslation (index:number, op1:string, op2:string) {
  */
 async function deleteBlock () {
   try {
-    await ElMessageBox.confirm('削除してよろしいですか',
-      { confirmButtonText: '削除する', cancelButtonText: 'キャンセル' }
-    )
+    await ElMessageBox.confirm('削除してよろしいですか', {
+      confirmButtonText: '削除する',
+      cancelButtonText: 'キャンセル'
+    })
     emits('delete', props.index)
-  } catch {
-  }
+  } catch {}
 }
 
 /**
@@ -484,7 +608,6 @@ async function deleteBlock () {
 function reorderBlock (offset: number) {
   emits('reorder', props.index, offset)
 }
-
 </script>
 
 <style>
@@ -509,7 +632,8 @@ div.Logic-block-linenumber {
   margin: 1rem 0;
 }
 
-div.Logic-block-linenumber > div, i {
+div.Logic-block-linenumber > div,
+i {
   margin-top: 0.3rem;
   margin-bottom: 0.3rem;
 }
