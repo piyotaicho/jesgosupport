@@ -2,7 +2,7 @@
   <div class="case_navigation">
     <div style="margin-right: 1rem;">
       <el-tooltip content="JESGO-JSONファイルの読み込み" placement="bottom" :show-after="500">
-        <el-button type="primary" round :icon="Upload" @click="emits('loadJson')"/>
+        <el-button type="primary" round :icon="Document" @click="emits('loadJson')"/>
       </el-tooltip>
     </div>
     <div>
@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { Upload, CaretLeft, CaretRight } from '@element-plus/icons-vue'
+import { Document, CaretLeft, CaretRight } from '@element-plus/icons-vue'
 import { computed } from 'vue'
 
 const props = withDefaults(
