@@ -6,6 +6,7 @@ import Encoding from 'encoding-japanese'
 * userDownload ブラウザでダウンロードさせる
 * @param {string} data
 * @param {string} filename
+* @param {boolean} shiftjiscsv ファイルがCSVのとき、ShiftJISのCSVを出力、falseでBOMつきUTF8を出力
 */
 export function userDownload (data: string, filename: string, shiftjiscsv = true): void {
   const blob = filename.toLowerCase().includes('.csv')
