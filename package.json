@@ -8,6 +8,7 @@
     "email": "mohyama@mohnet.com"
   },
   "license": "MIT",
+  "type": "module",
   "scripts": {
     "serve": "vite",
     "build": "vite build",

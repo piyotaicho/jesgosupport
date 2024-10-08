@@ -1,7 +1,11 @@
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
 
+// package.jsonのバージョンなどを取得
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 process.env.VITE_APP_VERSION = require('./package.json')?.version
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 process.env.VITE_APP_TITLE = require('./package.json')?.name
 
 export default {
