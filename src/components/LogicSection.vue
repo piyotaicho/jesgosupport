@@ -1,86 +1,52 @@
 <template>
   <div class="logic-section">
     <div class="logic-section-ruleset">
-      <div class="logic-section-ruleset-selector">
-        <span>ルール :</span>
-        <el-select v-model="currentRulesetTitle"
-          placeholder="ルールを選択"
-          no-data-text="選択可能なルールがありません"
-          >
-          <el-option v-for="(title, index) in ruleTitles" :key="index"
-            :value="title" :label="title" />
-        </el-select>
-      </div>
-      <div class="logic-section-ruleset-controller">
-        <el-button-group>
-          <el-button type="primary" :icon="Plus" circle @click="createNewRule()"/>
-          <el-button type="primary" :icon="EditPen" circle @click="renameRule()"/>
-          <el-button type="primary" :icon="Delete" circle @click="deleteRule()"/>
-        </el-button-group>
-      </div>
-    </div>
-    <div class="logic-section-ruleset" v-show="currentRulesetTitle !== ''">
-      <el-input v-model="description" placeholder="ルールの説明" type="textarea" />
+      <LogicRules v-model:ruleTitle="currentRulesetTitle"/>
     </div>
 
-    <div class="logic-section-ruleset" v-show="currentRulesetTitle !== ''">
-      <div style="width: 100%;">
+    <!-- ユーザ定義のドキュメント変数 -->
+    <div class="logic-section-ruleset" v-if="currentRulesetTitle === '変数宣言'">
+      <VariableEditor/>
+    </div>
+
+    <!-- ロジックエディタ -->
+    <div class="logic-section-ruleset" v-show="currentRulesetTitle !== '' && currentRulesetTitle !== '変数宣言'">
+      <div style="width: 100%; margin-right: 0.8rem;">
         <LogicSource v-for="(block, index) in sources" :key="index" :index="index" :block="block" @updateblock="updateSource"/>
       </div>
+      <LogicEditor v-model:blocks="procedures" :sourceCount="sourceCount" :variables="store.getters.documentVariables"/>
     </div>
-    <div class="logic-section-ruleset" v-show="currentRulesetTitle !== ''">
-      <!-- ロジックエディタ -->
-      <LogicEditor v-model:blocks="procedures"/>
-    </div>
-  </div>
+</div>
 </template>
 
 <script setup lang="ts">
-import { ref, Ref, computed, ComputedRef, WritableComputedRef } from 'vue'
-import { Plus, EditPen, Delete } from '@element-plus/icons-vue'
-import { ElMessageBox } from 'element-plus'
+import { Ref, computed, WritableComputedRef, ComputedRef } from 'vue'
 import { useStore } from './store'
-import { LogicBlock, SourceBlock, LogicRule } from './types'
+import { LogicBlock, SourceBlock, LogicRuleSet } from './types'
 import LogicSource from './LogicSource.vue'
 import LogicEditor from './LogicEditor.vue'
+import LogicRules from './LogicRules.vue'
+import VariableEditor from './VariableEditor.vue'
 
 const store = useStore()
 
 /**
  * rules ルールすべて
  */
-const rules = computed(() => store.state.RuleSet)
-
-/**
- * ruleTitles ルールのタイトル一覧
- */
-const ruleTitles: ComputedRef<string[]> = computed(
-  () => Array.isArray(rules.value)
-    ? rules.value.map(element => element.title)
-    : []
-)
+const rules:ComputedRef<LogicRuleSet[]> = computed(() => store.getters.rules)
 
 /**
  * currentRulesetTitle 現在編集中のルールのタイトル
- * currentRulesetTitleComputed ルールの追加に対応
  */
-const currentRulesetTitle:Ref<string> = ref('')
-const currentRulesetTitleComputed: WritableComputedRef<string> = computed({
-  get: () => currentRulesetTitle.value,
-  set: (value: string) => {
-    if (value !== '') {
-      if (rules.value.findIndex(element => element.title === value) === -1) {
-        store.commit('addNewRuleSet', { title: value })
-      }
-    }
-    currentRulesetTitle.value = value
-  }
+const currentRulesetTitle:WritableComputedRef<string> = computed({
+  get: () => store.getters.currentRulesetTitle,
+  set: (value:string) => store.commit('setCurrentRulesetTitle', value)
 })
 
 /**
  * currentRuleset 現在編集中のルール
  */
-const currentRuleset:Ref<LogicRule> = computed(() => {
+const currentRuleset:Ref<LogicRuleSet> = computed(() => {
   if (rules?.value) {
     const currentRule = rules.value.find(element => element.title === currentRulesetTitle.value)
     if (currentRule) {
@@ -89,28 +55,6 @@ const currentRuleset:Ref<LogicRule> = computed(() => {
   }
   return {
     title: ''
-  }
-})
-
-/**
- * description ルールの説明 変更は適宜アップデートされる
- */
-const description: WritableComputedRef<string> = computed({
-  get: () => {
-    if (currentRuleset?.value !== undefined) {
-      return currentRuleset.value?.description || ''
-    } else {
-      return ''
-    }
-  },
-  set: (text) => {
-    if (currentRuleset.value !== undefined && text.trim() !== '') {
-      const newRule = Object.assign(
-        currentRuleset.value,
-        { description: text.trim() }
-      )
-      store.commit('upsertRuleSet', newRule)
-    }
   }
 })
 
@@ -128,16 +72,21 @@ const sources: WritableComputedRef<SourceBlock[]> = computed({
         break
       }
     }
-    return [...sourcelist, { path: '' }].slice(0, 8) // 便宜上ソースは8個までとする
+    return [...sourcelist, { path: '' }] // ソースは無制限 .slice(0, 8) // 便宜上ソースは8個までとする
   },
   set: (newSources: SourceBlock[]) => {
     const newRule = Object.assign(
       currentRuleset?.value || {},
       { source: newSources }
     )
-    store.commit('upsertRuleSet', newRule)
+    store.commit('upsertRule', newRule)
   }
 })
+
+/**
+ * ルールのソースの数
+ */
+const sourceCount: ComputedRef<number> = computed(() => sources.value.length - 1)
 
 function updateSource (index: number, value:SourceBlock) {
   const newBlock = [...sources.value]
@@ -155,109 +104,25 @@ const procedures: WritableComputedRef<LogicBlock[]> = computed({
       currentRuleset?.value || {},
       { procedure: newSets }
     )
-    store.commit('upsertRuleSet', newRule)
+    store.commit('upsertRule', newRule)
   }
 })
 
-/**
- * createNew() イベントハンドラ 新しいルールセットエントリを作成する
- */
-async function createNewRule (): Promise<void> {
-  try {
-    do {
-      // キャンセルは例外でループを抜ける.
-      const newSetName = (await ElMessageBox.prompt('新しいルールの名称を入力してください.', '', {
-        confirmButtonText: '作成',
-        cancelButtonText: 'キャンセル',
-        inputPattern: /\S/,
-        inputErrorMessage: '正しく名称を入力してください'
-      })).value.trim()
-      if (newSetName !== undefined) {
-        if (rules.value.find(element => element.title === newSetName)) {
-          await ElMessageBox.alert(`${newSetName}は既に存在しています.別の名称を入力してください.`)
-        } else {
-          currentRulesetTitleComputed.value = newSetName
-          break
-        }
-      }
-    }
-    while (true)
-  } catch {
-    // do nothing :)
-  }
-}
-
-/**
- * renameRule 現在選択されているルールセットの名称を変更する
- */
-async function renameRule (): Promise<void> {
-  try {
-    if (currentRulesetTitleComputed.value) {
-      const newSetName = (await ElMessageBox.prompt('ルールの新しい名称を入力してください.', '', {
-        confirmButtonText: '変更',
-        cancelButtonText: 'キャンセル',
-        inputPattern: /\S/,
-        inputErrorMessage: '正しく名称を入力してください',
-        inputValue: currentRulesetTitleComputed.value
-      })).value.trim()
-      if (newSetName !== undefined) {
-        if (newSetName !== currentRulesetTitleComputed.value) {
-          if (rules.value.find(element => element.title === newSetName)) {
-            await ElMessageBox.alert(`${newSetName}は既に存在しています.別の名称を入力してください.`)
-          } else {
-            currentRuleset.value.title = newSetName
-            store.commit('changeRuleSetTitle', { old: currentRulesetTitleComputed.value, new: newSetName })
-            currentRulesetTitleComputed.value = newSetName
-          }
-        }
-      }
-    }
-  } catch {
-    // do notning :)
-  }
-}
-
-/**
- * deleteRule 現在選択されているルールセットを削除する
- */
-async function deleteRule (): Promise<void> {
-  try {
-    if (
-      currentRulesetTitleComputed.value &&
-      await ElMessageBox.confirm('現在編集中のルールを削除してよろしいですか', { confirmButtonText: '削除する', cancelButtonText: 'キャンセル' })
-    ) {
-      store.commit('removeFromRuleSet', currentRulesetTitleComputed.value)
-    }
-    currentRulesetTitleComputed.value = rules.value[0]?.title || ''
-  } catch {
-    // do notning :)
-  }
-}
 </script>
 
 <style>
 div.logic-section {
-  min-width: 40rem;
-  max-width: 40rem;
-  /* border: 1px solid cyan; */
-  /* display: flex;
-  flex-direction: column; */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: 630px;
   height: 100%;
   overflow-y: auto;
 }
 
 div.logic-section-ruleset {
-  display: flex;
-  flex-direction: row;
-  padding: 0.8rem 0.5rem;
-}
-
-div.logic-section-ruleset-controller {
-  padding-left: 1rem;
-  width: 6rem;
-}
-
-.logic-section-ruleset-selector .el-select {
-  width: 25rem;
+  padding-left: 0.5rem;
+  padding-top: 0.3rem;
 }
 </style>

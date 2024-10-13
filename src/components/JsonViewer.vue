@@ -1,6 +1,6 @@
 <template>
   <div class="json-viewer">
-    <div>
+    <div class="json-viewer--inner">
       <JsonViewerLineVue v-for="(item, index) in jsonLines" :key="index"
         :lineNumber="index + 1"
         :line="item.text"
@@ -42,8 +42,8 @@ const jsonLines: ComputedRef<jsonComplex[]> = computed(() => {
 })
 
 const jsonPointers: ComputedRef<string[]> = computed(() => {
-  if (props.json && store.state.HighlightedPath !== '') {
-    const pointers = JSONPath({ path: store.state.HighlightedPath, json: props.json, resultType: 'pointer' })
+  if (props.json && store.getters.highLightedPath !== '') {
+    const pointers = JSONPath({ path: store.getters.highLightedPath, json: props.json, resultType: 'pointer' })
     return pointers
   } else {
     return []
@@ -191,11 +191,14 @@ div.json-viewer {
 }
 
 div.json-viewer > div {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   flex-direction: column;
   box-sizing: content-box;
-  height: 100%;
-  width: 100%;
   overflow-x: visible;
   overflow-y: scroll;
 }

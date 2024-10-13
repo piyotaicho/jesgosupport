@@ -1,40 +1,51 @@
 <template>
   <div class="source-block">
-    <div class="source-block-index clickable" @click="previewSource">
-      <el-tooltip placement="top-start" content="クリックでソースをプレビューします.">
-        <span>ソース {{ props.index + 1 }}</span>
-      </el-tooltip>
-      <el-button :icon="View" type="primary" circle :disabled="sourcePath === ''"/>
-    </div>
-    <div class="source-block-content">
-      <div class="source-block-path">
-        <div class="source-block-path-title">
-          パス:
+    <el-row :gutter="20" justify="space-between">
+      <el-col :span="4">
+        <div class="source-block-left">
+          <div>
+            <span>ソース {{ props.index + 1 }}</span>
+          </div>
         </div>
-        <div>
-          <DropdownCombo v-model.lazy.trim="sourcePath" clearable placeholder="JSONpathを入力もしくは予約語を選択" style="width: 90%; margin-right: 0.5rem;">
-            <el-option value="$hash" label="ハッシュ値"/>
-            <el-option value="$his_id" label="カルテ番号"/>
-            <el-option value="$name" label="患者名"/>
-            <el-option value="$date_of_birth" label="生年月日"/>
-            <el-option value="$highlight" label="強調表示のパスを引用" />
-          </DropdownCombo>
-        </div>
-        <div>
-          <el-tooltip placement="top-end" content="入力されたJSONパスをハイライトします.">
-            <el-button :icon="Aim" type="primary" circle @click="highlight()" :disabled="disableHighlight"/>
-          </el-tooltip>
-        </div>
-      </div>
-      <div class="source-block-path">
-        <div class="source-block-path-title">
-          サブパス:
-        </div>
-        <div>
-          <el-input v-model.lazy.trim="sourceSubPath" clearable placeholder="パスの結果に対するJSONpathを入力" :disabled="disableSubpath"/>
-        </div>
-      </div>
-    </div>
+      </el-col>
+
+      <el-col :span="20">
+        <el-row :gutter="0">
+          <el-col :span="4" style="margin-top: 0.35rem;">パス:</el-col>
+          <el-col :span="15">
+            <DropdownCombo v-model.lazy.trim="sourcePath" clearable placeholder="JSONpathを入力もしくは予約語を選択">
+              <el-option value="$hash" label="ハッシュ値"/>
+              <el-option value="$his_id" label="カルテ番号"/>
+              <el-option value="$name" label="患者名"/>
+              <el-option value="$date_of_birth" label="生年月日"/>
+              <el-option value="$highlight" label="強調表示のパスを引用" />
+            </DropdownCombo>
+          </el-col>
+          <el-col :span="4" :offset="1">
+            <el-button-group>
+              <el-tooltip  placement="bottom" content="パスの結果をプレビューします." :show-after="500">
+                <el-button :icon="View" type="primary" circle  @click="previewSource()" :disabled="sourcePath === ''"/>
+              </el-tooltip>
+              <el-tooltip  placement="bottom" content="入力されたJSONパスをハイライトします." :show-after="500">
+                <el-button :icon="Aim" type="primary" circle @click="highlight()" :disabled="disableHighlight"/>
+              </el-tooltip>
+            </el-button-group>
+          </el-col>
+        </el-row>
+
+        <el-row>
+          <el-col :span="4" style="margin-top: 0.35rem;">サブパス</el-col>
+          <el-col :span="15">
+            <el-input v-model.lazy.trim="sourceSubPath" clearable placeholder="パスの結果に対するJSONpathを入力" :disabled="disableSubpath"/>
+          </el-col>
+          <el-col :span="3" :offset="1">
+            <el-tooltip  placement="bottom" content="サブパスを含めた結果をプレビューします." :show-after="500">
+              <el-button :icon="View" type="primary" circle  @click="previewSource(true)" :disabled="disableSubpath || sourceSubPath === ''"/>
+            </el-tooltip>
+          </el-col>
+        </el-row>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
@@ -73,7 +84,7 @@ const sourcePath :WritableComputedRef<string> = computed({
     if (newPath !== '$highlight') {
       emits('updateblock', props.index, Object.assign(props.block, { path: newPath }))
     } else {
-      emits('updateblock', props.index, Object.assign(props.block, { path: store.state.HighlightedPath }))
+      emits('updateblock', props.index, Object.assign(props.block, { path: store.getters.highLightedPath }))
     }
   }
 })
@@ -91,7 +102,7 @@ function highlight (disable = false) {
     !disable &&
     !disableSubpath.value &&
     sourcePath.value !== '' &&
-    store.state.HighlightedPath !== sourcePath.value
+    store.getters.highLightedPath !== sourcePath.value
   ) {
     store.commit('setHighlight', sourcePath.value)
   } else {
@@ -102,33 +113,49 @@ function highlight (disable = false) {
 /**
  * previewSource ソースの値のプレビューを表示する
  */
-function previewSource (): void {
+async function previewSource (parseSubpath = false): Promise<void> {
   if (store.getters.documentLength > 0 && sourcePath.value) {
-    let result = ''
+    let result:unknown[]
     switch (sourcePath.value) {
       case '$hash':
-        result = JSON.stringify(store.getters.documentRef()?.hash || 'N/A')
+        result = [store.getters.document()?.hash || 'N/A']
         break
       case '$his_id':
-        result = JSON.stringify(store.getters.documentRef()?.his_id || 'N/A')
+        result = [store.getters.document()?.his_id || 'N/A']
         break
       case '$name':
-        result = JSON.stringify(store.getters.documentRef()?.name || 'N/A')
+        result = [store.getters.document()?.name || 'N/A']
         break
       case '$date_of_birth':
-        result = JSON.stringify(store.getters.documentRef()?.date_of_birth || 'N/A')
+        result = [store.getters.document()?.date_of_birth || 'N/A']
         break
       default:
-        result = JSON.stringify(store.getters.parseJesgoDocument([sourcePath.value, sourceSubPath.value]))
+        if (parseSubpath) {
+          result = store.getters.parseJesgoDocument([sourcePath.value, sourceSubPath.value])
+        } else {
+          result = store.getters.parseJesgoDocument([sourcePath.value])
+        }
     }
 
-    ElMessageBox({
-      message: h('div', null, [
-        h('p', 'ソースの抽出結果は'),
-        h('span', `${result}`),
-        h('p', 'です.')
-      ])
-    })
+    try {
+      const dumpString = (result.length > 1 || result.findIndex(item => typeof item === 'object') >= 0)
+        ? JSON.stringify(result, undefined, '  ')
+        : JSON.stringify(result)
+      await ElMessageBox({
+        message: h('div', {
+          style: 'white-space: pre; overflow-wrap: anywhere;'
+        }, [
+          h('p', 'ソースの抽出結果は'),
+          h('div', {
+            style: 'max-height: 80vh; padding: 0.2rem 0; background: #eee; overflow-x: auto; overflow-y: auto;'
+          },
+          h('span', dumpString)),
+          h('p', 'です.')
+        ])
+      })
+    } catch {
+      // do nothing :)
+    }
   } else {
     ElMessageBox.alert('JSONドキュメントがありません.')
   }
@@ -137,62 +164,20 @@ function previewSource (): void {
 
 <style>
 div.source-block {
-  display: flex;
-  flex-direction: row;
+  position: relative;
   width: 100%;
   box-sizing: border-box;
-  padding: 0.3rem 0;
+  padding: 0.3rem 0.6rem;
   border: 1px #444444 solid;
   border-radius: 0.3rem;
   margin-bottom: 0.2rem;
-  padding-left: 0.6rem;
-  padding-right: 0.6rem;
 }
 
-div.source-block-index {
+div.source-block-left {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  width: 5.8rem;
-  margin: auto;
-}
-
-div.source-block-path {
-  display: flex;
-  flex-direction: column;
-}
-
-div.source-block-path-title {
-  box-sizing: border-box;
-  position: relative;
-  flex: initial;
-  min-width: 6rem;
-  max-width: 6rem;
-}
-
-div.source-block-content {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-}
-
-div.source-block-content > div {
-  display: flex;
-  flex-direction: row;
-}
-
-div.source-block-content > div > div:nth-child(1) {
-  display: block;
-  width: 7rem;
-}
-
-div.source-block-content > div > div:nth-child(2) {
-  display: block;
-  width: 100%;
-}
-
-.source-block-path .el-select {
-  width: 25rem;
+  justify-content: center;
+  height: 100%;
 }
 </style>

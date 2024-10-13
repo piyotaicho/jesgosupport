@@ -1,14 +1,24 @@
-import { JsonObject, LogicRule, failableBlockTypes } from './types'
+import { JsonObject, LogicRuleSet, failableBlockTypes, processorOutput } from './types'
 import { JSONPath } from 'jsonpath-plus'
+import { verbose, parseJesgo as parseJson } from './utilities'
+
+interface pulledDocument {
+  decline: boolean
+  documentList: object[]
+  hash: string
+  date_of_birth?: string
+  his_id?: string
+  name?: string
+}
 
 /**
  * マクロ実行ユニット
- * @param {JsonObject} 1症例分のオブジェクト
- * @param {LogicRule[]} ルールセット配列
+ * @param {pulledDocument} 1症例分のオブジェクト
+ * @param {LogicRuleSet[]} ルールセット配列
  * @returns {csv: string[], errors: string[]}
  */
 // eslint-disable-next-line camelcase
-export async function processor (content: { hash?: string, his_id?: string, name?: string, date_of_birth?: string, documentList: JsonObject }, rules: LogicRule[]): Promise<undefined | { csv: string[], errors: string[] }> {
+export async function processor (content: pulledDocument, rules: LogicRuleSet[]): Promise<undefined | processorOutput> {
   const hash = content?.hash || ''
   const hisid = content?.his_id || ''
   const name = content?.name || ''
@@ -74,27 +84,7 @@ export async function processor (content: { hash?: string, his_id?: string, name
 
     // JSONパスでJESGOドキュメントから値を取得
     function parseJesgo (jsonpath: string | string[]) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let result: any
-      try {
-        // jsonpathが配列の場合は[0]がメイン
-        const primarypath: string = Array.isArray(jsonpath) ? jsonpath[0] : jsonpath
-        result = JSONPath({
-          path: primarypath,
-          json: jesgoDocument
-        })
-
-        // サブパスがあれば続いて処理する
-        if (Array.isArray(jsonpath) && (jsonpath[1] || '') !== '') {
-          result = JSONPath({
-            path: jsonpath[1],
-            json: result
-          })
-        }
-      } catch (e) {
-        verbose(`parseJesgo: JSONPath exception : ${e}`, true)
-      }
-      return result
+      return parseJson(jesgoDocument, jsonpath)
     }
 
     // ソースを解析して値を設定する
@@ -198,7 +188,7 @@ export async function processor (content: { hash?: string, his_id?: string, name
         }
 
         const returnValue:JsonObject[] = JSONPath({
-          path: path,
+          path,
           json: arg
         })
 
@@ -421,7 +411,11 @@ export async function processor (content: { hash?: string, his_id?: string, name
             default:
               difference = -1
           }
-          results.push(difference.toString())
+          if (difference !== undefined) {
+            results.push(difference.toString())
+          } else {
+            results.push('-1')
+          }
         }
       }
 
@@ -659,10 +653,6 @@ export async function processor (content: { hash?: string, his_id?: string, name
   }
 }
 
-function verbose (message: string, isError = false): void {
-  if (isError) {
-    console.error(message)
-  } else {
-    console.log(message)
-  }
+export function terminateProcessor (): void {
+  // 互換のための関数
 }

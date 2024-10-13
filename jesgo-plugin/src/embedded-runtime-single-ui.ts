@@ -9,7 +9,7 @@ export const dialogHTML = `
         </div>
         <div style="margin: auto;">
             <div>
-                <span style="font-size: 1.6rem;">$$title$$</span>
+                <span style="font-size: 1.6rem; font-weight: bold; color: #480049;">$$title$$</span>
             </div>
             <div>
                 <span style="font-size: 0.8rem;">${runtimeCredit}</span>
@@ -23,18 +23,13 @@ export const dialogHTML = `
         </div>
     </div>
     <div id="plugin-processing" style="display: flex; flex-direction: column; justify-content: center;">
-        <div style="width: 90%; text-align: center; margin-bottom: 0.6rem;">
+        <div style="display: none; width: 90%; text-align: center; margin-bottom: 0.6rem;">
             <span id="plugin-statusline1">**出力症例数**</span>
         </div>
         <div style="width: 90%; text-align: center; margin-bottom: 0.6rem;">
             <span id="plugin-statusline2">**ステータス**</span>
         </div>
-        <div id="plugin-div-progressbar" style="width: 90%; text-align: center; margin-bottom: 0.6rem;">
-            <div class="progress">
-                <div class="progress-bar" role="progressbar" id="plugin-progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="0">処理中</div>
-            </div>    
-        </div>
-        <div id="plugin-div-csv-download" style="width: 90%; text-align: center; margin-bottom: 0.6rem;">
+        <div id="plugin-div-csv-download" style="display: none; width: 90%; text-align: center; margin-bottom: 0.6rem;">
             <button id="plugin-download" class="btn btn-primary" disabled>CSVファイルをダウンロード</button>
         </div>
         <div style="width: 90%; text-align: center;">

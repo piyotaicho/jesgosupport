@@ -11,12 +11,12 @@ import { showModalMessageBox } from './modal-dialog'
 const version = '1.0.0'
 const script_info: scriptInfo = {
   plugin_name: '全患者文書出力',
-  plugin_version: version.split('.').slice(0, 2).join('.'),
+  plugin_version: '1.0',
   all_patient: true,
   attach_patient_info: true,
   update_db: false,
   show_upload_dialog: false,
-  explain: 'JESGOのAPIが生成した生データを全患者分出力します.'
+  explain: 'JESGO-supportで読み込むAPI生データ(JSON)を全患者分出力します.入力された患者の全情報が入っています.'
 }
 
 export async function init () {

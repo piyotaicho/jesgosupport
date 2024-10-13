@@ -5,18 +5,16 @@ module.exports = {
   mode: 'development',
   devtool: false,
   entry: {
-    'runtime-all': './jesgo-plugin/src/jesgo-support-runtime.ts',
-    'runtime-each': './jesgo-plugin/src/jesgo-support-runtime-for-single.ts',
-    'export-all': './jesgo-plugin/src/jesgo-exporter.ts',
-    'export-each': './jesgo-plugin/src/jesgo-exporter-single.ts',
-    'checkCC2023-all': './jesgo-plugin/src/check-CC-2023.ts',
-    'checkCC2023-each': './jesgo-plugin/src/check-CC-2023-single.ts',
-    'checkEM2023-all': './jesgo-plugin/src/check-EM-2023.ts',
-    'checkEM2023-each': './jesgo-plugin/src/check-EM-2023-single.ts',
-    'checkOV2023-all': './jesgo-plugin/src/check-OV-2023.ts',
-    'checkOV2023-each': './jesgo-plugin/src/check-OV-2023-single.ts',
-    'export-to-joed': './jesgo-plugin/src/export-to-joed.ts',
-    'import-go-ids': './jesgo-plugin/src/import-jsog-ids.ts'
+    'jesgo-supporttool-runtime': './jesgo-plugin/src/jesgo-support-runtime.ts',
+    'jesgo-supporttool-runtime-for-singlecase': './jesgo-plugin/src/jesgo-support-runtime-for-single.ts',
+    'GOCCcheck2324-single': './jesgo-plugin/src/GOCCcheck2324.ts',
+    'GOEMcheck2324-single': './jesgo-plugin/src/GOEMcheck2324.ts',
+    'GOOVcheck2324-single': './jesgo-plugin/src/GOOVcheck2324.ts',
+    // 単純書き出しプラグイン
+    'jesgo-exporter': './jesgo-plugin/src/jesgo-exporter.ts',
+    'jesgo-single-exporter': './jesgo-plugin/src/jesgo-exporter-single.ts',
+    // joed書き出しプラグイン
+    'export-to-joed': './jesgo-plugin/src/export-to-joed.ts'
   },
   module: {
     rules: [

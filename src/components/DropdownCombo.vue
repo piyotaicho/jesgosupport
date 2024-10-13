@@ -38,6 +38,8 @@
 import { computed, ref, WritableComputedRef } from 'vue'
 import { EditPen } from '@element-plus/icons-vue'
 
+type selectPlacement = 'top' | 'bottom' | 'bottom-start' | 'auto' | 'auto-start' | 'auto-end' | 'right' | 'left' | 'top-start' | 'top-end' | 'bottom-end' | 'right-start' | 'right-end' | 'left-start' | 'left-end'
+
 const props = withDefaults(defineProps<{
   modelValue: string,
   disabled?: boolean,
@@ -47,7 +49,7 @@ const props = withDefaults(defineProps<{
   maxlength?: string|number,
   minlength?: number,
   clearable?: boolean,
-  placement?: string,
+  placement?: selectPlacement,
   largetext?: boolean
 }>(),
 {
@@ -79,6 +81,15 @@ div.dropdown-combo-input .el-select {
 div.dropdown-combo-input .el-select .el-input__wrapper {
   max-width: 14px;
   padding-left: 11px;
+}
+
+div.dropdown-combo-input .el-input-group__append {
+  padding-left: 16.5px;
+  padding-right: 16px;
+}
+
+div.dropdown-combo-input .el-input-group__append .el-select__wrapper {
+  padding: 4px 6px;
 }
 
 div.dropdown-combo-input > .el-input__inner {

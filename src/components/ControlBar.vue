@@ -1,253 +1,243 @@
-<template>
-  <div class="control-bar">
-    <div>
-      <el-button type="primary" :icon="CaretTop" @click="loadJson()">JESGO-JSONを読み込み</el-button>
-    </div>
-
-    <div>
-      <el-button-group>
-        <el-button type="primary" :icon="CaretBottom" @click="saveCSV">CSVを保存</el-button>
-        <el-button type="primary" :icon="CaretBottom" @click="saveError">エラーを保存</el-button>
-      </el-button-group>
-    </div>
-
-    <div>
-      <el-button-group>
-        <el-button type="primary" :icon="CaretTop" @click="loadRule">ルールセットを読み込み</el-button>
-        <el-button type="primary" :icon="CaretBottom" @click="saveRule">ルールセットを保存</el-button>
-      </el-button-group>
-    </div>
-
-    <div>
-      <el-button type="primary" :icon="CaretRight" @click="performProcessing" :loading="processing" :disabled="processing">実行</el-button>
-    </div>
-
-    <input type="file" ref="inputFileJson" accept="*.json" style="display: none;" @input="loadJsonDocument($event)">
-    <input type="file" ref="inputRule" accept="*.json" style="display: none;" @input="loadRuleFile($event)">
-    <!-- <input type="file" ref="inputFileCsv" accept="*.csv" style="display: none;" @input="loadCsvFile($event)"> -->
-  </div>
-</template>
-
 <script setup lang="ts">
-import { CsvObject, JsonObject, LogicRule } from './types'
-import { CaretTop, CaretBottom, CaretRight } from '@element-plus/icons-vue'
-import { h, ref } from 'vue'
+import { pulledDocument, processorOutput } from './types'
+import { CaretRight, Download, Upload } from '@element-plus/icons-vue'
+import { ref, computed, nextTick } from 'vue'
 import { useStore } from './store'
-import Papa from 'papaparse'
-import { ElInputNumber, ElMessageBox } from 'element-plus'
-import { processor } from './processor'
+import { ElMessageBox } from 'element-plus'
+import { processor } from './newProcessor'
+import { userDownload, loadFile } from './utilities'
+import RulesetConfig from './RulesetConfig.vue'
+import ProgressBar from './ProgressBar.vue'
 
 const store = useStore()
-const inputFileJson = ref()
-const inputRule = ref()
-// const inputFileCsv = ref()
 
+const openMenu = ref(false)
 const processing = ref(false)
-/**
- * loadJson inputFileJsonへのclickイベント発火
- */
-function loadJson ():void {
-  inputFileJson.value.click()
-}
+const caseIndex = ref(-1)
+const totalCases = ref(0)
+
+const rulesetTitle = computed({
+  get: () => store.getters.rulesetTitle,
+  set: (newvalue) => store.commit('setRulesetTitle', newvalue)
+})
 
 /**
- * loadJson inputRuleへのclickイベント発火
+ * ドロップダウンメニューハンドラ
+ * @param command コマンド文字列'load'|'save'|'clear'|'menu'
  */
-function loadRule ():void {
-  inputRule.value.click()
-}
-
-/**
- * saveRule ルールセットのダウンロードリンクを作成
- */
-function saveRule ():void {
-  if (store.state.RuleSet.length > 0) {
-    const data = store.getters.getRuleSetJson
-    userDownload(data, 'ruleset.json')
+function commandHandler (command:string):void {
+  switch (command) {
+    case 'load':
+      loadRuleset()
+      break
+    case 'save':
+      saveRuleset()
+      break
+    case 'clear':
+      clearRuleset()
+      break
+    case 'menu':
+      openMenu.value = true
+      break
+    default:
+      break
   }
 }
 
-async function saveCSV ():Promise<void> {
-  if (store.state.CsvDocument.length > 0) {
-    const csvOffset = ref(0)
-    await ElMessageBox({
-      title: 'オフセットの設定',
-      message: () => h('p', null, [
-        h('span', null, 'CSV出力の行オフセットを設定できます.'),
-        h(ElInputNumber, {
-          min: 0,
-          modelValue: csvOffset.value,
-          'onUpdate:modelValue': (val: number|undefined) => { csvOffset.value = Number(val) || 0 }
-        })
-      ])
-    })
-
-    const exportCsvDocument: CsvObject = []
-    for (let i = 0; i < csvOffset.value; i++) {
-      exportCsvDocument.push([])
+/**
+ * saveRuleset ルールセットのダウンロードリンクを作成
+ */
+function saveRuleset ():void {
+  if (store.getters.rules.length > 0) {
+    const data = {
+      title: store.getters.rulesetTitle,
+      config: store.getters.rulesetConfig,
+      rules: store.getters.rules
     }
-    exportCsvDocument.push(...store.state.CsvDocument)
-
-    const data = Papa.unparse(exportCsvDocument, {
-      header: false,
-      quotes: false
-    })
-    userDownload(data, 'results.csv')
+    userDownload(JSON.stringify(data, null, 2), 'ruleset.json')
   }
 }
 
-function saveError ():void {
-  if (store.state.ErrorDocument.length > 0) {
-    const data = JSON.stringify(store.state.ErrorDocument.map(element => {
-      return {
-        hash: element.hash,
-        type: element?.type || '',
-        messages: element.errors
-      }
-    }), undefined, ' ')
-    userDownload(data, 'errorreports.json')
-  }
-}
 /**
- * loadJsonDocument FILE APIで読み込んだJSONファイルをJSONドキュメントとして保存
+ * loadRuleset FILE APIで読み込んだJSONファイルをルールセットに保存
  * @param {Event} HTMLイベントオブジェクト
  */
-async function loadJsonDocument (event: Event) {
-  const content = await loadJsonFile(event)
-  if (content) {
-    try {
-      const loadedDocument = JSON.parse(content as string) as JsonObject
-      if (Array.isArray(loadedDocument) && loadedDocument[0]?.documentList) {
-        store.commit('setJsonDocument', loadedDocument)
-      } else {
-        throw new Error()
-      }
-    } catch {
-      ElMessageBox.alert('このファイルは有効なJESGOから出力されたJSONファイルではないようです.')
-    }
-  }
-}
-
-/**
- * loadRuleFile FILE APIで読み込んだJSONファイルをルールセットに保存
- * @param {Event} HTMLイベントオブジェクト
- */
-async function loadRuleFile (event: Event) {
-  const content = await loadJsonFile(event)
-  if (content) {
-    try {
+async function loadRuleset () {
+  try {
+    const content = await loadFile()
+    if (content) {
       // version 0.1.0のtypoを強制的に排除
-      const replacedContent = (content as string).replace(/([bB])ehaivior/g, '$1ehavior')
-      const loadedRuleset = JSON.parse(replacedContent) as LogicRule[]
+      const replacedContent = (content as string).replace(/([bB])ehaivior"/g, '$1ehavior"')
+      const loadedRuleset = JSON.parse(replacedContent)
 
       if (Array.isArray(loadedRuleset) && loadedRuleset[0]?.title) {
+        store.dispatch('clearRuleset')
+        // version 0.x
         store.commit('setRuleSet', loadedRuleset)
+        await ElMessageBox.alert(
+          'このソフトウエアでは旧バージョンでの保存はできません.また、旧バージョンのルールセットではエラーが出ることがあります.',
+          '旧バージョンのルールセット',
+          {
+            confirmButtonText: 'OK'
+          })
+      } else if (
+        loadedRuleset?.title !== undefined &&
+        (loadedRuleset?.rules && Array.isArray(loadedRuleset.rules))
+      ) {
+        store.dispatch('clearRuleset')
+        // version 1.x
+        store.commit('setRulesetTitle', loadedRuleset.title)
+        store.commit('setRulesetConfig', loadedRuleset?.config || {})
+        store.commit('setRuleSet', loadedRuleset.rules)
       } else {
-        throw new Error()
+        throw new Error('このファイルは有効なルールセットが記載されたJSONファイルではないようです.')
       }
-    } catch {
-      ElMessageBox.alert('このファイルは有効なルールセットが記載されたJSONファイルではないようです.')
+      // ルールセットを読み込んだら、編集のルール選択をクリアしておく
+      store.commit('setCurrentRulesetTitle', '')
     }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (e:any) {
+    ElMessageBox.alert(e.message)
   }
 }
 
 /**
- * loadJsonFile FILE APIで読み込まれたJSONファイルをパース
- * @param {Event} HTMLイベントオブジェクト
+ * ルールセットの設定を初期化
  */
-async function loadJsonFile (event: Event): Promise<string|ArrayBuffer|null> {
-  const target = event.target as HTMLInputElement
-  const files = target.files as FileList
-  if (files.length > 0) {
-    const reader = new FileReader()
-    return await new Promise((resolve) => {
-      try {
-        reader.onload = () => resolve(reader.result)
-        reader.readAsText(files[0])
-      } catch (e) {
-        window.alert('指定されたファイルにアクセスできません.')
-        console.error(e)
-      }
-    })
-  }
-  return null
+async function clearRuleset () {
+  await store.dispatch('clearRuleset')
+  await nextTick()
 }
 
 /**
- * userDownload ブラウザでダウンロードさせる
- * @param {string} data
- * @param {string} filename
+ * スクリプトの実行トリガ
  */
-function userDownload (data: string, filename: string): void {
-  const blob = filename.includes('.json')
-    ? new Blob([data], { type: 'application/json' })
-    // Excelがアレ過ぎるのでCSVにはBOMをつける
-    : new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), data], { type: 'text/csv' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.setAttribute('download', filename)
-  a.setAttribute('href', url)
-  a.click()
-  a.remove()
-  URL.revokeObjectURL(url)
-}
-
-async function performProcessing (): Promise<void> {
-  if (store.getters.documentLength > 0 && store.state.RuleSet.length > 0) {
-    // ドキュメントとルールセットがないと実行しない
-    store.commit('clearCsvDocument')
-    store.commit('clearErrorDocument')
-    for (let index = 0; index < store.getters.documentLength; index++) {
-      await processDocument(index)
-    }
+function performProcessing (command?:string): void {
+  if (command === 'compile') {
+    //
   }
+  if (store.getters.documentLength === 0 || store.getters.rules.length === 0) {
+    console.log('ドキュメントとスクリプトがありません')
+  }
+
+  store.commit('clearCsvDocument')
+  store.commit('clearErrorDocument')
+
+  const processBody = async () => {
+    try {
+      // 状態表示用reactiveの設定
+      totalCases.value = store.getters.documentLength
+      processing.value = true
+      // ドキュメントの逐次処理
+      for (let index = 0; index < store.getters.documentLength; index++) {
+        if (processing.value) {
+          caseIndex.value = index
+          await processDocument(index)
+        }
+      }
+    } finally {
+      caseIndex.value = -1
+      processing.value = false
+    }
+    //
+  }
+  // asyncに処理を渡す
+  processBody()
 }
 
+function cancel (): void {
+  processing.value = false
+}
+
+/**
+ * ドキュメントに対するスクリプトの実行
+ * @param index
+ */
 async function processDocument (index:number) {
-  const hash = store.getters.documentRef(index)?.hash || ''
+  // ドキュメントに処理を適用
+  let returnObject: processorOutput|undefined
+  // ドキュメントの直接取得
+  const jsonDocument:pulledDocument = store.getters.queriedDocument[index]
 
-  let returnObject: {csv: string[], errors: string[]}|undefined
+  // 空白ドキュメントのスキップ指示あり
+  if (store.getters.rulesetConfig?.skipUnmatchedRecord === true) {
+    if ((jsonDocument?.documentList || []).length === 0) {
+      // ドキュメントがないのでスキップ
+      return undefined
+    }
+  }
+
   try {
-    processing.value = true
-    returnObject = await processor(store.getters.documentRef(index), store.state.RuleSet)
+    returnObject = (await processor(jsonDocument, store.getters.rules, store.getters.documentVariables))
   } catch (e) {
     console.error(e)
-  } finally {
-    processing.value = false
+    if ((e as Error)?.message) {
+      const messages = ((e as Error).message as string).split('\n')
+      ElMessageBox.alert(messages.slice(1).join('\n'), messages[0])
+    }
+    throw new Error()
   }
 
   // 処理済みデータを書き出し
   if (returnObject !== undefined) {
+    const hash = jsonDocument?.hash || ''
     const { csv: csvRow, errors: errorMessages } = returnObject
     store.commit('addCsvDocument', csvRow)
-    const type = store.getters.jesgoDocumentRef(index)[0]?.患者台帳?.がん種
-    console.log(type)
-    store.commit('addErrorDocument', type
-      ? {
-          hash,
-          type,
-          errors: [...errorMessages]
-        }
-      : {
-          hash,
-          errors: [...errorMessages]
-        }
-    )
+    store.commit('addErrorDocument', {
+      hash,
+      errors: [...(errorMessages || [])]
+    })
   }
 }
 </script>
 
+<template>
+  <div class="control-bar">
+    <div>
+      <el-dropdown split-button type="primary" @click="commandHandler('menu')" @command="commandHandler">
+        ルールセットの設定
+        <template #dropdown>
+          <el-dropdown-item command="load"><el-icon><Upload/></el-icon> ルールセットの読み込み</el-dropdown-item>
+          <el-dropdown-item command="save" :disabled="store.getters.rules.length === 0"><el-icon><download/></el-icon>ルールセットを保存</el-dropdown-item>
+          <el-dropdown-item command="clear" divided>ルールセットを初期化</el-dropdown-item>
+        </template>
+      </el-dropdown>
+    </div>
+    <div>
+      <el-input style="width: 20rem;" v-model="rulesetTitle" placeholder="ルールセットの名称未設定"/>
+      <el-dialog title="ルールセットの詳細設定"
+        v-model="openMenu" :show-close="false" :close-on-click-modal="false">
+        <RulesetConfig v-if="openMenu" @close="() => openMenu = false"/>
+      </el-dialog>
+    </div>
+    <div>
+      <!-- <el-dropdown split-button type="primary" @click="performProcessing" :disabled="processing">
+        実行<el-icon><CaretRight/></el-icon> -->
+        <el-button type="primary" :icon="CaretRight" @click="performProcessing()" :loading="processing" :disabled="processing">実行</el-button>
+        <!-- コンパイルとステップ実行は未実装 <template #dropdown>
+          <el-dropdown-item :disabled="processing" command="compile">コンパイルのみ実行</el-dropdown-item>
+          <el-dropdown-item disabled command="step">ステップ実行モード</el-dropdown-item>
+        </template> -->
+      <!-- </el-dropdown> -->
+      <el-dialog
+        :model-value="(processing || caseIndex >= 0)"
+        :show-close="false"
+        :close-on-click-modal="false"
+        :close-on-press-escape="false"
+        :close-delay="caseIndex >= 0 ? 500 : 0"
+        style="width: 20rem;"
+        title="処理実行中">
+        <ProgressBar :index="caseIndex" :length="totalCases" @cancel="cancel" />
+      </el-dialog>
+    </div>
+  </div>
+</template>
+
 <style>
 div.control-bar {
-  /* border: 1px solid cyan; */
-  flex: initial;
-  width: 100vw;
   display: flex;
   flex-direction: row;
-  justify-content: space-around;
-}
-
-div.control-bar > div {
-  display: flexbox;
+  justify-content: space-between;
+  align-items: center;
 }
 </style>
