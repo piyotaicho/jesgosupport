@@ -1,3 +1,4 @@
+import { parseMinWidth } from 'node_modules/element-plus/es/components/table/src/util.ts'
 import { pulledDocument, processorOutput, JsonObject, LogicRuleSet, LogicBlock, BlockType } from './types'
 import { parseJesgo, verbose } from './utilities'
 
@@ -19,7 +20,7 @@ type commandPeriodOperators = 'years' | 'years,roundup' | 'months' | 'months,rou
 type commandStoreFieldSeparators = 'first' | 'whitespace' | 'colon' | 'comma' | 'semicolon'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type instructionFunction = (...args: any[]) => instructionResult
+type instructionFunction = (procobj: Processor) => instructionResult
 
 type translationTableObject = {
   match: (value: string) => boolean
@@ -128,6 +129,7 @@ export class Processor {
   public errorMessages: string[]
   public csvRow: string[]
 
+  private codeBuffer: string[][]
   /**
    * コンストラクター = コンパイラを実行
    * @param ユーザ定義広域変数リスト
@@ -141,6 +143,10 @@ export class Processor {
 
     this.errorMessages = []
     this.csvRow = []
+
+    // コードバッファ ルールごとに各ステップをstring[]に格納
+    // 格コードは function( thisの宛先 ) で、返り値は instructionResult
+    this.codeBuffer = []
 
     // レジスタ変数の用意
     for (let registerIndex = 0; registerIndex < 10; registerIndex++) {
@@ -175,6 +181,206 @@ export class Processor {
     }
   }
 
+  public async compile (ruleset: LogicRuleSet[]) {
+    verbose('** COMPILE RULESETS **')
+    // コードバッファを初期化
+    this.codeBuffer = []
+
+    // 空の内容で変数定義
+    try {
+      // eslint-disable-next-line dot-notation
+      delete this.variables['$hash']
+      // eslint-disable-next-line dot-notation
+      delete this.variables['$his_id']
+      // eslint-disable-next-line dot-notation
+      delete this.variables['$name']
+      // eslint-disable-next-line dot-notation
+      delete this.variables['$date_of_birth']
+    } catch { }
+    Object.defineProperties(this.variables, {
+      $hash: {
+        value: [''],
+        writable: false
+      },
+      $his_id: {
+        value: [''],
+        writable: false
+      },
+      $name: {
+        value: [''],
+        writable: false
+      },
+      $date_of_birth: {
+        value: [''],
+        writable: false
+      }
+    })
+
+    // ルールセットを逐次処理
+    for (let index = 0; index < ruleset.length; index++) {
+      const currentRule = ruleset[index]
+      const currentRuleTitle = currentRule.title
+      verbose(`* ruleset [${index + 1}] '${currentRuleTitle}'`)
+      try {
+        // 空の内容でソースの初期化
+        // 既にあるソース変数を削除
+        Object.keys(this.variables).filter(name => name.charAt(0) === '@').forEach(
+          name => delete this.variables[name]
+        )
+        // 設定された分だけを用意する
+        if (currentRule?.source) {
+          for (let sourceIndex = 0; sourceIndex < currentRule.source.length; sourceIndex++) {
+            const sourceName = `@${sourceIndex + 1}`
+            const path = currentRule.source[sourceIndex]?.path || ''
+            if (path !== '') {
+              Object.defineProperty(this.variables,
+                sourceName, {
+                value: [''],
+                writable: false
+              })
+            }
+          }
+        }
+      } catch (e) {
+        console.error(e as Error)
+        throw new Error(`${currentRuleTitle} ソース定義にエラーがあります\n` + (e as Error).message)
+      }
+
+      // コード部分を逐次処理してコードバッファに保存する
+      if (currentRule?.procedure) {
+        const procedures: LogicBlock[] = currentRule.procedure
+        const rulecodeBuffer: string[] = []
+
+        for (let counter = 0; counter < procedures.length; counter++) {
+          const procedure = procedures[counter]
+
+          try {
+            // パラメータの抽出 引数は参照では無く値をコピー
+            const command = procedure.type as newBlockType
+            const params: string[] = []
+
+            for (const item of procedure.arguments) {
+              params.push((item || '').toString())
+            }
+
+            const successBehavior: string = procedure.trueBehavior.toString() || '+1'
+            const failureBehavior: string = (procedure?.falseBehavior || 'Abort').toString()
+
+            let valuestr: string, valueAstr: string, valueBstr: string
+
+            switch (command) {
+              case 'var':
+              case 'Variables':
+                valuestr = (params[0].charAt(0) === '$' || params[0].charAt(0) === '@')
+                  ? `procobj.variables['${params[0]}']`
+                  : JSON.stringify(parseStringToStringArray(params[0]))
+                rulecodeBuffer.push(`
+                  return procobj.commandVariables(${valuestr}, '${params[1] || ''}', '${params[2] || 'value'}')
+                    ? { success: true, behavior: '${successBehavior}' }
+                    : { success: false, behavir: '${failureBehavior}' }
+                `)
+                break
+              case 'oper':
+              case 'Operators':
+                valueAstr = (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') 
+                  ? `procobj.variables['${params[0]}']`
+                  : JSON.stringify(setValueAsStringArray(params[0]))
+                valueBstr = (params[2].charAt(0) === '$' || params[2].charAt(0) === '@')
+                  ? `procobj.variables['${params[2]}']`
+                  : JSON.stringify(setValueAsStringArray(params[2])).replace('\'', '\\\'')
+
+                rulecodeBuffer.push(`
+                  return procobj.commandOperators(${valueAstr},  '${params[1]}', ${valueBstr}, '${params[3]}')
+                    ? { success: true, behavior: '${successBehavior}' }
+                    : { success: false, behavir: '${failureBehavior}' }
+                  `)
+                break
+              case 'query':
+              case 'Query':
+                valuestr = (params[0].charAt(0) === '$' || params[0].charAt(0) === '@')
+                  ? `procobj.variables['${params[0]}']`
+                  : JSON.stringify(setValueAsStringArray(params[0]))
+                rulecodeBuffer.push(`
+                  return procobj.commandQuery(${valuestr}, '${params[1]}', '${params[2]}')
+                    ? { success: true, behavior: '${successBehavior}' }
+                    : { success: false, behavir: '${failureBehavior}' }
+                  `)
+                break
+              case 'set':
+              case 'Sets':
+                valueAstr = (params[0].charAt(0) === '$' || params[0].charAt(0) === '@')
+                  ? `procobj.variables['${params[0]}']`
+                  : JSON.stringify(setValueAsStringArray(params[0]))
+                valueBstr = (params[1].charAt(0) === '$' || params[1].charAt(0) === '@')
+                  ? `procobj.variables['${params[1]}']`
+                  : JSON.stringify(setValueAsStringArray(params[1]))
+                rulecodeBuffer.push(`
+                  return procobj.commandSets(${valueAstr}, ${valueBstr}, '${params[2]}', '${params[3]}')
+                    ? { success: true, behavior: '${successBehavior}' }
+                    : { success: false, behavir: '${failureBehavior}' }
+                  `)
+                break
+              case 'sort':
+              case 'Sort':
+                rulecodeBuffer.push(`
+                  return procobj.commandSort('${params[0] || ''}', '${params[1] || ''}',  '${params[2] || 'asc'}')
+                    ? { success: true, behavior: '${successBehavior}' }
+                    : { success: false, behavir: '${failureBehavior}' }
+                  `)
+                break
+              case 'tr':
+              case 'Translation':
+                rulecodeBuffer.push(`
+                  const table = procobj.createTranslationTable(
+                    ${ JSON.stringify(procedure.lookup || []) }
+                  )
+                  return procobj.commandTranslation( '${params[0] || ''}', table)
+                    ? { success: true, behavior: '${successBehavior}' }
+                    : { success: false, behavir: '${failureBehavior}' }
+                  `)
+                break
+              case 'period':
+              case 'Period':
+                if (params[3] == '') {
+                  throw new SyntaxError('Period: 値の保存先が指定されていません.')
+                }
+                valueAstr = (params[0].charAt(0) === '$' || params[0].charAt(0) === '@')
+                  ? `procobj.variables['${params[0]}']`
+                  : JSON.stringify(setValueAsStringArray(params[0]))
+                valueBstr = (params[1].charAt(0) === '$' || params[1].charAt(0) === '@')
+                  ? `procobj.variables['${params[1]}']`
+                  : JSON.stringify(setValueAsStringArray(params[1]))
+                rulecodeBuffer.push(`
+                  return procobj.commandPeroid(${valueAstr}, ${valueBstr}, '${params[2] || 'months'}', '${params[3]}')
+                    ? { success: true, behavior: '${successBehavior}' }
+                    : { success: false, behavir: '${failureBehavior}' }
+                  `)
+                break
+              case 'put':
+              case 'Store':
+                valuestr = (params[0].charAt(0) === '$' || params[0].charAt(0) === '@')
+                  ? `procobj.variables['${params[0]}']`
+                  : JSON.stringify(setValueAsStringArray(params[0]))
+                rulecodeBuffer.push(`
+                  return procobj.commandStore(${valuestr}, '${params[1] || '$error'}', '${params[2]}')
+                    ? { success: true, behavior: '${successBehavior}' }
+                    : { success: false, behavir: '${failureBehavior}' }
+                  `)
+                break
+              default:
+                throw new SyntaxError(`無効な命令: ${command}`)
+            }
+          } catch (e) {
+            console.error(e as Error)
+            throw new Error(`'${currentRuleTitle}' @${counter + 1} でエラー\n` + (e as Error).message)
+          }
+        }
+
+        // コードバッファを保存
+        this.codeBuffer.push(rulecodeBuffer)
+      }
+    }
+  }
   /**
    * 逐次実行
    * @param content JESGO取得ドキュメント単体
@@ -192,6 +398,10 @@ export class Processor {
       this.errorMessages.splice(0)
       this.csvRow.splice(0)
 
+      // コンパイル
+      await this.compile(ruleset)
+
+      // 実行環境へ
       // ドキュメント変数の再定義
       try {
         // eslint-disable-next-line dot-notation
@@ -231,6 +441,8 @@ export class Processor {
     for (let index = 0; index < ruleset.length; index++) {
       const currentRule = ruleset[index]
       const currentRuleTitle = currentRule.title
+      const currentCodeBuffer = this.codeBuffer[index]
+
       verbose(`* ruleset '${currentRuleTitle}'`)
       try {
         // レジスタ変数の初期化
@@ -295,236 +507,16 @@ export class Processor {
           const procedure = procedures[counter]
 
           try {
-            // パラメータの抽出 引数は参照では無く値をコピー
             const command = procedure.type as newBlockType
-            const params: string[] = []
-
             verbose(`** step ${counter + 1} directive ${command}`)
+            console.log(currentCodeBuffer[counter])
 
-            for (const item of procedure.arguments) {
-              params.push((item || '').toString())
-            }
-
-            let instruction: instructionFunction
-
-            let operator: string = ''
-            let valueType: string = ''
-            let variableName: string = ''
-
-            const success: instructionResult = {
-              success: true,
-              behavior: procedure.trueBehavior.toString() || '+1'
-            }
-            const failed: instructionResult = {
-              success: false,
-              behavior: (procedure?.falseBehavior || 'Abort').toString()
-            }
-
-            switch (command) {
-              case 'var':
-              case 'Variables':
-                valueType = params[2] || 'value' // 拡張
-                variableName = params[1] || ''
-                if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
-                  instruction = () => {
-                    const values = this.variables[params[0]]
-                    return this.commandVariables(values, variableName, valueType as commandValueTypes)
-                      ? success
-                      : failed
-                  }
-                } else {
-                  instruction = () => {
-                    const values = parseStringToStringArray(params[0])
-                    return this.commandVariables(values, variableName, valueType as commandValueTypes)
-                      ? success
-                      : failed
-                  }
-                }
-                break
-              case 'oper':
-              case 'Operators':
-                valueType = params[1]
-                operator = params[3]
-                if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
-                  if (params[2].charAt(0) === '$' || params[2].charAt(0) === '@') {
-                    instruction = () => {
-                      const valueA = this.variables[params[0]]
-                      const valueB = this.variables[params[2]]
-                      return this.commandOperators(valueA, valueType as commandValueTypes, valueB, operator as commandOperatorExpressions)
-                        ? success
-                        : failed
-                    }
-                  } else {
-                    instruction = () => {
-                      const valueA = this.variables[params[0]]
-                      const valueB = setValueAsStringArray(params[2])
-                      return this.commandOperators(valueA, valueType as commandValueTypes, valueB, operator as commandOperatorExpressions)
-                        ? success
-                        : failed
-                    }
-                  }
-                } else {
-                  if (params[2].charAt(0) === '$' || params[2].charAt(0) === '@') {
-                    instruction = () => {
-                      const valueA = setValueAsStringArray(params[0])
-                      const valueB = this.variables[params[2]]
-                      return this.commandOperators(valueA, valueType as commandValueTypes, valueB, operator as commandOperatorExpressions)
-                        ? success
-                        : failed
-                    }
-                  } else {
-                    instruction = () => {
-                      const valueA = setValueAsStringArray(params[0])
-                      const valueB = setValueAsStringArray(params[2])
-                      return this.commandOperators(valueA, valueType as commandValueTypes, valueB, operator as commandOperatorExpressions)
-                        ? success
-                        : failed
-                    }
-                  }
-                }
-                break
-              case 'query':
-              case 'Query':
-                operator = params[1]
-                variableName = params[2]
-                if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
-                  instruction = () => {
-                    const values = this.variables[params[0]]
-                    return this.commandQuery(values, operator, variableName)
-                      ? success
-                      : failed
-                  }
-                } else {
-                  instruction = () => {
-                    return this.commandQuery(setValueAsStringArray(params[0]), operator, variableName)
-                      ? success
-                      : failed
-                  }
-                }
-                break
-              case 'set':
-              case 'Sets':
-                operator = params[2]
-                variableName = params[3]
-                if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
-                  if (params[1].charAt(0) === '$' || params[1].charAt(0) === '@') {
-                    instruction = () => {
-                      const valueA = this.variables[params[0]]
-                      const valueB = this.variables[params[1]]
-                      return this.commandSets(valueA, valueB, operator as commandSetsOperators, variableName)
-                        ? success
-                        : failed
-                    }
-                  } else {
-                    instruction = () => {
-                      const valueA = this.variables[params[0]]
-                      return this.commandSets(valueA, setValueAsStringArray(params[1]), operator as commandSetsOperators, variableName)
-                        ? success
-                        : failed
-                    }
-                  }
-                } else {
-                  if (params[1].charAt(0) === '$' || params[1].charAt(0) === '@') {
-                    instruction = () => {
-                      const valueB = this.variables[params[1]]
-                      return this.commandSets(setValueAsStringArray(params[0]), valueB, operator as commandSetsOperators, variableName)
-                        ? success
-                        : failed
-                    }
-                  } else {
-                    instruction = () => {
-                      return this.commandSets(setValueAsStringArray(params[0]), setValueAsStringArray(params[1]), operator as commandSetsOperators, variableName)
-                        ? success
-                        : failed
-                    }
-                  }
-                }
-                break
-              case 'sort':
-              case 'Sort':
-                instruction = () => {
-                  const valiableName = params[0] || ''
-                  const path = params[1] || ''
-                  const operator = params[2] || 'asc'
-                  return this.commandSort(valiableName, path, operator as commandSortDirections)
-                    ? success
-                    : failed
-                }
-                break
-              case 'tr':
-              case 'Translation':
-                instruction = () => {
-                  const vaiableName = params[0] || ''
-                  const table = this.createTranslationTable(procedure.lookup || [])
-                  return this.commandTranslation(vaiableName, table)
-                    ? success
-                    : failed
-                }
-                break
-              case 'period':
-              case 'Period':
-                variableName = params[3]
-                operator = params[2] || 'months'
-                if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
-                  if (params[1].charAt(0) === '$' || params[1].charAt(0) === '@') {
-                    instruction = () => {
-                      const valueA = this.variables[params[0]]
-                      const valueB = this.variables[params[1]]
-                      return this.commandPeroid(valueA, valueB, operator as commandPeriodOperators, variableName)
-                        ? success
-                        : failed
-                    }
-                  } else {
-                    instruction = () => {
-                      const valueA = this.variables[params[0]]
-                      return this.commandPeroid(valueA, setValueAsStringArray(params[1]), operator as commandPeriodOperators, variableName)
-                        ? success
-                        : failed
-                    }
-                  }
-                } else {
-                  if (params[1].charAt(0) === '$' || params[1].charAt(0) === '@') {
-                    instruction = () => {
-                      const valueB = this.variables[params[2]]
-                      return this.commandPeroid(setValueAsStringArray(params[0]), valueB, operator as commandPeriodOperators, variableName)
-                        ? success
-                        : failed
-                    }
-                  } else {
-                    instruction = () => {
-                      return this.commandPeroid(setValueAsStringArray(params[0]), setValueAsStringArray(params[1]), operator as commandPeriodOperators, variableName)
-                        ? success
-                        : failed
-                    }
-                  }
-                }
-                break
-              case 'put':
-              case 'Store':
-                if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
-                  const value = this.variables[params[0]]
-                  instruction = () => {
-                    return this.commandStore(value, params[1] || '$error', params[2] as commandStoreFieldSeparators)
-                      ? success
-                      : failed
-                  }
-                } else {
-                  instruction = () => {
-                    return this.commandStore(setValueAsStringArray(params[0]), params[1] || '$error', params[2] as commandStoreFieldSeparators)
-                      ? success
-                      : failed
-                  }
-                }
-                break
-              default:
-                throw new SyntaxError(`無効な命令: ${command}`)
-            }
-
+            let instruction: instructionFunction = new Function('procobj', currentCodeBuffer[counter]) as instructionFunction
             // ステップの実行 - ロックアップ防止のためsetTimeout = 0でラップ
             await new Promise(resolve => {
               setTimeout(() => { resolve(undefined) }, 0)
             })
-            const result: instructionResult = instruction()
+            const result: instructionResult = instruction(this)
 
             // 次のステップへ
             verbose(`=> result: ${result.behavior}`)
@@ -550,8 +542,6 @@ export class Processor {
           } catch (e) {
             console.error(e as Error)
             throw new Error(`'${currentRuleTitle}' @${counter + 1} でエラー\n` + (e as Error).message)
-            // ElMessageBox.alert((e as Error).message, `'${currentRuleTitle}' @${counter + 1} でエラー`)
-            // return undefined
           }
         }
       }
