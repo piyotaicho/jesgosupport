@@ -43,8 +43,21 @@ export async function loadFile (acceptPattern:string = '.json'): Promise<string|
       if (files.length > 0) {
         const reader = new FileReader()
         try {
-          reader.onload = () => resolve(reader.result as string)
-          reader.readAsText(files[0])
+          reader.onload = () => {
+            // reader.resultにファイル内容をArrayBufferとして取得
+            let readerContent = new Uint8Array(reader.result as ArrayBuffer)
+            // 文字コードの検出・変換を行って返す
+            resolve(
+              Encoding.codeToString(Encoding.convert(
+                readerContent,
+                {
+                  to: 'UNICODE',
+                  from: 'AUTO'
+                })
+              )
+            )
+          }
+          reader.readAsArrayBuffer(files[0])
         } catch {
           verbose('指定されたファイルにアクセス出来ません.', true)
           resolve(null)
