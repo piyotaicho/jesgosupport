@@ -7,7 +7,7 @@
     "name": "Yasuhiro Yamamoto",
     "email": "mohyama@mohnet.com"
   },
-  "license": "MIT",
+  "license": "MIT (C) 2023-2024 by P4mohnet",
   "type": "module",
   "scripts": {
     "serve": "vite",

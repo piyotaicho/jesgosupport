@@ -7,6 +7,8 @@ import path from 'path'
 process.env.VITE_APP_VERSION = require('./package.json')?.version
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 process.env.VITE_APP_TITLE = require('./package.json')?.name
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+process.env.VITE_APP_LICENSE = require('./package.json')?.license
 
 export default {
   base: './',
