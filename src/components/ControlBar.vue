@@ -4,7 +4,7 @@ import { CaretRight, Download, Upload } from '@element-plus/icons-vue'
 import { ref, computed, nextTick } from 'vue'
 import { useStore } from './store'
 import { ElMessageBox } from 'element-plus'
-import { processor } from './newProcessor'
+import { Processor } from './newProcessor'
 import { userDownload, loadFile } from './utilities'
 import RulesetConfig from './RulesetConfig.vue'
 import ProgressBar from './ProgressBar.vue'
@@ -120,19 +120,45 @@ function performProcessing (command?:string): void {
     console.log('ドキュメントとスクリプトがありません')
   }
 
+  // 出力をクリア
   store.commit('clearCsvDocument')
   store.commit('clearErrorDocument')
 
   const processBody = async () => {
     try {
+      // 処理ユニットの準備
+      const processor = new Processor(store.getters.documentVariables)
+      await processor.compile(store.getters.rules)
+
       // 状態表示用reactiveの設定
       totalCases.value = store.getters.documentLength
       processing.value = true
       // ドキュメントの逐次処理
       for (let index = 0; index < store.getters.documentLength; index++) {
         if (processing.value) {
+          // プログレスバーの更新
           caseIndex.value = index
-          await processDocument(index)
+  
+          // ドキュメントの処理
+          const jsonDocument:pulledDocument = store.getters.queriedDocument[index]
+
+          try {
+            const returnValues = await processor.run(jsonDocument)
+            if (returnValues !== undefined) {
+              store.commit('addCsvDocument', returnValues.csv)
+              store.commit('addErrorDocument', {
+                hash: jsonDocument?.hash || '',
+                errors: [...(returnValues.errors || [])]
+              })
+            }
+          } catch (e) {
+            console.error(e)
+            if ((e as Error)?.message) {
+              const messages = ((e as Error).message as string).split('\n')
+              ElMessageBox.alert(messages.slice(1).join('\n'), messages[0])
+            }
+            throw new Error()
+          }
         }
       }
     } finally {
@@ -141,7 +167,6 @@ function performProcessing (command?:string): void {
     }
     //
   }
-  // asyncに処理を渡す
   processBody()
 }
 
@@ -153,7 +178,7 @@ function cancel (): void {
  * ドキュメントに対するスクリプトの実行
  * @param index
  */
-async function processDocument (index:number) {
+async function processDocument (index:number, processor: Processor) {
   // ドキュメントに処理を適用
   let returnObject: processorOutput|undefined
   // ドキュメントの直接取得
@@ -168,7 +193,7 @@ async function processDocument (index:number) {
   }
 
   try {
-    returnObject = (await processor(jsonDocument, store.getters.rules, store.getters.documentVariables))
+    returnObject = await processor.run(jsonDocument)
   } catch (e) {
     console.error(e)
     if ((e as Error)?.message) {
