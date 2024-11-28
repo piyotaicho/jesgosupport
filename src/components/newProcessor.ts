@@ -1,10 +1,17 @@
 import { parseMinWidth } from 'node_modules/element-plus/es/components/table/src/util.ts'
-import { pulledDocument, processorOutput, JsonObject, LogicRuleSet, LogicBlock, BlockType } from './types'
+import { pulledDocument, processorOutput, JsonObject, LogicRuleSet, LogicBlock, BlockType, SourceBlock } from './types'
 import { parseJesgo, verbose } from './utilities'
+import { compile } from 'vue'
 
 interface instructionResult {
   success: boolean
   behavior: string
+}
+
+interface codeBuffer {
+  title: string
+  code: string[]
+  source: SourceBlock[]
 }
 
 // 後方互換を保持してスクリプトコマンドを短縮
@@ -129,7 +136,9 @@ export class Processor {
   public errorMessages: string[]
   public csvRow: string[]
 
-  private codeBuffer: string[][]
+  // トランスパイル済みルールを保持
+  private transpiledRuleset: codeBuffer[]
+
   /**
    * コンストラクター = コンパイラを実行
    * @param ユーザ定義広域変数リスト
@@ -138,16 +147,14 @@ export class Processor {
     // 変数を初期化
     this.variableStore = {}
     this.variables = new Proxy(this.variableStore, storeProxyHandler)
-    // this.sourceDefinitions = []
-    // this.compiledRules = []
 
     this.errorMessages = []
     this.csvRow = []
 
     // コードバッファ ルールごとに各ステップをstring[]に格納
     // 格コードは function( thisの宛先 ) で、返り値は instructionResult
-    this.codeBuffer = []
-
+    this.transpiledRuleset = []
+  
     // レジスタ変数の用意
     for (let registerIndex = 0; registerIndex < 10; registerIndex++) {
       const registerName = `$${registerIndex}`
@@ -184,7 +191,7 @@ export class Processor {
   public async compile (ruleset: LogicRuleSet[]) {
     verbose('** COMPILE RULESETS **')
     // コードバッファを初期化
-    this.codeBuffer = []
+    this.transpiledRuleset = []
 
     // 空の内容で変数定義
     try {
@@ -198,29 +205,24 @@ export class Processor {
       delete this.variables['$date_of_birth']
     } catch { }
     Object.defineProperties(this.variables, {
-      $hash: {
-        value: [''],
-        writable: false
-      },
-      $his_id: {
-        value: [''],
-        writable: false
-      },
-      $name: {
-        value: [''],
-        writable: false
-      },
-      $date_of_birth: {
-        value: [''],
-        writable: false
-      }
+      $hash: { value: [''], writable: false },
+      $his_id: { value: [''], writable: false },
+      $name: { value: [''], writable: false },
+      $date_of_birth: { value: [''], writable: false }
     })
 
     // ルールセットを逐次処理
     for (let index = 0; index < ruleset.length; index++) {
       const currentRule = ruleset[index]
       const currentRuleTitle = currentRule.title
-      verbose(`* ruleset [${index + 1}] '${currentRuleTitle}'`)
+
+      const currentTranspiledRule: codeBuffer = {
+        title: currentRuleTitle,
+        code: [],
+        source: currentRule?.source || []
+      }
+
+      verbose(`* ruleset '${currentRuleTitle}'`)
       try {
         // 空の内容でソースの初期化
         // 既にあるソース変数を削除
@@ -249,7 +251,6 @@ export class Processor {
       // コード部分を逐次処理してコードバッファに保存する
       if (currentRule?.procedure) {
         const procedures: LogicBlock[] = currentRule.procedure
-        const rulecodeBuffer: string[] = []
 
         for (let counter = 0; counter < procedures.length; counter++) {
           const procedure = procedures[counter]
@@ -271,10 +272,16 @@ export class Processor {
             switch (command) {
               case 'var':
               case 'Variables':
-                valuestr = (params[0].charAt(0) === '$' || params[0].charAt(0) === '@')
-                  ? `procobj.variables['${params[0]}']`
-                  : JSON.stringify(parseStringToStringArray(params[0]))
-                rulecodeBuffer.push(`
+                if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
+                  if (!(params[0] in this.variables)) {
+                    throw new TypeError(`${currentRuleTitle} [${counter + 1}]:変数 ${params[0]} は未定義です.`)
+                  }
+                  valuestr = `procobj.variables['${params[0]}']`
+                } else {
+                  valuestr = JSON.stringify(parseStringToStringArray(params[0]))
+                }
+
+                currentTranspiledRule.code.push(`
                   return procobj.commandVariables(${valuestr}, '${params[1] || ''}', '${params[2] || 'value'}')
                     ? { success: true, behavior: '${successBehavior}' }
                     : { success: false, behavir: '${failureBehavior}' }
@@ -282,14 +289,25 @@ export class Processor {
                 break
               case 'oper':
               case 'Operators':
-                valueAstr = (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') 
-                  ? `procobj.variables['${params[0]}']`
-                  : JSON.stringify(setValueAsStringArray(params[0]))
-                valueBstr = (params[2].charAt(0) === '$' || params[2].charAt(0) === '@')
-                  ? `procobj.variables['${params[2]}']`
-                  : JSON.stringify(setValueAsStringArray(params[2])).replace('\'', '\\\'')
+                if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
+                  if (!(params[0] in this.variables)) {
+                    throw new TypeError(`${currentRuleTitle} [${counter + 1}]:変数 ${params[0]} は未定義です.`)
+                  }
+                  valueAstr = `procobj.variables['${params[0]}']`
+                } else {
+                  valueAstr = JSON.stringify(parseStringToStringArray(params[0]))
+                }
 
-                rulecodeBuffer.push(`
+                if (params[2].charAt(0) === '$' || params[2].charAt(0) === '@') {
+                  if (!(params[2] in this.variables)) {
+                    throw new TypeError(`${currentRuleTitle} [${counter + 1}]:変数 ${params[2]} は未定義です.`)
+                  }
+                  valueBstr = `procobj.variables['${params[2]}']`
+                } else {
+                  valueBstr = JSON.stringify(parseStringToStringArray(params[2]))
+                }
+
+                currentTranspiledRule.code.push(`
                   return procobj.commandOperators(${valueAstr},  '${params[1]}', ${valueBstr}, '${params[3]}')
                     ? { success: true, behavior: '${successBehavior}' }
                     : { success: false, behavir: '${failureBehavior}' }
@@ -297,10 +315,16 @@ export class Processor {
                 break
               case 'query':
               case 'Query':
-                valuestr = (params[0].charAt(0) === '$' || params[0].charAt(0) === '@')
-                  ? `procobj.variables['${params[0]}']`
-                  : JSON.stringify(setValueAsStringArray(params[0]))
-                rulecodeBuffer.push(`
+                if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
+                  if (!(params[0] in this.variables)) {
+                    throw new TypeError(`${currentRuleTitle} [${counter + 1}]:変数 ${params[0]} は未定義です.`)
+                  }
+                  valuestr = `procobj.variables['${params[0]}']`
+                } else {
+                  valuestr = JSON.stringify(parseStringToStringArray(params[0]))
+                }
+
+                currentTranspiledRule.code.push(`
                   return procobj.commandQuery(${valuestr}, '${params[1]}', '${params[2]}')
                     ? { success: true, behavior: '${successBehavior}' }
                     : { success: false, behavir: '${failureBehavior}' }
@@ -308,13 +332,25 @@ export class Processor {
                 break
               case 'set':
               case 'Sets':
-                valueAstr = (params[0].charAt(0) === '$' || params[0].charAt(0) === '@')
-                  ? `procobj.variables['${params[0]}']`
-                  : JSON.stringify(setValueAsStringArray(params[0]))
-                valueBstr = (params[1].charAt(0) === '$' || params[1].charAt(0) === '@')
-                  ? `procobj.variables['${params[1]}']`
-                  : JSON.stringify(setValueAsStringArray(params[1]))
-                rulecodeBuffer.push(`
+                if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
+                  if (!(params[0] in this.variables)) {
+                    throw new TypeError(`${currentRuleTitle} [${counter + 1}]:変数 ${params[0]} は未定義です.`)
+                  }
+                  valueAstr = `procobj.variables['${params[0]}']`
+                } else {
+                  valueAstr = JSON.stringify(parseStringToStringArray(params[0]))
+                }
+
+                if (params[1].charAt(0) === '$' || params[1].charAt(0) === '@') {
+                  if (!(params[1] in this.variables)) {
+                    throw new TypeError(`${currentRuleTitle} [${counter + 1}]:変数 ${params[1]} は未定義です.`)
+                  }
+                  valueBstr = `procobj.variables['${params[1]}']`
+                } else {
+                  valueBstr = JSON.stringify(parseStringToStringArray(params[1]))
+                }
+
+                currentTranspiledRule.code.push(`
                   return procobj.commandSets(${valueAstr}, ${valueBstr}, '${params[2]}', '${params[3]}')
                     ? { success: true, behavior: '${successBehavior}' }
                     : { success: false, behavir: '${failureBehavior}' }
@@ -322,7 +358,17 @@ export class Processor {
                 break
               case 'sort':
               case 'Sort':
-                rulecodeBuffer.push(`
+                if (!(params[0] in this.variables)) {
+                  throw new TypeError(`変数 ${params[0]} が未定義です.`)
+                } else {
+                  const descriptor = Object.getOwnPropertyDescriptor(this.variables, params[0])
+                  console.dir(descriptor)
+                  if (descriptor?.writable !== true) {
+                    throw new TypeError(`変数 ${params[0]} は定数のため保存先として指定できません.`)
+                  }
+                }
+
+                currentTranspiledRule.code.push(`
                   return procobj.commandSort('${params[0] || ''}', '${params[1] || ''}',  '${params[2] || 'asc'}')
                     ? { success: true, behavior: '${successBehavior}' }
                     : { success: false, behavir: '${failureBehavior}' }
@@ -330,7 +376,16 @@ export class Processor {
                 break
               case 'tr':
               case 'Translation':
-                rulecodeBuffer.push(`
+                if (!(params[0] in this.variables)) {
+                  throw new TypeError(`変数 ${params[0]} が未定義です.`)
+                } else {
+                  const descriptor = Object.getOwnPropertyDescriptor(this.variables, params[0])
+                  if (descriptor?.writable !== true) {
+                    throw new TypeError(`変数 ${params[0]} は定数のため保存先として指定できません.`)
+                  }
+                }
+
+                currentTranspiledRule.code.push(`
                   const table = procobj.createTranslationTable(
                     ${ JSON.stringify(procedure.lookup || []) }
                   )
@@ -342,15 +397,36 @@ export class Processor {
               case 'period':
               case 'Period':
                 if (params[3] == '') {
-                  throw new SyntaxError('Period: 値の保存先が指定されていません.')
+                  throw new SyntaxError('値の保存先が指定されていません.')
                 }
-                valueAstr = (params[0].charAt(0) === '$' || params[0].charAt(0) === '@')
-                  ? `procobj.variables['${params[0]}']`
-                  : JSON.stringify(setValueAsStringArray(params[0]))
-                valueBstr = (params[1].charAt(0) === '$' || params[1].charAt(0) === '@')
-                  ? `procobj.variables['${params[1]}']`
-                  : JSON.stringify(setValueAsStringArray(params[1]))
-                rulecodeBuffer.push(`
+                if (!(params[3] in this.variables)) {
+                  throw new TypeError(`変数 ${params[3]} が未定義です.`)
+                } else {
+                  const descriptor = Object.getOwnPropertyDescriptor(this.variables, params[3])
+                  if (descriptor?.writable !== true) {
+                    throw new TypeError(`変数 ${params[3]} は定数のため保存先として指定できません.`)
+                  }
+                }
+
+                if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
+                  if (!(params[0] in this.variables)) {
+                    throw new TypeError(`変数 ${params[0]} は未定義です.`)
+                  }
+                  valueAstr = `procobj.variables['${params[0]}']`
+                } else {
+                  valueAstr = JSON.stringify(parseStringToStringArray(params[0]))
+                }
+
+                if (params[1].charAt(0) === '$' || params[1].charAt(0) === '@') {
+                  if (!(params[1] in this.variables)) {
+                    throw new TypeError(`変数 ${params[1]} は未定義です.`)
+                  }
+                  valueBstr = `procobj.variables['${params[1]}']`
+                } else {
+                  valueBstr = JSON.stringify(parseStringToStringArray(params[1]))
+                }
+
+                currentTranspiledRule.code.push(`
                   return procobj.commandPeroid(${valueAstr}, ${valueBstr}, '${params[2] || 'months'}', '${params[3]}')
                     ? { success: true, behavior: '${successBehavior}' }
                     : { success: false, behavir: '${failureBehavior}' }
@@ -358,10 +434,16 @@ export class Processor {
                 break
               case 'put':
               case 'Store':
-                valuestr = (params[0].charAt(0) === '$' || params[0].charAt(0) === '@')
-                  ? `procobj.variables['${params[0]}']`
-                  : JSON.stringify(setValueAsStringArray(params[0]))
-                rulecodeBuffer.push(`
+                if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
+                  if (!(params[0] in this.variables)) {
+                    throw new TypeError(`変数 ${params[0]} は未定義です.`)
+                  }
+                  valuestr = `procobj.variables['${params[0]}']`
+                } else {
+                  valuestr = JSON.stringify(parseStringToStringArray(params[0]))
+                }
+
+                currentTranspiledRule.code.push(`
                   return procobj.commandStore(${valuestr}, '${params[1] || '$error'}', '${params[2]}')
                     ? { success: true, behavior: '${successBehavior}' }
                     : { success: false, behavir: '${failureBehavior}' }
@@ -377,29 +459,34 @@ export class Processor {
         }
 
         // コードバッファを保存
-        this.codeBuffer.push(rulecodeBuffer)
+        this.transpiledRuleset.push(currentTranspiledRule)
+      } else {
+        // コードのないルールセットは無視する
+        verbose(`${currentRuleTitle} には処理が含まれていないためトランスパイルでスキップしました.`)
       }
     }
   }
+
   /**
    * 逐次実行
    * @param content JESGO取得ドキュメント単体
-   * @param ruleset
    * @returns $.csv - csvの行アレイ $.errors - エラーメッセージアレイ
    */
-  public async run (content: pulledDocument, ruleset: LogicRuleSet[]): Promise<processorOutput | undefined> {
+  // public async run (content: pulledDocument, ruleset: LogicRuleSet[]): Promise<processorOutput | undefined> {
+  public async run (content: pulledDocument): Promise<processorOutput | undefined> {
     verbose('* PROCESSOR *')
     try {
       if (!content) {
         throw new Error('ドキュメントが指定されていません.')
       }
 
+      if (this.transpiledRuleset.length === 0) {
+        throw new Error('有効なルールセットがコンパイルされていません.')
+      }
+
       // 出力をクリア
       this.errorMessages.splice(0)
       this.csvRow.splice(0)
-
-      // コンパイル
-      await this.compile(ruleset)
 
       // 実行環境へ
       // ドキュメント変数の再定義
@@ -438,10 +525,10 @@ export class Processor {
     }
 
     // ルールを逐次処理
-    for (let index = 0; index < ruleset.length; index++) {
-      const currentRule = ruleset[index]
-      const currentRuleTitle = currentRule.title
-      const currentCodeBuffer = this.codeBuffer[index]
+    for (let index = 0; index < this.transpiledRuleset.length; index++) {
+      const currentRuleTitle = this.transpiledRuleset[index].title
+      const currentCodeBuffer = this.transpiledRuleset[index].code
+      const currentSources = this.transpiledRuleset[index].source
 
       verbose(`* ruleset '${currentRuleTitle}'`)
       try {
@@ -459,33 +546,31 @@ export class Processor {
           name => delete this.variables[name]
         )
         // 設定された分だけを設定する
-        if (currentRule?.source) {
-          for (let sourceIndex = 0; sourceIndex < currentRule.source.length; sourceIndex++) {
-            // ソース名は@1～なので indexに+1する
-            verbose(`** parse source @${sourceIndex + 1}`)
-            const sourceName = `@${sourceIndex + 1}`
-            const path = currentRule.source[sourceIndex]?.path || ''
-            const subpath = currentRule.source[sourceIndex]?.subpath
-            switch (path) {
-              case '':
-                // 存在しないとは思われるが空白pathはソース未定義にする
-                break
-              case '$hash':
-              case '$his_id':
-              case '$name':
-              case '$date_of_birth':
-                // ドキュメント変数の代入
-                Object.defineProperty(this.variables, sourceName, {
-                  value: this.variables[path],
-                  writable: false
-                })
-                break
-              default:
-                Object.defineProperty(this.variables, sourceName, {
-                  value: parseJesgo(content.documentList, subpath ? [path, subpath] : path),
-                  writable: false
-                })
-            }
+        for (let sourceIndex = 0; sourceIndex < currentSources.length; sourceIndex++) {
+          // ソース名は@1～なので indexに+1する
+          verbose(`** parse source @${sourceIndex + 1}`)
+          const sourceName = `@${sourceIndex + 1}`
+          const path = currentSources[sourceIndex]?.path || ''
+          const subpath = currentSources[sourceIndex]?.subpath
+          switch (path) {
+            case '':
+              // 存在しないとは思われるが空白pathはソース未定義にする
+              break
+            case '$hash':
+            case '$his_id':
+            case '$name':
+            case '$date_of_birth':
+              // ドキュメント変数の代入
+              Object.defineProperty(this.variables, sourceName, {
+                value: this.variables[path],
+                writable: false
+              })
+              break
+            default:
+              Object.defineProperty(this.variables, sourceName, {
+                value: parseJesgo(content.documentList, subpath ? [path, subpath] : path),
+                writable: false
+              })
           }
         }
 
@@ -494,55 +579,46 @@ export class Processor {
       } catch (e) {
         console.error(e as Error)
         throw new Error(`${currentRuleTitle} 初期化中にエラー\n` + (e as Error).message)
-        // ElMessageBox.alert((e as Error).message, `${currentRuleTitle} 初期化中にエラー`)
-        // return undefined
       }
 
-      // コード部分を処理
-      if (currentRule?.procedure) {
-        const procedures: LogicBlock[] = currentRule.procedure
+      // コードを実行
+      // eslint-disable-next-line no-labels
+      instructionLoop: for (let counter = 0; counter < currentCodeBuffer.length;) {
+        try {
+          verbose(`** step ${counter + 1}\n${currentCodeBuffer[counter]}`)
 
-        // eslint-disable-next-line no-labels
-        instructionLoop: for (let counter = 0; counter < procedures.length;) {
-          const procedure = procedures[counter]
+          let instruction: instructionFunction = new Function('procobj', currentCodeBuffer[counter]) as instructionFunction
 
-          try {
-            const command = procedure.type as newBlockType
-            verbose(`** step ${counter + 1} directive ${command}`)
-            console.log(currentCodeBuffer[counter])
+          // ステップの実行 - ロックアップ防止のためsetTimeout = 0でラップ
+          await new Promise(resolve => {
+            setTimeout(() => { resolve(undefined) }, 0)
+          })
+          const result: instructionResult = instruction(this)
 
-            let instruction: instructionFunction = new Function('procobj', currentCodeBuffer[counter]) as instructionFunction
-            // ステップの実行 - ロックアップ防止のためsetTimeout = 0でラップ
-            await new Promise(resolve => {
-              setTimeout(() => { resolve(undefined) }, 0)
-            })
-            const result: instructionResult = instruction(this)
-
-            // 次のステップへ
-            verbose(`=> result: ${result.behavior}`)
-            switch (result.behavior) {
-              case 'Exit':
-                if (!result.success) {
-                  // 症例に対する処理の中止は処理の不成立の場合のみ
-                  return undefined
-                }
-              // Abortと同義になる
-              // eslint-disable-next-line no-fallthrough
-              case 'Abort':
-                // 現在のルール処理を終了
-                // eslint-disable-next-line no-labels
-                break instructionLoop
-              default:
-                if (!Number.isNaN(Number(result.behavior))) {
-                  counter += Number(result.behavior)
-                } else {
-                  counter++
-                }
-            }
-          } catch (e) {
-            console.error(e as Error)
-            throw new Error(`'${currentRuleTitle}' @${counter + 1} でエラー\n` + (e as Error).message)
+          // 次のステップへ
+          verbose(`=> result: ${result.behavior}`)
+          switch (result.behavior) {
+            case 'Exit':
+              if (!result.success) {
+                // 症例に対する処理の中止は処理の不成立の場合のみ
+                return undefined
+              }
+            // Abortと同義になる
+            // eslint-disable-next-line no-fallthrough
+            case 'Abort':
+              // 現在のルール処理を終了
+              // eslint-disable-next-line no-labels
+              break instructionLoop
+            default:
+              if (!Number.isNaN(Number(result.behavior))) {
+                counter += Number(result.behavior)
+              } else {
+                counter++
+              }
           }
+        } catch (e) {
+          console.error(e as Error)
+          throw new Error(`'${currentRuleTitle}' @${counter + 1} でエラー\n` + (e as Error).message)
         }
       }
     }
@@ -759,7 +835,7 @@ export class Processor {
    */
   private commandSort = (variableName = '', indexPath = '', mode: commandSortDirections = 'asc'): boolean => {
     if (indexPath.trim() === '') {
-      // パス未指定 - 単純比較を行う
+      // パス未指定
       return this.commandVariables(
         mode === 'asc' || mode === 'ascend'
           ? this.variables[variableName].sort()
@@ -845,9 +921,9 @@ export class Processor {
     const datePattern = /(?<year>\d{4})[-/](?<month>0?[1-9]|1[0-2])[-/](?<date>0?[1-9]|[12][0-9]|3[01])/
 
     // 値の検証
-    const baseMatch = valueA[0].toString().match(datePattern)
+    const baseMatch = (valueA[0] || '').toString().match(datePattern)
     if (baseMatch === null) {
-      throw new TypeError(`${valueA[0].toString()}は有効な日付文字列ではありません.`)
+      throw new TypeError(`${(valueA[0] || '').toString()}は有効な日付文字列ではありません.`)
     }
     const baseDate = new Date(
       Number(baseMatch.groups?.year || '1970'),
@@ -857,9 +933,9 @@ export class Processor {
 
     const result: string[] = []
     for (const targetValue of valueB) {
-      const targetMatch = targetValue.toString().match(datePattern)
+      const targetMatch = (targetValue || '').toString().match(datePattern)
       if (targetMatch === null) {
-        throw new TypeError(`${targetValue.toString()}は有効な日付文字列ではありません.`)
+        throw new TypeError(`${(targetValue || '').toString()}は有効な日付文字列ではありません.`)
       }
 
       const targetDate = new Date(
@@ -1070,6 +1146,7 @@ export function parseStringToStringArray (value: string): string[] {
 // eslint-disable-next-line camelcase
 export async function processor (content: pulledDocument, rules: LogicRuleSet[], documentVariables?:string[]): Promise<undefined | processorOutput> {
   const processor = new Processor(documentVariables)
+  processor.compile(rules)
 
-  return await processor.run(content, rules)
+  return await processor.run(content)
 }
