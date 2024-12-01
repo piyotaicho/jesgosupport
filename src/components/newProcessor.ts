@@ -1,7 +1,5 @@
-import { parseMinWidth } from 'node_modules/element-plus/es/components/table/src/util.ts'
 import { pulledDocument, processorOutput, JsonObject, LogicRuleSet, LogicBlock, BlockType, SourceBlock } from './types'
 import { parseJesgo, verbose } from './utilities'
-import { compile } from 'vue'
 
 interface instructionResult {
   success: boolean
@@ -27,7 +25,7 @@ type commandPeriodOperators = 'years' | 'years,roundup' | 'months' | 'months,rou
 type commandStoreFieldSeparators = 'first' | 'whitespace' | 'colon' | 'comma' | 'semicolon'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type instructionFunction = (procobj: Processor) => instructionResult
+type instructionFunction = (processor: Processor) => instructionResult
 
 type translationTableObject = {
   match: (value: string) => boolean
@@ -112,6 +110,7 @@ const storeProxyHandler: ProxyHandler<VariableStore> = {
         }
       )
     }
+    verbose(`* declare variable ${property}`)
     return true
   },
 
@@ -175,7 +174,6 @@ export class Processor {
       for (const globalVariableName of globalVariables) {
         if (globalVariableName.charAt(0) === '$') {
           Object.defineProperty(this.variables, globalVariableName, { writable: true })
-          verbose(`* declare variable ${globalVariableName}`)
         }
       }
     }
@@ -188,7 +186,7 @@ export class Processor {
     const numberOfRegister = 10
     for (let registerIndex = 0; registerIndex < numberOfRegister; registerIndex++) {
       const registerName = `$${registerIndex}`
-      if (!Object.hasOwn(this.variables, registerName)) {
+      if (!(registerName in this.variables)) {
         Object.defineProperty(this.variables, registerName, {})
       }
       this.variables[registerName] = []
@@ -312,16 +310,14 @@ export class Processor {
             const successBehavior: string = procedure.trueBehavior.toString() || '+1'
             const failureBehavior: string = (procedure?.falseBehavior || 'Abort').toString()
 
-            let valuestr: string, valueAstr: string, valueBstr: string, codeStr: string[] = []
+            let checkstr: string[], valuestr: string, valueAstr: string, valueBstr: string, codeStr: string[] = []
 
             switch (command) {
               case 'var':
               case 'Variables':
                 if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
-                  if (!(params[0] in this.variables)) {
-                    throw new TypeError(`変数 ${params[0]} は未定義です.`)
-                  }
-                  valuestr = `procobj.variables['${params[0]}']`
+                  checkstr = this.variables[params[0]]
+                  valuestr = `processor.variables['${params[0]}']`
                 } else {
                   valuestr = JSON.stringify(parseStringToStringArray(params[0]))
                 }
@@ -330,15 +326,13 @@ export class Processor {
                   throw new SyntaxError(`${params[2]} は不正な指示です.`)
                 }
 
-                codeStr.push(`procobj.commandVariables(${valuestr}, '${params[1] || ''}', '${params[2] || 'value'}')`)
+                codeStr.push(`processor.commandVariables(${valuestr}, '${params[1] || ''}', '${params[2] || 'value'}')`)
                 break
               case 'oper':
               case 'Operators':
                 if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
-                  if (!(params[0] in this.variables)) {
-                    throw new TypeError(`変数 ${params[0]} は未定義です.`)
-                  }
-                  valueAstr = `procobj.variables['${params[0]}']`
+                  checkstr = this.variables[params[0]]
+                  valueAstr = `processor.variables['${params[0]}']`
                 } else {
                   valueAstr = JSON.stringify(parseStringToStringArray(params[0]))
                 }
@@ -348,10 +342,8 @@ export class Processor {
                 }
 
                 if (params[2].charAt(0) === '$' || params[2].charAt(0) === '@') {
-                  if (!(params[2] in this.variables)) {
-                    throw new TypeError(`変数 ${params[2]} は未定義です.`)
-                  }
-                  valueBstr = `procobj.variables['${params[2]}']`
+                  checkstr = this.variables[params[2]]
+                  valueBstr = `processor.variables['${params[2]}']`
                 } else {
                   valueBstr = JSON.stringify(parseStringToStringArray(params[2]))
                 }
@@ -363,37 +355,31 @@ export class Processor {
                   throw new SyntaxError(`不正な比較演算子 ${params[3]} が指示されました.`)
                 }
 
-                codeStr.push(`procobj.commandOperators(${valueAstr},  '${params[1] || 'value'}', ${valueBstr}, '${params[3]}')`)
+                codeStr.push(`processor.commandOperators(${valueAstr},  '${params[1] || 'value'}', ${valueBstr}, '${params[3]}')`)
                 break
               case 'query':
               case 'Query':
                 if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
-                  if (!(params[0] in this.variables)) {
-                    throw new TypeError(`変数 ${params[0]} は未定義です.`)
-                  }
-                  valuestr = `procobj.variables['${params[0]}']`
+                  checkstr = this.variables[params[0]]
+                  valuestr = `processor.variables['${params[0]}']`
                 } else {
                   valuestr = JSON.stringify(parseStringToStringArray(params[0]))
                 }
 
-                codeStr.push(`procobj.commandQuery(${valuestr}, '${params[1]}', '${params[2]}')`)
+                codeStr.push(`processor.commandQuery(${valuestr}, '${params[1]}', '${params[2]}')`)
                 break
               case 'set':
               case 'Sets':
                 if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
-                  if (!(params[0] in this.variables)) {
-                    throw new TypeError(`変数 ${params[0]} は未定義です.`)
-                  }
-                  valueAstr = `procobj.variables['${params[0]}']`
+                  checkstr = this.variables[params[0]]
+                  valueAstr = `processor.variables['${params[0]}']`
                 } else {
                   valueAstr = JSON.stringify(parseStringToStringArray(params[0]))
                 }
 
                 if (params[1].charAt(0) === '$' || params[1].charAt(0) === '@') {
-                  if (!(params[1] in this.variables)) {
-                    throw new TypeError(`変数 ${params[1]} は未定義です.`)
-                  }
-                  valueBstr = `procobj.variables['${params[1]}']`
+                  checkstr = this.variables[params[1]]
+                  valueBstr = `processor.variables['${params[1]}']`
                 } else {
                   valueBstr = JSON.stringify(parseStringToStringArray(params[1]))
                 }
@@ -402,48 +388,27 @@ export class Processor {
                   throw new SyntaxError(`${params[2]} は不正な指示です.`)
                 }
 
-                if (!(params[3] in this.variables)) {
-                  throw new TypeError(`変数 ${params[3]} が未定義です.`)
-                } else {
-                  const descriptor = Object.getOwnPropertyDescriptor(this.variables, params[3])
-                  if (descriptor?.writable !== true) {
-                    throw new TypeError(`変数 ${params[3]} は定数のため保存先として指定できません.`)
-                  }
-                }
+                this.variables[params[3]] = []
 
-                codeStr.push(`procobj.commandSets(${valueAstr}, ${valueBstr}, '${params[2] || 'add'}', '${params[3]}')`)
+                codeStr.push(`processor.commandSets(${valueAstr}, ${valueBstr}, '${params[2] || 'add'}', '${params[3]}')`)
                 break
               case 'sort':
               case 'Sort':
-                if (!(params[0] in this.variables)) {
-                  throw new TypeError(`変数 ${params[0]} が未定義です.`)
-                } else {
-                  const descriptor = Object.getOwnPropertyDescriptor(this.variables, params[0])
-                  if (descriptor?.writable !== true) {
-                    throw new TypeError(`変数 ${params[0]} は定数のため保存先として指定できません.`)
-                  }
-                }
+                this.variables[params[0]] = []
 
                 if (params[2] && !['asc', 'ascend', 'desc', 'descend'].includes(params[2])) {
                   throw new SyntaxError(`${params[2]} は不正な指示です.`)
                 }
 
-                codeStr.push(`procobj.commandSort('${params[0] || ''}', '${params[1] || ''}',  '${params[2] || 'asc'}')`)
+                codeStr.push(`processor.commandSort('${params[0]}', '${params[1] || ''}',  '${params[2] || 'asc'}')`)
                 break
               case 'tr':
               case 'Translation':
-                if (!(params[0] in this.variables)) {
-                  throw new TypeError(`変数 ${params[0]} が未定義です.`)
-                } else {
-                  const descriptor = Object.getOwnPropertyDescriptor(this.variables, params[0])
-                  if (descriptor?.writable !== true) {
-                    throw new TypeError(`変数 ${params[0]} は定数のため保存先として指定できません.`)
-                  }
-                }
+                this.variables[params[0]] = []
 
                 codeStr.push(
-                  `const table = procobj.createTranslationTable(${ JSON.stringify(procedure.lookup || []) })`,
-                  `procobj.commandTranslation( '${params[0] || ''}', table)`
+                  `const table = processor.createTranslationTable(${ JSON.stringify(procedure.lookup || []) })`,
+                  `processor.commandTranslation( '${params[0]}', table)`
                 )
                 break
               case 'period':
@@ -451,29 +416,18 @@ export class Processor {
                 if (params[3] == '') {
                   throw new SyntaxError('値の保存先が指定されていません.')
                 }
-                if (!(params[3] in this.variables)) {
-                  throw new TypeError(`変数 ${params[3]} が未定義です.`)
-                } else {
-                  const descriptor = Object.getOwnPropertyDescriptor(this.variables, params[3])
-                  if (descriptor?.writable !== true) {
-                    throw new TypeError(`変数 ${params[3]} は定数のため保存先として指定できません.`)
-                  }
-                }
+                this.variables[params[3]] = []
 
                 if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
-                  if (!(params[0] in this.variables)) {
-                    throw new TypeError(`変数 ${params[0]} は未定義です.`)
-                  }
-                  valueAstr = `procobj.variables['${params[0]}']`
+                  checkstr = this.variables[params[0]]
+                  valueAstr = `processor.variables['${params[0]}']`
                 } else {
                   valueAstr = JSON.stringify(parseStringToStringArray(params[0]))
                 }
 
                 if (params[1].charAt(0) === '$' || params[1].charAt(0) === '@') {
-                  if (!(params[1] in this.variables)) {
-                    throw new TypeError(`変数 ${params[1]} は未定義です.`)
-                  }
-                  valueBstr = `procobj.variables['${params[1]}']`
+                  checkstr = this.variables[params[1]]
+                  valueBstr = `processor.variables['${params[1]}']`
                 } else {
                   valueBstr = JSON.stringify(parseStringToStringArray(params[1]))
                 }
@@ -482,15 +436,13 @@ export class Processor {
                   throw new SyntaxError(`${params[2]} は不正な指示です.`)
                 }
 
-                codeStr.push(`procobj.commandPeroid(${valueAstr}, ${valueBstr}, '${params[2] || 'months'}', '${params[3]}')`)
+                codeStr.push(`processor.commandPeroid(${valueAstr}, ${valueBstr}, '${params[2] || 'months'}', '${params[3]}')`)
                 break
               case 'put':
               case 'Store':
                 if (params[0].charAt(0) === '$' || params[0].charAt(0) === '@') {
-                  if (!(params[0] in this.variables)) {
-                    throw new TypeError(`変数 ${params[0]} は未定義です.`)
-                  }
-                  valuestr = `procobj.variables['${params[0]}']`
+                  checkstr = this.variables[params[0]]
+                  valuestr = `processor.variables['${params[0]}']`
                 } else {
                   valuestr = JSON.stringify(parseStringToStringArray(params[0]))
                 }
@@ -499,7 +451,7 @@ export class Processor {
                   throw new SyntaxError(`${params[2]} は不正な指示です.`)
                 }
 
-                codeStr.push(`procobj.commandStore(${valuestr}, '${params[1] || '$error'}', '${params[2] || 'first'}')`)
+                codeStr.push(`processor.commandStore(${valuestr}, '${params[1] || '$error'}', '${params[2] || 'first'}')`)
                 break
               default:
                 throw new SyntaxError(`無効な命令: ${command}`)
@@ -613,7 +565,7 @@ export class Processor {
         try {
           verbose(`@${counter + 1}\n${currentCodeBuffer[counter]}`)
 
-          let instruction: instructionFunction = new Function('procobj', currentCodeBuffer[counter]) as instructionFunction
+          let instruction: instructionFunction = new Function('processor', currentCodeBuffer[counter]) as instructionFunction
 
           // ステップの実行 - ロックアップ防止のためsetTimeout = 0でラップ
           const result: instructionResult = await new Promise(resolve => {
