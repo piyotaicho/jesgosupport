@@ -1,6 +1,6 @@
 import { InjectionKey } from 'vue'
 import { createStore, useStore as vuexUseStore, Store } from 'vuex'
-import { ErrorObject, JsonObject, CsvObject, LogicRuleSet, configObject, LogicBlock } from './types'
+import { ErrorObject, JsonObject, CsvObject, LogicRuleSet, configObject, LogicBlock, pulledDocument } from './types'
 import { parseJesgo, dropNullValues, queryDocument } from './utilities'
 
 export interface State {
@@ -49,7 +49,7 @@ export const store = createStore<State>({
     // 症例ドキュメント関連のgetters
     // マスタークエリをドキュメントに適用して取得・スキップはしない
     queriedDocument: (state) => {
-      return queryDocument(state.JsonDocument, state.RuleSetConfig?.masterQuery, state.RuleSetConfig?.masterBasePointer)
+      return queryDocument(state.JsonDocument as pulledDocument[], state.RuleSetConfig?.masterQuery, state.RuleSetConfig?.masterBasePointer)
     },
     documentLength: (state) => Array.isArray(state.JsonDocument) ? state.JsonDocument.length : 0,
     // indexを指定したドキュメント取得(表示用)
