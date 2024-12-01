@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { pulledDocument, processorOutput } from './types'
-import { CaretRight, Download, Upload } from '@element-plus/icons-vue'
+import { Download, Upload } from '@element-plus/icons-vue'
 import { ref, computed, nextTick } from 'vue'
 import { useStore } from './store'
 import { ElMessageBox } from 'element-plus'
@@ -113,51 +113,68 @@ async function clearRuleset () {
  * スクリプトの実行トリガ
  */
 function performProcessing (command?:string): void {
-  if (command === 'compile') {
-    //
+  // なにもやることがない
+  if (store.getters.rules.length === 0) {
+    ElMessageBox.alert('処理するルールセットがありません.')
+    return
   }
-  if (store.getters.documentLength === 0 || store.getters.rules.length === 0) {
-    console.log('ドキュメントとスクリプトがありません')
-  }
-
-  // 出力をクリア
-  store.commit('clearCsvDocument')
-  store.commit('clearErrorDocument')
 
   const processBody = async () => {
     try {
+      // 処理中フラグを設定
+      processing.value = true
+
       // 処理ユニットの準備
       const processor = new Processor(store.getters.documentVariables)
-      await processor.compile(store.getters.rules)
+      try {
+        await processor.compile(store.getters.rules)
+      } catch (e) {
+        console.error(e)
+        if ((e as Error)?.message) {
+          const messages = ((e as Error).message as string).split('\n')
+          ElMessageBox.alert(messages.slice(1).join('\n'), messages[0])
+        }
+        throw new Error()
+      }
 
-      // 状態表示用reactiveの設定
-      totalCases.value = store.getters.documentLength
-      processing.value = true
-      // ドキュメントの逐次処理
-      for (let index = 0; index < store.getters.documentLength; index++) {
-        if (processing.value) {
-          // プログレスバーの更新
-          caseIndex.value = index
-  
-          // ドキュメントの処理
-          const jsonDocument:pulledDocument = store.getters.queriedDocument[index]
+      if (command !== 'compile') {
+        // 出力をクリア
+        store.commit('clearCsvDocument')
+        store.commit('clearErrorDocument')
 
-          try {
-            const returnValues = await processor.run(jsonDocument)
-            if (returnValues !== undefined) {
-              store.commit('addCsvDocument', returnValues.csv)
-              store.commit('addErrorDocument', {
-                hash: jsonDocument?.hash || '',
-                errors: [...(returnValues.errors || [])]
-              })
+        if (store.getters.documentLength > 0) {
+          // 状態表示用reactiveの設定
+          totalCases.value = store.getters.documentLength
+
+          // ドキュメントの逐次処理
+          for (let index = 0; index < store.getters.documentLength; index++) {
+            if (processing.value) {
+              // プログレスバーの更新
+              caseIndex.value = index
+      
+              // ドキュメントの処理
+              const jsonDocument:pulledDocument = store.getters.queriedDocument[index]
+
+              try {
+                console.log('CALL PROCESSOR')
+                console.dir(jsonDocument)
+                const returnValues = await processor.run(jsonDocument)
+                if (returnValues !== undefined) {
+                  store.commit('addCsvDocument', [...returnValues.csv])
+                  store.commit('addErrorDocument', {
+                    hash: jsonDocument?.hash || '',
+                    errors: [...(returnValues.errors || [])]
+                  })
+                }
+              } catch (e) {
+                console.error(e)
+                if ((e as Error)?.message) {
+                  const messages = ((e as Error).message as string).split('\n')
+                  ElMessageBox.alert(messages.slice(1).join('\n'), messages[0])
+                }
+                throw new Error()
+              }
             }
-          } catch (e) {
-            console.error(e)
-            if ((e as Error)?.message) {
-              const messages = ((e as Error).message as string).split('\n')
-              ElMessageBox.alert(messages.slice(1).join('\n'), messages[0])
-            }
-            throw new Error()
           }
         }
       }
@@ -167,6 +184,10 @@ function performProcessing (command?:string): void {
     }
     //
   }
+
+  // 処理実行中フラグを初期化
+  processing.value = false
+  // 非同期実行へ
   processBody()
 }
 
@@ -182,7 +203,7 @@ async function processDocument (index:number, processor: Processor) {
   // ドキュメントに処理を適用
   let returnObject: processorOutput|undefined
   // ドキュメントの直接取得
-  const jsonDocument:pulledDocument = store.getters.queriedDocument[index]
+  const jsonDocument:pulledDocument = await store.getters.queriedDocument[index]
 
   // 空白ドキュメントのスキップ指示あり
   if (store.getters.rulesetConfig?.skipUnmatchedRecord === true) {
@@ -236,14 +257,14 @@ async function processDocument (index:number, processor: Processor) {
       </el-dialog>
     </div>
     <div>
-      <!-- <el-dropdown split-button type="primary" @click="performProcessing" :disabled="processing">
-        実行<el-icon><CaretRight/></el-icon> -->
-        <el-button type="primary" :icon="CaretRight" @click="performProcessing()" :loading="processing" :disabled="processing">実行</el-button>
-        <!-- コンパイルとステップ実行は未実装 <template #dropdown>
+      <el-dropdown split-button type="primary" @click="performProcessing" @command="performProcessing" :disabled="processing">
+        実行
+        <!-- <el-button type="primary" :icon="CaretRight" @click="performProcessing()" :loading="processing" :disabled="processing">実行</el-button> -->
+        <template #dropdown>
           <el-dropdown-item :disabled="processing" command="compile">コンパイルのみ実行</el-dropdown-item>
-          <el-dropdown-item disabled command="step">ステップ実行モード</el-dropdown-item>
-        </template> -->
-      <!-- </el-dropdown> -->
+          <!-- <el-dropdown-item disabled command="step">ステップ実行モード</el-dropdown-item> -->
+        </template>
+      </el-dropdown>
       <el-dialog
         :model-value="(processing || caseIndex >= 0)"
         :show-close="false"
