@@ -1120,7 +1120,8 @@ export function parseStringToStringArray (value: string): string[] {
   let quoteType: string = ''
   let currentToken: string = ''
 
-  const delimiters = [' ', ',', '。', '、', '「', '」', '『', '』', '(', ')', '[', ']', '{', '}', '<', '>', '\t', '\r', '\n']
+  // const delimiters = [' ', ',', '。', '、', '「', '」', '『', '』', '(', ')', '[', ']', '{', '}', '<', '>', '\t', '\r', '\n']
+  const delimiters = [' ', ',', '\t', '\r', '\n']
   for (const char of value.trim()) {
     // 非クオート状態で区切り文字(全角スペースも区切り文字扱い)
     if (quoteType === '' && delimiters.includes(char)) {
