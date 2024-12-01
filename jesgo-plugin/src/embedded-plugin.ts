@@ -28,7 +28,8 @@ export type pluginInformation = {
 export async function main (
   docData: setterPluginArgument[],
   apicall: (docData: getterPluginArgument|updateDocument|updateDocument[], mode: boolean) => string,
-  pluginInfo: pluginInformation): Promise<mainOutput> {
+  pluginInfo: pluginInformation
+): Promise<mainOutput> {
   console.log(`${pluginInfo.rulesetObject.title}@${pluginInfo.version} (C) 2023-2024 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
 
   // 更新モードなのでdocDataには表示されている全てのドキュメントが入っている

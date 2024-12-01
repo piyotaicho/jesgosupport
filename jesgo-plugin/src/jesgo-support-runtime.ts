@@ -4,12 +4,12 @@ import { handler, verbose, loadJSONfile } from './runtime-common'
 // スクリプトプリセット
 import { scriptCC, scriptEM, scriptOV, checkCC, checkEM, checkOV } from './support-scripts/scripts-v1'
 
-const version = '0.9.1'
+const version = '1.0'
 const filename = 'jesgo-support-runtime.ts'
 export async function init ():Promise<scriptInfo> {
   return {
-    plugin_name: '腫瘍登録スクリプト一括実行',
-    plugin_version: '1.2',
+    plugin_name: '腫瘍登録スクリプト一括実行TEST',
+    plugin_version: '1.3',
     all_patient: true,
     attach_patient_info: true,
     show_upload_dialog: false,
