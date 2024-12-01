@@ -2,12 +2,12 @@
 import { getterPluginArgument, pulledDocument, updateDocument, setterPluginArgument } from './types'
 import { showModalDialog, createElementFromHtml } from './modal-dialog'
 import { unparse as papaUnparse } from 'papaparse'
-import { processor } from '../../src/components/newProcessor'
+import { Processor } from '../../src/components/newProcessor'
 import { LogicRuleSet, configObject, fileRuleSetV1 } from '../../src/components/types'
 import { queryDocument, userDownload } from '../../src/components/utilities'
 import { JSONPath } from 'jsonpath-plus'
 
-export const runtimeVersion = '1.0.4'
+export const runtimeVersion = '1.0.5'
 export const runtimeCredit = `Version ${runtimeVersion} Copyright &copy; 2023-2024 by P4mohnet`
 
 /**
@@ -79,8 +79,7 @@ export function saveCSV (data:unknown[], offset = 0, filename = 'JESGO出力デ�
         offsettedData,
         {
           header: false,
-          delimiter: ',',
-          quoteChar: '"'
+          quotes: false
         }
       ),
       filename,
@@ -124,7 +123,7 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
 
   let rulesetConfig: configObject = {}
   let rulesetTitle = ''
-  let script: LogicRuleSet[] = []
+  let rulesetScript: LogicRuleSet[] = []
   const csvBuffer: string[][] = []
   const errorBuffer:typeErrorBuffer[] = []
 
@@ -148,7 +147,7 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
       // ルールセットファイルを分解して設定
       rulesetTitle = loadedContent.title
       rulesetConfig = loadedContent?.config || {}
-      script = loadedContent.rules
+      rulesetScript = loadedContent.rules
     } catch (e: unknown) {
       const message = (e as Error)?.message || 'エラーです'
       window.alert(message)
@@ -181,15 +180,33 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
     const statusline3 = document.getElementById('plugin-statusline3') as HTMLSpanElement
 
     downloadButton.addEventListener('click', () => {
-      if (csvBuffer.length > 0) {
-        saveCSV(csvBuffer, rulesetConfig?.csvOffset || 0, undefined, !(rulesetConfig?.csvUnicode || false))
-      }
+      saveCSV(csvBuffer, rulesetConfig?.csvOffset || 0, 'JESGO出力データ.csv', !(rulesetConfig?.csvUnicode || false))
     })
 
     // 症例数ステータスの更新
     if (statusline1 && statusline2) {
       statusline1.innerText = `読み込まれた症例数は ${targets.length} 症例です.`
-      statusline2.innerText = `${rulesetTitle} - 処理中です`
+      statusline2.innerText = `${rulesetTitle} - コンパイル中です`
+    }
+
+    // プロセッサの構築
+    const processor = new Processor(rulesetConfig?.documentVariables || [])
+    try {
+      await processor.compile(rulesetScript)  
+    } catch (e) {
+      // ダイアログ表示をエラー中断に変更
+      statusline1.innerText = ''
+      statusline2.innerText = 'スクリプトエラーのため処理を中止しました.'
+      downloadButton.disabled = true
+
+      // コンソールにエラーを出力しておく
+      console.error(e)
+    }
+
+    // 症例数ステータスの更新
+    if (statusline1 && statusline2) {
+      statusline1.innerText = `読み込まれた症例数は ${targets.length} 症例です.`
+      statusline2.innerText = `${rulesetTitle} - データの処理中です`
     }
 
     // ドキュメントの逐次処理
@@ -229,12 +246,12 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
           continue
         }
 
-        const result = await processor(queriedDocument, script, rulesetConfig?.documentVariables) as processorOutputFormat
+        const result = await processor.run(queriedDocument) as processorOutputFormat
 
         if (result) {
           // 結果
           if (result?.csv && result.csv.length > 0) {
-            csvBuffer.push(result.csv)
+            csvBuffer.push([...result.csv])
           }
 
           // エラーオブジェクトの生成
@@ -250,7 +267,7 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
                   his_id: caseData[0]?.his_id,
                   name: caseData[0]?.name,
                   documentId: documentIds[0],
-                  errors: result.errors
+                  errors: [...result.errors]
                 })
               }
             } else {
@@ -266,7 +283,7 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
                   his_id: caseData[0]?.his_id,
                   name: caseData[0]?.name,
                   documentId: documentIds[0],
-                  errors: result.errors
+                  errors: [...result.errors]
                 })
               }
             }
@@ -274,7 +291,7 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
         }
       } catch (e) {
         const message = (e as Error)?.message || '処理エラーが発生しました'
-        if (!window.confirm(`${message} 無視して次の症例に対して処理を継続しますか？`)) {
+        if (!window.confirm(`${message}\n無視して次の症例に対して処理を継続しますか？`)) {
           continue
         } else {
           // ダイアログ表示をエラー中断に変更
