@@ -9,7 +9,7 @@
         </template>
         <div>
           <div>
-            <el-button type="primary" :icon="Delete" :disabled="disabledButtons">エラー情報をクリア</el-button>
+            <el-button type="primary" :icon="Delete" :disabled="disabledButtons" @click="eraseError">エラー情報をクリア</el-button>
           </div>
           <div>
             <el-button type="primary" :icon="Download" :disabled="disabledButtons" @click="saveError">エラー情報を保存</el-button>
@@ -50,6 +50,8 @@ const saveError = ():void => {
     userDownload(data, 'errorreports.json')
   }
 }
+
+const eraseError = ():void => store.commit('clearErrorDocument')
 </script>
 
 <style>
