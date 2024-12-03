@@ -102,6 +102,8 @@ export function saveCSV (data:unknown[], offset = 0, filename = 'JESGO出力デ�
  * SPAN #plugin-statusline1 #plugin-statusline2 #plugin-statusline3
  */
 export async function handler (data: setterPluginArgument[], scriptGetter: () => Promise<unknown>, dialogHTMLsource: string, getterAPIcall?: (arg: getterPluginArgument) => string): Promise<updateDocument[]|undefined> {
+  console.info(`JESGO support tool runtime ${runtimeVersion} ${runtimeCredit}`)
+
   // データ無し
   const dataLength = data.length
   if (dataLength === 0) {
@@ -189,8 +191,8 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
       statusline2.innerText = `${rulesetTitle} - コンパイル中です`
     }
 
-    // プロセッサの構築
-    const processor = new Processor(rulesetConfig?.documentVariables || [])
+    // プロセッサの構築 (プラグインではログを行わない)
+    const processor = new Processor(rulesetConfig?.documentVariables || [], true)
     try {
       await processor.compile(rulesetScript)  
     } catch (e) {
@@ -221,7 +223,7 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
 
       // ダイアログのDOMが消失した = modalがcloseされた と判断して処理を中止する
       if (!document.getElementById('plugin-processing')) {
-        verbose(undefined, 'Plugin-aborted by closing the dialog.')
+        console.warn('Plugin-aborted by closing the dialog.')
         return
       }
 
