@@ -124,8 +124,15 @@ function performProcessing (command?:string): void {
       // 処理中フラグを設定
       processing.value = true
 
+      // ロギングフラグ
+      let verbose = false
+      if (command === 'verbose-run' || command === 'compile') {
+        verbose = true
+      }
+
       // 処理ユニットの準備
-      const processor = new Processor(store.getters.documentVariables)
+      const processor = new Processor(store.getters.documentVariables, !verbose)
+
       try {
         await processor.compile(store.getters.rules)
       } catch (e) {
@@ -155,9 +162,15 @@ function performProcessing (command?:string): void {
               // ドキュメントの処理
               const jsonDocument:pulledDocument = store.getters.queriedDocument[index]
 
+              // 空ドキュメントのスキップ機能を確認
+              if (store.getters.rulesetConfig?.skipUnmatchedRecord) {
+                if ((jsonDocument?.documentList || []).length === 0) {
+                  continue
+                }
+              }
+
               try {
-                console.log('CALL PROCESSOR')
-                console.dir(jsonDocument)
+                // ドキュメントを処理
                 const returnValues = await processor.run(jsonDocument)
                 if (returnValues !== undefined) {
                   store.commit('addCsvDocument', [...returnValues.csv])
@@ -259,8 +272,8 @@ async function processDocument (index:number, processor: Processor) {
     <div>
       <el-dropdown split-button type="primary" @click="performProcessing" @command="performProcessing" :disabled="processing">
         実行
-        <!-- <el-button type="primary" :icon="CaretRight" @click="performProcessing()" :loading="processing" :disabled="processing">実行</el-button> -->
         <template #dropdown>
+          <el-dropdown-item :disabled="processing" command="verbose-run">コンソール出力付きで実行</el-dropdown-item>
           <el-dropdown-item :disabled="processing" command="compile">コンパイルのみ実行</el-dropdown-item>
           <!-- <el-dropdown-item disabled command="step">ステップ実行モード</el-dropdown-item> -->
         </template>
