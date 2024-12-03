@@ -423,7 +423,7 @@
               <EditableCascader
                 v-model.trim="argument2nd"
                 placeholder="CSVの桁を入力"
-                :options="[{ label: 'エラー出力', value: '$error' }]"
+                :options="[...writeableVariables, { label: 'エラー出力', value: '$error' }]"
               />
             </el-col>
             <el-col :span="4" style="margin-top: 0.25rem; margin-left: 0.4rem"
@@ -436,6 +436,7 @@
             >
             <el-col :span="12">
               <el-select placeholder="出力方法を指定" v-model="argument3rd">
+                <el-option label="桁にあわせて配列として出力" value="array" />
                 <el-option label="最初の値のみを出力" value="first" />
                 <el-option label="空白で区切って出力" value="whitespace" />
                 <el-option label="カンマで区切って出力" value="comma" />

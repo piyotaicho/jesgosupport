@@ -22,7 +22,7 @@ type commandOperatorExpressions = 'eq' | '=' | 'gt' | '>' | 'ge' | '>=' | 'lt' |
 type commandSetsOperators = 'add' | 'union' | 'intersect' | 'difference' | 'xor'
 type commandSortDirections = 'asc' | 'ascend' | 'desc' | 'descend'
 type commandPeriodOperators = 'years' | 'years,roundup' | 'months' | 'months,roundup' | 'weeks' | 'weeks,roundup' | 'days'
-type commandStoreFieldSeparators = 'first' | 'whitespace' | 'colon' | 'comma' | 'semicolon'
+type commandStoreFieldSeparators = 'array' | 'first' | 'whitespace' | 'colon' | 'comma' | 'semicolon'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type instructionFunction = (processor: Processor) => instructionResult
@@ -83,6 +83,10 @@ const storeProxyHandler: ProxyHandler<VariableStore> = {
       throw new TypeError(`変数"${property}"は既に定義されています.`)
     }
 
+    if (property === '$error') {
+      throw new TypeError('変数名"$error"は予約語のため使用できません.')
+    }
+
     const propertyHeader = property.charAt(0)
     if (propertyHeader !== '@' && propertyHeader !== '$') {
       throw new SyntaxError('変数名は$で開始されている必要があります.')
@@ -101,11 +105,13 @@ const storeProxyHandler: ProxyHandler<VariableStore> = {
       // 入力は強制的にArrayに修正する
       const arrayedValue = [descriptor?.value || ''].flat(1)
       const isWritable = descriptor?.writable === undefined ? true : descriptor.writable
+      const isEmumerable = descriptor?.enumerable === undefined ? true : descriptor.enumerable
+      const isConfigurable = descriptor?.configurable === undefined ? true : descriptor.configurable
       Object.defineProperty(target, property,
         {
-          enumerable: true,
+          enumerable: isEmumerable,
           writable: isWritable,
-          configurable: true,
+          configurable: isConfigurable,
           value: arrayedValue
         }
       )
@@ -141,6 +147,7 @@ export class Processor {
   /**
    * コンストラクタ
    * @param ユーザ定義広域変数リスト
+   * @param コンソールへのログ出力を抑制する boolean
    */
   constructor (globalVariables?: string[], disableLogging = false) {
     // 変数を初期化
@@ -153,7 +160,7 @@ export class Processor {
     this.disableLogging = disableLogging === true
 
     // コードバッファ ルールごとに各ステップをstring[]に格納
-    // 格コードは function( thisの宛先 ) で、返り値は instructionResult
+    // コードは function( processorであるこのオブジェクト自身 ) で、返り値は instructionResult
     this.transpiledRuleset = []
   
     // レジスタ変数とシステム変数の定義と初期化
@@ -449,7 +456,13 @@ export class Processor {
                   valuestr = JSON.stringify(parseStringToStringArray(params[0]))
                 }
 
-                if (params[2] && !['first', 'whitespace', 'colon', 'comma', 'semicolon'].includes(params[2])) {
+                if (params[1].charAt(0) === '$' || params[1].charAt(0) === '@') {
+                  if (params[1] !== '$error') {
+                    this.variables[params[1]] = []
+                  }
+                }
+
+                if (params[2] && !['array', 'first', 'whitespace', 'colon', 'comma', 'semicolon'].includes(params[2])) {
                   throw new SyntaxError(`${params[2]} は不正な指示です.`)
                 }
 
@@ -961,8 +974,8 @@ export class Processor {
   /**
    * コマンド Store 出力バッファ(文字列)に値を出力する
    * @param values 値のアレイ
-   * @param target CSVの桁もしくはエラーバッファ
-   * @param mode アレイの出力様式
+   * @param target CSVの桁指定もしくは変数, エラーバッファ CSV桁指定は MSExcel形式(A,B...Z,AA)のほかCells形式(1～)をサポート
+   * @param mode アレイの出力様式指定
    */
   private commandStore = (values: JsonObject[], target: string = '$error', mode: commandStoreFieldSeparators = 'first'): boolean => {
     /**
@@ -970,48 +983,94 @@ export class Processor {
      * @param col
      * @returns
      */
-    const xlcolToNum = (col: string): number => {
-      let num = 0
-      for (let pos = 0; pos < col.length; pos++) {
-        num *= 26
-        num += col.toUpperCase().charCodeAt(pos) - 64
+    const collabelToNum = (col: string): number => {
+      let num = Number(col)
+      if (Number.isNaN(num)) {
+        num = 0
+        for (let pos = 0; pos < col.length; pos++) {
+          num *= 26
+          num += col.toUpperCase().charCodeAt(pos) - 64
+        }
+        return num - 1  
+      } else {
+        if (num > 0) {
+          return num - 1
+        }
+        throw new SyntaxError(`列表記 ${col} は不正です.`)
       }
-      return num - 1
+    }
+
+    let colIndexes: number[] = []
+    // 格納先の形式を確認する
+    if (target.charAt(0) !== '$') {
+      // 対象リストを作成する
+      // カンマ区切りをまず分割
+      const targets = target.split(',').map(item => item.replaceAll(/\s/g, '').toUpperCase())
+      for(let i = 0; i < targets.length; i++) {
+        // コロン表記の抽出
+        const targetParams = targets[i].match(/^([0-9A-Z]+)(:([0-9A-Z]+))?$/)
+        if(targetParams === null) {
+          throw new SyntaxError(`列表記 ${target} は不正です.`)
+        }
+
+        const start = collabelToNum(targetParams[1])
+        if (targetParams[3] !== undefined) {
+          // コロン表記の範囲指定
+          const end = collabelToNum(targetParams[3])
+          if (start <= end) {
+            for (let index = start; index <= end; index++) {
+              colIndexes.push(index)
+            }
+          } else {
+            for (let index = start; index >= end; index--) {
+              colIndexes.push(index)
+            }
+          }
+        } else {
+          colIndexes.push(start)
+        }
+      }
     }
 
     // 値をflattenし、オブジェクトはJSON文字列化する
-    const flattenValues = values.flat(99).map(item => item.toString() !== '[object Object]' ? item.toString() : JSON.stringify(item))
-    let cellValue = ''
+    const colValues = values.flat(99).map(item => item.toString() !== '[object Object]' ? item.toString() : JSON.stringify(item))
     switch (mode) {
-      case 'first':
-        cellValue = flattenValues[0] || ''
+      case 'array': 
         break
       case 'whitespace':
-        cellValue = flattenValues.join(' ')
+        colValues.splice(0, 0, colValues.join(' '))
+        colValues.splice(1)
         break
       case 'colon':
-        cellValue = flattenValues.join(':')
+        colValues.splice(0, 0, colValues.join(':'))
+        colValues.splice(1)
         break
       case 'comma':
-        cellValue = flattenValues.join(',')
+        colValues.splice(0, 0, colValues.join(','))
+        colValues.splice(1)
         break
       case 'semicolon':
+        colValues.splice(0, 0, colValues.join(';'))
+        colValues.splice(1)
+        break
+      case 'first':
       default:
-        cellValue = flattenValues.join(';')
+        colValues.splice(1)
     }
 
-    if (target === '$error') {
-      this.errorMessages.push(cellValue)
-    } else {
-      if (/^[A-Z]+$/i.test(target)) {
-        const columnIndex = xlcolToNum(target)
-        this.csvRow[columnIndex] = cellValue
+    // 値を対象に保存する
+    if (target.charAt(0) === '$') {
+      if (target === '$error') {
+        // エラーオブジェクト
+        this.errorMessages.push(...colValues)
       } else {
-        const columnIndex = Number(target)
-        if (Number.isNaN(columnIndex) || columnIndex <= 0) {
-          throw new TypeError('桁番号の指定が異常です.')
-        }
-        this.csvRow[columnIndex] = cellValue
+        // 変数
+        this.variables[target] = [...colValues]
+      }
+    } else {
+      // カラムに値を設定
+      for(let index = 0; index < colIndexes.length; index++) {
+        this.csvRow[colIndexes[index]] = colValues[index] || ''
       }
     }
     return true
