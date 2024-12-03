@@ -131,9 +131,10 @@ function performProcessing (command?:string): void {
       }
 
       // 処理ユニットの準備
-      const processor = new Processor(store.getters.documentVariables, !verbose)
+      let processor: Processor
 
       try {
+        processor = new Processor(store.getters.documentVariables, !verbose)
         await processor.compile(store.getters.rules)
       } catch (e) {
         console.error(e)
