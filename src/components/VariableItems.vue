@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useStore } from './store'
-import { ElMessageBox } from 'element-plus'
 import { CopyDocument } from '@element-plus/icons-vue'
 
 const store = useStore()
@@ -17,11 +16,7 @@ const emits = defineEmits<{
 const counts = computed(() => store.getters.docuemntVariableCount(props.name) as number)
 
 function deleteItem () {
-  if (counts.value > 0) {
-    ElMessageBox.alert('変数がルールで使用されているため削除出来ません.', 'ユーザ定義変数')
-  } else {
-    emits('delete')
-  }
+  emits('delete')
 }
 
 async function copyVariableName (): Promise<void> {

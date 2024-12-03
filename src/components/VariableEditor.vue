@@ -12,11 +12,17 @@ async function addDocumentVariable () {
     if ((name as string).trim() !== '') {
       store.commit('addDocumentVariable', name)
     }
-  } catch {}
+  } catch (e) {
+    await ElMessageBox.alert((e as Error).message, 'ドキュメント変数')
+  }
 }
 
-function deleteDocumentVariable (name: string) {
-  store.commit('removeDocumentVariable', name)
+async function deleteDocumentVariable (name: string) {
+  try {
+    store.commit('removeDocumentVariable', name)
+  } catch (e) {
+    await ElMessageBox.alert((e as Error).message, 'ドキュメント変数')
+  }
 }
 </script>
 

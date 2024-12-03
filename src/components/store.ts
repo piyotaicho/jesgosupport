@@ -194,21 +194,19 @@ export const store = createStore<State>({
         return
       }
       newname = '$' + newname.replace(/[\s,.-@$;:\\'"]+/g, '_')
-      if (newname in ['$hash', '$his_id', '$name', '$date_of_birth', '$now']) {
-        throw new Error(`${newname}は予約語です.`)
+      if (['$hash', '$his_id', '$name', '$date_of_birth', '$now', '$error'].includes(newname)) {
+        throw new Error(`変数名 "${newname}" は予約語のため利用できません.`)
       }
       // 変数の追加
-      const config = state.RuleSetConfig
-      const documentVariables = config?.documentVariables || []
+      const documentVariables = state.RuleSetConfig?.documentVariables || []
 
-      if (!(newname in documentVariables)) {
-        documentVariables.push(newname)
-        state.RuleSetConfig.documentVariables = documentVariables
+      if (!documentVariables.includes(newname)) {
+        state.RuleSetConfig.documentVariables = [...documentVariables, newname]
       }
     },
     removeDocumentVariable (state, name: string) {
-      if (name in ['$hash', '$his_id', '$name', '$date_of_birth', '$now']) {
-        throw new Error(`${name}は予約語です.`)
+      if (['$hash', '$his_id', '$name', '$date_of_birth', '$now', '$error'].includes(name)) {
+        throw new Error(`変数名 "${name}" は予約語のため削除できません.`)
       }
 
       const config = state.RuleSetConfig
@@ -216,6 +214,20 @@ export const store = createStore<State>({
 
       const index = documentVariables.indexOf(name)
       if (index >= 0) {
+        // ルールセット内での利用をチェック
+        const rules:LogicRuleSet[] = state.RuleSet
+        for (const rule of rules) {
+          const logicblocks:LogicBlock[] = rule.procedure || []
+          for (const block of logicblocks) {
+            const args = block.arguments
+            for (const arg of args) {
+              if (arg === name) {
+                throw new Error(`変数名 "${name}" はルールで使用されているため削除できません.`)
+              }
+            }
+          }
+        }
+  
         documentVariables.splice(index, 1)
         state.RuleSetConfig.documentVariables = documentVariables
       }
