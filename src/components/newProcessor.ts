@@ -110,7 +110,6 @@ const storeProxyHandler: ProxyHandler<VariableStore> = {
         }
       )
     }
-    verbose(`* declare variable ${property}`)
     return true
   },
 
@@ -137,18 +136,21 @@ export class Processor {
 
   // トランスパイル済みルールを保持
   private transpiledRuleset: codeBuffer[]
+  private disableLogging: boolean
 
   /**
    * コンストラクタ
    * @param ユーザ定義広域変数リスト
    */
-  constructor (globalVariables?: string[]) {
+  constructor (globalVariables?: string[], disableLogging = false) {
     // 変数を初期化
     this.variableStore = {}
     this.variables = new Proxy(this.variableStore, storeProxyHandler)
 
     this.errorMessages = []
     this.csvRow = []
+
+    this.disableLogging = disableLogging === true
 
     // コードバッファ ルールごとに各ステップをstring[]に格納
     // 格コードは function( thisの宛先 ) で、返り値は instructionResult
@@ -240,7 +242,7 @@ export class Processor {
    * @param ruleset ルールセットオブジェクトアレイ
    */
   public async compile (ruleset: LogicRuleSet[]) {
-    verbose('** COMPILER **')
+    verbose('** COMPILER **', false, this.disableLogging)
     // コードバッファを初期化
     this.transpiledRuleset = []
 
@@ -258,7 +260,7 @@ export class Processor {
         source: currentRule?.source || []
       }
 
-      verbose(`* ruleset '${currentRuleTitle}'`)
+      verbose(`* ruleset '${currentRuleTitle}'`, false, this.disableLogging)
       try {
         // 空の内容でソースの初期化
         // 既にあるソース変数を削除
@@ -474,7 +476,7 @@ export class Processor {
         this.transpiledRuleset.push(currentTranspiledRule)
       } else {
         // コードのないルールセットは無視する
-        verbose(`# Skipped empty ruleset '${currentRuleTitle}'`)
+        verbose(`# Skipped empty ruleset '${currentRuleTitle}'`, false, this.disableLogging)
       }
     }
   }
@@ -485,7 +487,7 @@ export class Processor {
    * @returns $.csv - csvの行アレイ $.errors - エラーメッセージアレイ
    */
   public async run (content: pulledDocument): Promise<processorOutput | undefined> {
-    verbose('** EXECUTOR **')
+    verbose('** EXECUTOR **', false, this.disableLogging)
     try {
       if (!content) {
         throw new Error('ドキュメントが指定されていません.')
@@ -512,7 +514,7 @@ export class Processor {
       const currentCodeBuffer = this.transpiledRuleset[index].code
       const currentSources = this.transpiledRuleset[index].source
 
-      verbose(`* ruleset '${currentRuleTitle}'`)
+      verbose(`* ruleset '${currentRuleTitle}'`, false, this.disableLogging)
       try {
         // レジスタ変数の初期化
         this.initRegister()
@@ -531,7 +533,7 @@ export class Processor {
           switch (path) {
             case '':
               // 存在しないとは思われるが空白pathはソース未定義にする
-              verbose(`# source @${sourceIndex + 1} is empty`)
+              verbose(`# source @${sourceIndex + 1} is empty`, false, this.disableLogging)
               break
             case '$hash':
             case '$his_id':
@@ -552,8 +554,10 @@ export class Processor {
           }
         }
 
-        verbose('# variables')
-        Object.entries(this.variableStore).forEach(vars => verbose(` ${vars[0]} = ${JSON.stringify(vars[1])}`))
+        if (!this.disableLogging) {
+          verbose('# variables')
+          Object.entries(this.variableStore).forEach(vars => verbose(` ${vars[0]} = ${JSON.stringify(vars[1])}`))
+        }
       } catch (e) {
         console.error(e as Error)
         throw new Error(`ルールセット ${currentRuleTitle} 初期化中にエラー\n` + (e as Error).message)
@@ -563,7 +567,7 @@ export class Processor {
       // eslint-disable-next-line no-labels
       instructionLoop: for (let counter = 0; counter < currentCodeBuffer.length;) {
         try {
-          verbose(`@${counter + 1}\n${currentCodeBuffer[counter]}`)
+          verbose(`@${counter + 1}\n${currentCodeBuffer[counter]}`, false, this.disableLogging)
 
           let instruction: instructionFunction = new Function('processor', currentCodeBuffer[counter]) as instructionFunction
 
@@ -573,7 +577,7 @@ export class Processor {
           })
 
           // 次のステップへ
-          verbose(`=> Behavior: ${result.behavior}`)
+          verbose(`=> Behavior: ${result.behavior}`, false, this.disableLogging)
           switch (result.behavior) {
             case 'Exit':
               if (result.success) {
@@ -628,7 +632,7 @@ export class Processor {
       default: // value
         newvalue = value
     }
-    verbose(`* variable ${variableName} <- ${JSON.stringify(newvalue)}`)
+    verbose(`* variable ${variableName} <- ${JSON.stringify(newvalue)}`, false, this.disableLogging)
     this.variables[variableName] = newvalue
     return true
   }

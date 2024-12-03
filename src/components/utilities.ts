@@ -201,15 +201,16 @@ export function dropNullValues (source: unknown): unknown {
   }
 }
 /**
- * console log のラッパー(開発者ツールが開いているときはダンプする)
+ * console log のラッパー
  * @param message
  * @param isError エラーとして表示
+ * @param disabled エラー以外は表示しない
  */
-export function verbose (message: string, isError = false): void {
+export function verbose (message: string, isError = false, disabled = false): void {
   if (isError) {
     console.error(message)
   } else {
-    if (window.console) {
+    if (!disabled) {
       console.log(message)
     }
   }
