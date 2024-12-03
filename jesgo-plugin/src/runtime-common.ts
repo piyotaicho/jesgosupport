@@ -7,7 +7,7 @@ import { LogicRuleSet, configObject, fileRuleSetV1 } from '../../src/components/
 import { queryDocument, userDownload } from '../../src/components/utilities'
 import { JSONPath } from 'jsonpath-plus'
 
-export const runtimeVersion = '1.0.5'
+export const runtimeVersion = '1.1.0'
 export const runtimeCredit = `Version ${runtimeVersion} Copyright &copy; 2023-2024 by P4mohnet`
 
 /**
@@ -102,7 +102,7 @@ export function saveCSV (data:unknown[], offset = 0, filename = 'JESGO出力デ�
  * SPAN #plugin-statusline1 #plugin-statusline2 #plugin-statusline3
  */
 export async function handler (data: setterPluginArgument[], scriptGetter: () => Promise<unknown>, dialogHTMLsource: string, getterAPIcall?: (arg: getterPluginArgument) => string): Promise<updateDocument[]|undefined> {
-  console.info(`JESGO support tool runtime ${runtimeVersion} ${runtimeCredit}`)
+  console.info(`JESGO support tool runtime ${runtimeCredit}`)
 
   // データ無し
   const dataLength = data.length

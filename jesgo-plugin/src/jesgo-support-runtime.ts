@@ -4,12 +4,12 @@ import { handler, verbose, loadJSONfile } from './runtime-common'
 // スクリプトプリセット
 import { scriptCC, scriptEM, scriptOV, checkCC, checkEM, checkOV } from './support-scripts/scripts-v1'
 
-const version = '1.0'
+const version = '1.1.0'
 const filename = 'jesgo-support-runtime.ts'
 export async function init ():Promise<scriptInfo> {
   return {
-    plugin_name: '腫瘍登録スクリプト一括実行TEST',
-    plugin_version: '1.3',
+    plugin_name: '腫瘍登録スクリプト一括実行RC',
+    plugin_version: '1.100',
     all_patient: true,
     attach_patient_info: true,
     show_upload_dialog: false,
@@ -31,7 +31,7 @@ export async function init ():Promise<scriptInfo> {
  *  - 取得系 void
  */
 export async function main (docData: setterPluginArgument[], apicall: (docData: getterPluginArgument|updateDocument|updateDocument[], mode: boolean) => string): Promise<mainOutput> {
-  console.log(`${filename}@${version} (C) 2023 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
+  console.log(`${filename}@${version} (C) 2023-2024 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
 
   // 更新モードなのでdocDataには表示されている全てのドキュメントが入っている
   const getterAPIcall = (request: getterPluginArgument) => apicall(request, true)
