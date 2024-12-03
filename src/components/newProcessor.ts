@@ -414,6 +414,12 @@ export class Processor {
               case 'tr':
               case 'Translation':
                 this.variables[params[0]] = []
+                try {
+                  this.createTranslationTable(procedure?.lookup || [])
+                } catch(e) {
+                  console.error((e as Error).message)
+                  throw new SyntaxError('置換テーブルに問題があります.')
+                }
 
                 codeStr.push(
                   `const table = processor.createTranslationTable(${ JSON.stringify(procedure.lookup || []) })`,
@@ -1005,7 +1011,7 @@ export class Processor {
     if (target.charAt(0) !== '$') {
       // 対象リストを作成する
       // カンマ区切りをまず分割
-      const targets = target.split(',').map(item => item.replaceAll(/\s/g, '').toUpperCase())
+      const targets = target.split(',').map(item => item.replace(/\s/g, '').toUpperCase())
       for(let i = 0; i < targets.length; i++) {
         // コロン表記の抽出
         const targetParams = targets[i].match(/^([0-9A-Z]+)(:([0-9A-Z]+))?$/)
