@@ -509,7 +509,8 @@ export class Processor {
     }
 
     // ルールを逐次処理
-    for (let index = 0; index < this.transpiledRuleset.length; index++) {
+    // eslint-disable-next-line no-labels
+    rulesetLoop: for (let index = 0; index < this.transpiledRuleset.length; index++) {
       const currentRuleTitle = this.transpiledRuleset[index].title
       const currentCodeBuffer = this.transpiledRuleset[index].code
       const currentSources = this.transpiledRuleset[index].source
@@ -584,7 +585,7 @@ export class Processor {
                 // 症例に対する処理の中止は処理の不成立の場合のみなのでエラーとする
                 throw new SyntaxError('不正な返り値を取得しました.')
               }
-            // Abortと同義になる
+              break rulesetLoop
             // eslint-disable-next-line no-fallthrough
             case 'Abort':
               // 現在のルール処理を終了
