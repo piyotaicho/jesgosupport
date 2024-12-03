@@ -254,38 +254,36 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
             csvBuffer.push([...result.csv])
           }
 
-          // エラーオブジェクトの生成
-          if (result?.errors && result.errors.length > 0) {
-            // 指定スキーマからdocumentIdを抽出
-            if (!rulesetConfig?.errorTargetSchemaId) {
-              // errorTargerSchemaIdが未指定の場合一番最初に出現したドキュメントにエラーを埋め込む
-              const documentIds = JSONPath({ path: '$..[?(@property === "jesgo:document_id")]', json: caseData[0]?.documentList || [] })
+          // エラーは空白であっても出力する(要望あり)
+          // 指定スキーマからdocumentIdを抽出
+          if (!rulesetConfig?.errorTargetSchemaId) {
+            // errorTargerSchemaIdが未指定の場合一番最初に出現したドキュメントにエラーを埋め込む
+            const documentIds = JSONPath({ path: '$..[?(@property === "jesgo:document_id")]', json: caseData[0]?.documentList || [] })
 
-              if (documentIds.length > 0) {
-                errorBuffer.push({
-                  hash: caseData[0].hash,
-                  his_id: caseData[0]?.his_id,
-                  name: caseData[0]?.name,
-                  documentId: documentIds[0],
-                  errors: [...result.errors]
-                })
-              }
-            } else {
-              // 指定したエラースキーマ(継承元を含む)にエラーを埋め込む
-              // スキーマidを正規化(継承スキーマに対応するため前方一致で/を最後につけて区切り文字とする)
-              const matchPattern = '/^' + rulesetConfig.errorTargetSchemaId.split('/').join('\\/') + '\\/?/'
-              const jsonpath = `$..[?(@["jesgo:schema_id"] && @["jesgo:schema_id"].match(${matchPattern}) )].jesgo:document_id`
-              const documentIds = JSONPath({ path: jsonpath, json: caseData[0]?.documentList || [] })
+            if (documentIds.length > 0) {
+              errorBuffer.push({
+                hash: caseData[0].hash,
+                his_id: caseData[0]?.his_id,
+                name: caseData[0]?.name,
+                documentId: documentIds[0],
+                errors: [...(result.errors || [])]
+              })
+            }
+          } else {
+            // 指定したエラースキーマ(継承元を含む)にエラーを埋め込む
+            // スキーマidを正規化(継承スキーマに対応するため前方一致で/を最後につけて区切り文字とする)
+            const matchPattern = '/^' + rulesetConfig.errorTargetSchemaId.split('/').join('\\/') + '\\/?/'
+            const jsonpath = `$..[?(@["jesgo:schema_id"] && @["jesgo:schema_id"].match(${matchPattern}) )].jesgo:document_id`
+            const documentIds = JSONPath({ path: jsonpath, json: caseData[0]?.documentList || [] })
 
-              if (documentIds.length > 0) {
-                errorBuffer.push({
-                  hash: caseData[0].hash,
-                  his_id: caseData[0]?.his_id,
-                  name: caseData[0]?.name,
-                  documentId: documentIds[0],
-                  errors: [...result.errors]
-                })
-              }
+            if (documentIds.length > 0) {
+              errorBuffer.push({
+                hash: caseData[0].hash,
+                his_id: caseData[0]?.his_id,
+                name: caseData[0]?.name,
+                documentId: documentIds[0],
+                errors: [...(result.errors || [])]
+              })
             }
           }
         }
