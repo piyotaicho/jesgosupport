@@ -212,7 +212,6 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
     }
 
     // ドキュメントの逐次処理
-    let skipNumber = 0
     const progressbar = document.getElementById('plugin-progressbar') as HTMLDivElement
 
     for (let index = 0; index < targets.length; index++) {
@@ -244,7 +243,6 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
         const queriedDocument = queryDocument([caseData[0]], rulesetConfig?.masterQuery, rulesetConfig?.masterBasePointer)[0]
         if (rulesetConfig?.skipUnmatchedRecord === true && (queriedDocument?.documentList || []).length === 0) {
           // 空白ドキュメントのスキップ指示があったら次のドキュメントへ
-          skipNumber++
           continue
         }
 
@@ -312,7 +310,7 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
       progressbar.style.width = '変換終了'
     }
     if (statusline1 && statusline2) {
-      statusline1.innerText = `${targets.length - skipNumber}症例から${csvBuffer.length}症例のデータを抽出処理しました.`
+      statusline1.innerText = `${csvBuffer.length}症例のデータを抽出処理しました.`
       statusline2.innerText = ''
     }
 
