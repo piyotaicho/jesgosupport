@@ -2,57 +2,12 @@
 import { ref, Ref, computed, ComputedRef, onMounted } from 'vue'
 import { useStore } from './store'
 import { configObject } from './types'
+import { configulationPresets } from './presets'
 
 const store = useStore()
 const emit = defineEmits<{
   close: []
 }>()
-
-// プリセットリスト（ハードコード：そのうち別ファイルに移動する）
-interface presetObject extends configObject {
-  title: string
-}
-const configulationPresets:presetObject[] = [
-  {
-    title: '子宮頸がん',
-    masterQuery: [
-      '$..患者台帳',
-      '$.[?(@.がん種 == "子宮頸がん")]'
-    ],
-    masterBasePointer: '/患者台帳/-',
-    skipUnmatchedRecord: true,
-    csvOffset: 6,
-    csvUnicode: false,
-    errorTargetSchemaId: '/schema/CC/root',
-    errorPointer: '/jesgo:error'
-  },
-  {
-    title: '子宮体がん',
-    masterQuery: [
-      '$..患者台帳',
-      '$.[?(@.がん種 == "子宮体がん")]'
-    ],
-    masterBasePointer: '/患者台帳/-',
-    skipUnmatchedRecord: true,
-    csvOffset: 6,
-    csvUnicode: false,
-    errorTargetSchemaId: '/schema/EM/root',
-    errorPointer: '/jesgo:error'
-  },
-  {
-    title: '卵巣がん',
-    masterQuery: [
-      '$..患者台帳',
-      '$.[?(@.がん種 == "卵巣がん")]'
-    ],
-    masterBasePointer: '/患者台帳/-',
-    skipUnmatchedRecord: true,
-    csvOffset: 6,
-    csvUnicode: false,
-    errorTargetSchemaId: '/schema/OV/root',
-    errorPointer: '/jesgo:error'
-  }
-]
 
 const presetNames:ComputedRef<string[]> = computed(() => configulationPresets.map(preset => preset.title))
 
@@ -165,9 +120,9 @@ function closeMenu () {
       </el-col>
     </el-row>
     <el-row style="margin-top: 0.8rem;">
-      <el-col :span="8" class="ruleset-config-label-column">テンプレート選択</el-col>
+      <el-col :span="8" class="ruleset-config-label-column">プリセット</el-col>
       <el-col :span="14">
-        <el-select v-model="selectedPreset" placeholder="テンプレートを利用出来ます" @change="applyPreset">
+        <el-select v-model="selectedPreset" placeholder="各種プリセットが利用出来ます" @change="applyPreset">
           <el-option
             v-for="item in presetNames"
             :key="item" :label="item" :value="item"/>
