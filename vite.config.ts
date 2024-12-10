@@ -1,5 +1,6 @@
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
+import { VitePWA } from 'vite-plugin-pwa'
 
 // package.jsonのバージョンなどを取得
 
@@ -13,7 +14,45 @@ process.env.VITE_APP_LICENSE = require('./package.json')?.license
 export default {
   base: './',
   plugins: [
-    vue()
+    vue(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      devOptions: {
+        enabled: true
+      },
+      manifest: {
+        name: 'JESGO support tool',
+        lang: 'ja',
+        display: 'standalone',
+        background_color: '#c0c0c0',
+        theme_color: '#ff00ff',
+        icons: [
+          {
+            src: 'NewIcon48.png',
+            sizes: '48x48',
+            type: 'image/png'
+          },
+          {
+            src: 'NewIcon96.png',
+            sizes: '96x96',
+            type: 'image/png'
+          },
+          {
+            src: 'NewIcon192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: 'NewIcon512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          }
+        ]
+      },
+      workbox: {
+        globPatterns: ['**/*.{css,html,ico,js,png,webmanifest}']
+      }
+    })
   ],
   server: {
     port: 8080
