@@ -10,7 +10,7 @@ import { convertDaichoToJOED, formatJOED } from './jesgo-joed-translator'
 import { createElementFromHtml, showModalDialog } from './modal-dialog'
 import { dialogHTMLstrings } from './export-to-joed-ui'
 
-const version = '1.0.2'
+const version = '1.1.0'
 const script_info: scriptInfo = {
   plugin_name: 'JOED5インポートデータの作成',
   plugin_version: version.split('.').slice(0, 2).join('.'),
@@ -56,7 +56,7 @@ async function handler (docData: pulledDocument[]) {
   const createDialogContent = (parent:Element) => parent.appendChild(createElementFromHtml(dialogHTMLstrings))
 
   // メインのデータ変換処理
-  const procedure = async (yearFilter: string) => {
+  const mainProcess = async (yearFilter: string, anonymizeSetting: string) => {
     // ダイアログ内容の初期化
     const numberOfCases = docData.length
     const statusline1 = document.getElementById('plugin-statusline1')
@@ -104,11 +104,12 @@ async function handler (docData: pulledDocument[]) {
         // 変換
         for (const daicho of daichoArray) {
           const exportDocument = await convertDaichoToJOEDwrapper(
-            patientId,
+            anonymizeSetting.includes('ID') ? `I-${count + 1}`: patientId,
             patientName,
             patientDOB,
             daicho,
-            yearFilter
+            yearFilter,
+            anonymizeSetting
           )
           if (exportDocument) {
             JOEDdocuments.push(...exportDocument)
@@ -133,13 +134,15 @@ async function handler (docData: pulledDocument[]) {
   // modal dialog 内で実行される処理
   const dialogProcedure = async () => {
     const selectElement = document.getElementById('plugin-selection')
+    const anonymizeElement = document.getElementById('anonymize')
     const processButton = document.getElementById('plugin-process-script')
-    if (!selectElement || !processButton) {
+    if (!selectElement || !anonymizeElement || !processButton) {
       throw new Error('DOM loading failure.')
     }
-    // ダイアログの select / option を追加
-    const currentYear: number = new Date().getFullYear()
 
+    // ダイアログの年次 select / option を追加
+    const currentYear: number = new Date().getFullYear()
+  
     for (let year = currentYear; year > 2019; year--) {
       const option = document.createElement('option')
       option.text = `${year}年`
@@ -160,7 +163,10 @@ async function handler (docData: pulledDocument[]) {
             processDiv.style.display = ''
 
             // メインルーチンへ
-            resolve(await procedure((selectElement as HTMLSelectElement).value))
+            resolve(await mainProcess(
+              (selectElement as HTMLSelectElement).value,
+              (anonymizeElement as HTMLSelectElement).value
+            ))
           } else {
             throw new Error('Div DOM loading failure.')
           }
@@ -184,12 +190,17 @@ async function handler (docData: pulledDocument[]) {
  * ロックアップ回避のための変換ルーチンのラッパー
  */
 async function convertDaichoToJOEDwrapper (
-  patientId: string|undefined, patientName: string|undefined, patientDOB:string|undefined, daicho: formatJESGOdaicho|formatJESGOrelapse, filterYear: string
+  patientId: string|undefined,
+  patientName: string|undefined,
+  patientDOB:string|undefined,
+  daicho: formatJESGOdaicho|formatJESGOrelapse,
+  filterYear: string,
+  anonymizeSetting = 'NO'
 ): Promise<formatJOED[]|undefined> {
   return await new Promise(resolve => {
     setTimeout(() => {
       try {
-        resolve(convertDaichoToJOED(patientId, patientName, patientDOB, daicho, filterYear))
+        resolve(convertDaichoToJOED(patientId, patientName, patientDOB, daicho, filterYear, anonymizeSetting))
       } catch (e) {
         console.log(`症例(${patientId})の処理中に例外が発生しました.`)
         console.dir(daicho)
