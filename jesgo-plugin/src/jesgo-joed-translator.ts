@@ -1,6 +1,7 @@
 //
 // JESGOの各種情報をJOEDの内容にマップする
 //
+import { fa } from 'element-plus/es/locale'
 import { formatJESGOOperationSection, formatJESGOdaicho, formatJESGOoperationV2, formatJESGOrelapse } from './types'
 
 // JOED5ドキュメント構造定義
@@ -222,13 +223,16 @@ const operationTitlesToExtract = Object.keys(operationTranslation)
  * @param patientDOB string 患者誕生日
  * @param JESGOdaicho JESGO台帳
  * @param filterYear 抽出する年次
+ * @param anonymizeSetting 匿名化設定
+ * @returns formatJOED[]|undefined JOED5形式のデータ
  */
 export function convertDaichoToJOED (
   patientId: string|undefined,
   patientName: string|undefined,
   patientDOB: string|undefined,
   JESGOdaicho: formatJESGOdaicho|formatJESGOrelapse,
-  filterYear = 'ALL'): formatJOED[]|undefined {
+  filterYear = 'ALL',
+  anonymizeSetting = 'NO'): formatJOED[]|undefined {
   const returnValues = []
   const diagnosis:formatJOEDdiagnosis = { Text: '' }
   const caseNotification: string[] = []
@@ -236,6 +240,27 @@ export function convertDaichoToJOED (
   if (!patientId) {
     // 患者IDだけは必須(JESGOで入力が無いことはあり得ないから念のため)
     throw new Error('患者IDは必須項目です.')
+  }
+
+  // 匿名化設定の解釈
+  const anonymize = {
+    id: false,
+    name: false,
+    date: false
+  }
+
+  if (anonymizeSetting !== 'NO') {
+    caseNotification.push('匿名化が実行されました.重複などについて確認/保存が必要です.')
+  } else {
+    for(const item of anonymizeSetting.split(',')) {
+      if (item === 'ID') {
+        anonymize.id = true
+      } else if (item === 'NAME') {
+        anonymize.name = true
+      } else if (item === 'DATE') {
+        anonymize.date = true
+      }
+    }  
   }
 
   // 台帳のparse
@@ -302,7 +327,7 @@ export function convertDaichoToJOED (
           break
         default:
           // 翻訳対象外のがん種
-          diagnosis.Text = relapseTreatment?.再発したがん種 || '再発癌'
+          diagnosis.Text = relapseTreatment?.再発したがん種 || 'その他婦人科がん'
           diagnosis.UserTyped = true
           caseNotification.push('診断名の自動判別の対象外です.')
       }
@@ -338,6 +363,9 @@ export function convertDaichoToJOED (
       const dummyDate = ('0' + (returnValues.length + 1).toString()).substring(0, 2)
       const dummyYear = filterYear === 'ALL' ? (new Date().getFullYear() - 1).toString() : filterYear
       dateOfOperation = `${dummyYear}-01-${dummyDate}`
+    } else if (anonymize.date) {
+      // 手術日の匿名化
+      dateOfOperation = `${dateOfOperation.substring(0, 4)}-01-01`
     }
 
     // 抽出年次に一致しなければ次へ
@@ -350,8 +378,8 @@ export function convertDaichoToJOED (
 
     JOEDrecord.DateOfProcedure = dateOfOperation
 
-    // 年齢は患者の生年月日と手術日から計算
-    if (patientDOB) {
+    // 年齢は患者の生年月日と手術日から計算（手術日の匿名化が有効な場合はAgeは出力しない）
+    if (patientDOB && !anonymize.date) {
       const age = dateCalc(patientDOB, JOEDrecord.DateOfProcedure)
       if (age) {
         JOEDrecord.Age = Number(age)
@@ -377,7 +405,8 @@ export function convertDaichoToJOED (
 
     let operationTitles:string[] = []
     if (Array.isArray(operation.実施手術) && operation.実施手術.length > 0) {
-      operationTitles = operation.実施手術.map(item => typeof item === 'string' ? item as string : item.術式)
+      operationTitles = operation.実施手術
+        .map(item => typeof item === 'string' ? item as string : item.術式)
     } else {
       const operationV2s = (operation.実施手術 as formatJESGOoperationV2).実施手術
       if (Array.isArray(operationV2s) && operationV2s.length > 0) {
@@ -388,7 +417,12 @@ export function convertDaichoToJOED (
       }
     }
 
-    for (const operationTitle of operationTitles) {
+    for (let operationTitle of operationTitles) {
+      // 2024年末改定で文字列表記に修正が加わったのでそれに対応する
+      operationTitle = operationTitle
+        .replace('（', '(').replace('）', ')') // 全角括弧を半角に変換
+        .replace('：', ':') // 全角コロンを半角に変換
+
       if (operationTitlesToExtract.includes(operationTitle)) {
         operationRecords.push(operationTranslation[operationTitle])
         // ロボットフラグの設定
@@ -471,9 +505,14 @@ export function convertDaichoToJOED (
     const adverseEvents = []
     if (operation?.手術合併症) {
       for (const event of operation.手術合併症) {
+        const grade = event.Grade.match(/^Grade\s*(1|2|3a|3b|4|5)[:：]/)
+        if (grade === null) {
+          recordNotification.push(`合併症 ${event.合併症の種別} のGradeが正しく入力されていません.`)
+          continue
+        }
         const JOEDAE:formatJOEDAE = {
           Category: event.合併症の種別,
-          Grade: (event.Grade.substring(6, event.Grade.indexOf(':'))) as '1'|'2'|'3a'|'3b'|'4'|'5',
+          Grade: grade[1] as '1'|'2'|'3a'|'3b'|'4'|'5',
           Course: event.転帰
         }
 
@@ -524,10 +563,22 @@ export function convertDaichoToJOED (
               // スキーマ1.3以前
               JOEDAE.Title = event.発生した合併症
               // 気腹・潅流操作のSchema 1.0 と JOED2022 マスタ更新に伴う変更を吸収する
+              // 2024年でのスキーマ・ドキュメント一括自動変更に伴う修正
+
               // 検索対象
-              const searchString = ['皮下気腫', 'そのほか心臓障害', 'そのほか呼吸器障害', 'そのほか神経系障害']
+              const searchString = [
+                '皮下気腫',
+                'ガス塞栓（炭酸ガス）', 'ガス塞栓（空気）',
+                'そのほか心臓障害', 'そのほか呼吸器障害', 'そのほか神経系障害',
+                'その他心臓障害', 'その他呼吸器障害', 'その他神経系障害'
+              ]
               // 置換先
-              const replaceTo = ['気腫', 'その他 循環器系障害', 'その他 呼吸器系障害', 'その他 神経系障害']
+              const replaceTo = [
+                '気腫',
+                'ガス塞栓(炭酸ガス)', 'ガス塞栓(空気)',
+                'その他 循環器系障害', 'その他 呼吸器系障害', 'その他 神経系障害',
+                'その他 循環器系障害', 'その他 呼吸器系障害', 'その他 神経系障害'
+              ]
               JOEDAE.Title.forEach((value, index, original) => {
                 const foundIndex = searchString.indexOf(value)
                 if (foundIndex >= 0) {
@@ -576,6 +627,22 @@ export function convertDaichoToJOED (
           case '術後':
             if (event.合併症の内容) {
               JOEDAE.Title = event.合併症の内容
+
+              // 2024年でのスキーマ・ドキュメント一括自動変更に伴う修正
+              // 検索対象
+              const searchString = [
+                'その他尿路系障害', 'その他循環器系障害', 'その他呼吸器系障害', 'その他骨軟部系障害', 'その他神経系障害'
+              ]
+              // 置換先
+              const replaceTo = [
+                'その他 尿路系障害', 'その他 循環器系障害', 'その他 呼吸器系障害', 'その他 骨軟部系障害', 'その他 神経系障害'
+              ]
+              JOEDAE.Title.forEach((value, index, original) => {
+                const foundIndex = searchString.indexOf(value)
+                if (foundIndex >= 0) {
+                  original[index] = replaceTo[foundIndex]
+                }
+              })
             }
             break
         }
@@ -593,7 +660,7 @@ export function convertDaichoToJOED (
     // 最終的なレコードの成形
     JOEDrecord.Imported = true
 
-    if (patientName && patientName !== '') {
+    if (!anonymize.name && patientName && patientName !== '') {
       JOEDrecord.Name = patientName
     }
     if (caseNotification.length > 0) {
