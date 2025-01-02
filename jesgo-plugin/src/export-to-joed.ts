@@ -13,7 +13,7 @@ import { dialogHTMLstrings } from './export-to-joed-ui'
 const version = '1.1.0'
 const script_info: scriptInfo = {
   plugin_name: 'JOED5インポートデータの作成',
-  plugin_version: version.split('.').slice(0, 2).join('.'),
+  plugin_version: `${version.split('.')[0]}.${(Number(version.split('.')[1]) * 100 + Number(version.split('.')[2])).toString().padStart(2,'0')}`,
   all_patient: true,
   attach_patient_info: true,
   update_db: false,
