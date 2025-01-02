@@ -53,6 +53,7 @@ async function handler (docData: pulledDocument[]) {
   const JOEDdocuments:formatJOED[] = []
 
   // modal dialog に要素を配置する
+  // これをしておかないと以下の getElementById が null を返すので問題をおこす
   const createDialogContent = (parent:Element) => parent.appendChild(createElementFromHtml(dialogHTMLstrings))
 
   // メインのデータ変換処理
@@ -104,6 +105,7 @@ async function handler (docData: pulledDocument[]) {
         // 変換
         for (const daicho of daichoArray) {
           const exportDocument = await convertDaichoToJOEDwrapper(
+            // IDの匿名化は変換ルーチンでは順序がわからないのでこの時点で行う
             anonymizeSetting.includes('ID') ? `I-${count + 1}`: patientId,
             patientName,
             patientDOB,

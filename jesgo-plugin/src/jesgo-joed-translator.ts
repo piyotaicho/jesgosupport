@@ -1,7 +1,6 @@
 //
 // JESGOの各種情報をJOEDの内容にマップする
 //
-import { fa } from 'element-plus/es/locale'
 import { formatJESGOOperationSection, formatJESGOdaicho, formatJESGOoperationV2, formatJESGOrelapse } from './types'
 
 // JOED5ドキュメント構造定義
