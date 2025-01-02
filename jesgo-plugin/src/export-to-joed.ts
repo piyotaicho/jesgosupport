@@ -26,7 +26,7 @@ export async function init () {
 }
 
 export async function main (docData: getterPluginArgument, apifunc: (docData: getterPluginArgument) => string): Promise<mainOutput> {
-  console.log(`export-to-joed.ts@${version} (C) 2023 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
+  console.info(`export-to-joed.ts@${version} (C) 2023-2024 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
 
   if (docData.caseList) {
     const apiresult = await apifunc(docData)
@@ -47,6 +47,7 @@ export async function finalize () {
 
 async function handler (docData: pulledDocument[]) {
   if (docData.length === 0) {
+    window.alert('取得できた症例がありません.')
     return undefined
   }
 
@@ -66,6 +67,8 @@ async function handler (docData: pulledDocument[]) {
     }
 
     let count = 0
+  
+    // 1症例レコードずつparseしてJOED5用に変換
     for (const caseEntry of docData) {
       // ダイアログのプログレスバーを更新
       count++
@@ -74,7 +77,7 @@ async function handler (docData: pulledDocument[]) {
         progressbar.style.width = (count * 100 / numberOfCases).toString().substring(0, 5) + '%'
       } else {
         // ダイアログのDOMが消失した = modalがcloseされた と判断して処理を中止する
-        console.log('Plugin-aborted.')
+        console.warn('Plugin-aborted.')
         return undefined
       }
 
@@ -88,6 +91,8 @@ async function handler (docData: pulledDocument[]) {
       for (const item of caseEntry.documentList) {
         const documentEntry = item as formatJESGOdocument
         const daichoArray:(formatJESGOdaicho|formatJESGOrelapse)[] = []
+
+        // 治療台帳をdepth 1の配列化
         if (documentEntry?.患者台帳 !== undefined) {
           if (Array.isArray(documentEntry.患者台帳)) {
             daichoArray.push(...documentEntry.患者台帳 as formatJESGOdaicho[])
@@ -102,18 +107,22 @@ async function handler (docData: pulledDocument[]) {
             daichoArray.push(documentEntry.再発)
           }
         }
-        // 変換
+
+        // 治療台帳をJOED5用に変換
         for (const daicho of daichoArray) {
+          // IDの匿名化は変換ルーチンでは順序がわからないのでこの時点で行う
+          const patientIdCoded = anonymizeSetting.includes('ID') ? `jesgo-${count}`: patientId
+
           const exportDocument = await convertDaichoToJOEDwrapper(
-            // IDの匿名化は変換ルーチンでは順序がわからないのでこの時点で行う
-            anonymizeSetting.includes('ID') ? `I-${count + 1}`: patientId,
+            patientIdCoded,
             patientName,
             patientDOB,
             daicho,
             yearFilter,
             anonymizeSetting
           )
-          if (exportDocument) {
+          // 変換結果を JOEDdocuments に push
+          if (exportDocument && exportDocument.length > 0) {
             JOEDdocuments.push(...exportDocument)
           }
         }
@@ -204,8 +213,7 @@ async function convertDaichoToJOEDwrapper (
       try {
         resolve(convertDaichoToJOED(patientId, patientName, patientDOB, daicho, filterYear, anonymizeSetting))
       } catch (e) {
-        console.log(`症例(${patientId})の処理中に例外が発生しました.`)
-        console.dir(daicho)
+        console.warn(`症例(${patientId})の処理中に例外が発生しました.`)
         console.error(e)
         resolve(undefined)
       }
