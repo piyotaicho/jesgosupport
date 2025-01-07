@@ -15,12 +15,25 @@ export const dialogHTMLstrings = `
         </div>
     </div>
     <div id="plugin-setting" style="margin-left: 1rem;">
-        <label for="plugin-selection" class="form-label">
-            出力する年次を選択してください:
-        </label>   
-        <select id="plugin-selection" class="form-select form-select-sm">
-            <option value="ALL" selected>全て</option>
-        </select>
+        <div>
+            <label for="plugin-selection" class="form-label">
+                出力する年次を選択してください:
+            </label>   
+            <select id="plugin-selection" class="form-select form-select-sm">
+                <option value="ALL" selected>全て</option>
+            </select>
+        </div>
+        <div style="padding-top: 0.9rem;">
+            <label for="anonymize" class="form-label">
+                匿名化するかどうかを選択してください:
+            </label>
+            <select id="anonymize" class="form-select form-select-sm">
+                <option value="NO" selected>匿名化しない</option>
+                <option value="NAME">氏名を出力しない</option>
+                <option value="ID,NAME">IDを連番に変更し氏名を出力しない</option>
+                <option value="ID,NAME,DATE">手術日を1/1,IDを連番に変更し氏名を出力しない</option>
+            </select>
+        </div>
         <div style="padding-top: 0.9rem;">
             <button id="plugin-process-script" class="btn btn-primary">上記の年次の症例を抽出して変換を開始</button>
         </div>

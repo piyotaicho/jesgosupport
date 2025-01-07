@@ -144,12 +144,14 @@ export interface formatJESGOoperationAEs {
   転帰: string[]
 }
 
+export type formatJESGOoperationV2 = { 実施手術?: formatJESGOoperation[] }
+
 export interface formatJESGOOperationSection {
   手術日: string,
   手術時間?: string|number
   出血量?: string|number
   合併症の有無?: string
-  実施手術?: formatJESGOoperation[]
+  実施手術?: formatJESGOoperation[] | formatJESGOoperationV2
   手術合併症?: formatJESGOoperationAEs[]
 }
 

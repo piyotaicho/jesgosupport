@@ -3,34 +3,44 @@
     <CaseNavigation
       :index="index"
       :length="maxIndex"
-      @update:index="updateIndex($event)">
+      :apply="applyQuery"
+      @update:index="updateIndex($event)"
+      @update:apply="applyQuery = $event"
+      @loadJson="loadJsonDocument">
     </CaseNavigation>
     <div class="case-viewer-identifiers">
-      <div>
-        $hash: {{ caseHash }}
-      </div>
-      <div>
-        $his_id: {{ caseId }}
-      </div>
-      <div>
-        $name: {{ caseName }}
-      </div>
-      <div class="clickable" @click="copytoClipboard">
-        <el-tooltip placement="top-start" content="クリックでJSONパスをクリップボードにコピー">
-          強調表示パス: {{ store.state.HighlightedPath }}
-        </el-tooltip>
-      </div>
+      <el-row>
+        <el-col :span="5"><span>$hash: </span></el-col>
+        <el-col :span="19"><span>{{ caseHash }}</span></el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="5"><span>$his_id: </span></el-col>
+        <el-col :span="19"><span>{{ caseId }}</span></el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="5"><span>$name: </span></el-col>
+        <el-col :span="19"><span>{{ caseName }}</span></el-col>
+      </el-row>
+      <el-row @click="copytoClipboard">
+        <el-col :span="8">
+          <span>強調表示パス<el-icon><CopyDocument /></el-icon>: </span>
+        </el-col>
+        <el-col :span="16"><span>{{ store.getters.highLightedPath }}</span></el-col>
+      </el-row>
     </div>
     <JsonViewer :json="caseDocumentList"></JsonViewer>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed, ComputedRef } from 'vue'
+import { useStore } from './store'
+import { ElMessageBox } from 'element-plus'
+import { CopyDocument } from '@element-plus/icons-vue'
 import { JsonObject } from './types'
+import { loadFile } from './utilities'
 import CaseNavigation from './CaseNavigation.vue'
 import JsonViewer from './JsonViewer.vue'
-import { computed, ComputedRef, watchEffect } from 'vue'
-import { useStore } from './store'
 
 const store = useStore()
 
@@ -45,40 +55,27 @@ interface jesgoOutput {
   documentList: JsonObject
 }
 
-const props = defineProps<{
-  json: JsonObject|undefined
-}>()
+const applyQuery = computed({
+  get: () => store.getters.applyQuery,
+  set: (value) => store.commit('setApplyQuery', value)
+
+})
 
 const index = computed({
-  get: () => store.state.currentIndex,
+  get: () => store.getters.caseIndex,
   set: (value) => store.commit('setIndex', value)
 })
 
-watchEffect(() => {
-  // JSONドキュメントが更新されたら表示を最初のレコードに移動する
-  if (props.json !== undefined && Array.isArray(props.json)) {
-    index.value = props.json.length === 0 ? -1 : 0
-  } else {
-    index.value = -1
-  }
-})
-
 /**
- * maxIndex JSONドキュメント配列の症例数
+ * maxIndex 表示するドキュメントの症例数
  */
-const maxIndex = computed(() => {
-  if (Array.isArray(props.json)) {
-    return props.json.length
-  } else {
-    return 0
-  }
-})
+const maxIndex = computed(() => store.getters.documentLength)
 
 /**
- * indexで指定されたレコードドキュメント
+ * indexで指定された表示用レコードドキュメント
  * @returns {JsonObject} ドキュメントが空白の場合は空オブジェクトを返す
  */
-const caseDocument: ComputedRef<JsonObject> = computed(() => store.getters.documentRef(index.value))
+const caseDocument: ComputedRef<JsonObject> = computed(() => store.getters.document())
 
 /**
  * @returns {string} 症例レコードのハッシュ
@@ -107,7 +104,7 @@ const caseName: ComputedRef<string> = computed(() => {
 /**
  * @returns {string} 症例レコードが保持するJSEGOドキュメント本体部分
  */
-const caseDocumentList: ComputedRef<JsonObject> = computed(() => store.getters.jesgoDocumentRef(index.value))
+const caseDocumentList: ComputedRef<JsonObject> = computed(() => (caseDocument.value as jesgoOutput).documentList)
 
 /**
  * イベントハンドラ index の値を更新しハイライトを解除する
@@ -124,10 +121,38 @@ function updateIndex (value: number) :void {
  * イベントハンドラ クリップボードにハイライトされたjsonpathをコピーする
  */
 async function copytoClipboard (): Promise<void> {
-  if (store.state.HighlightedPath !== '') {
-    await navigator.clipboard.writeText(store.state.HighlightedPath)
+  const highLightedPath = store.getters.highLightedPath
+  if (highLightedPath !== '') {
+    if (!applyQuery.value) {
+      await ElMessageBox.alert('コピーされたパスは実際と異なる可能性があります.', 'マスタクエリ未適応')
+    }
+    await navigator.clipboard.writeText(highLightedPath)
   }
 }
+
+/**
+ * loadJsonDocument FILE APIで読み込んだJSONファイルをJSONドキュメントとして保存
+ * @param {Event} HTMLイベントオブジェクト
+ */
+async function loadJsonDocument () {
+  try {
+    const content = await loadFile()
+
+    if (content) {
+      const loadedDocument = JSON.parse(content as string) as JsonObject
+      if (Array.isArray(loadedDocument) && loadedDocument[0]?.documentList) {
+        store.commit('setJsonDocument', loadedDocument)
+        index.value = 0
+      } else {
+        throw new Error('このファイルは有効なJESGOから出力されたJSONファイルではないようです.')
+      }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (e:any) {
+    ElMessageBox.alert(e.message)
+  }
+}
+
 </script>
 
 <style>

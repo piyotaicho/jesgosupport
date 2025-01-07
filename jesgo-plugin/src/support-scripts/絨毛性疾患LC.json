@@ -1,0 +1,645 @@
+{
+  "title": "絨毛性疾患",
+  "config": {
+    "masterQuery": [
+      "$..患者台帳",
+      "$.[?(@.がん種 == \"絨毛性疾患\")]",
+      "$"
+    ],
+    "masterBasePointer": "/患者台帳/-",
+    "skipUnmatchedRecord": true,
+    "documentVariables": [
+      "$腫瘍登録対象",
+      "$初回治療開始日",
+      "$腫瘍登録対象年",
+      "$年齢",      
+      "$病理組織診断",
+      "$FIGO"
+    ],
+    "csvOffset": 6,
+    "csvUnicode": false,
+    "errorPointer": "/jesgo:error",
+    "errorTargetSchemaId": "/schema/TD/root"
+  },
+  "rules": [
+    {
+      "title": "GO-RT_TD_2024_20XX_basic_info",
+      "source": [
+        {
+          "path": "$.[0].患者台帳.[0].腫瘍登録対象"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].初回治療開始日"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.病理組織診断"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.FIGO"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Variables",
+          "arguments": [
+            "@1",
+            "$腫瘍登録対象",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象",
+            "value",
+            "はい",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Exit"
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@2",
+            "$初回治療開始日",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$初回治療開始日",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】初回治療開始日を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": "Abort"
+        },
+        {
+          "type": "Period",
+          "arguments": [
+            "$date_of_birth",
+            "$初回治療開始日",
+            "years",
+            "$年齢"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$年齢",
+            "value",
+            "10",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$年齢",
+            "value",
+            "99",
+            "le"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】患者年齢が10歳未満または100歳以上です",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$初回治療開始日",
+            "$腫瘍登録対象年",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$腫瘍登録対象年"
+          ],
+          "trueBehavior": 1,
+          "lookup": [
+            [
+              "/^(\\d{4})-(\\d{2})-(\\d{2})$/",
+              "$1"
+            ]
+          ]
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@3",
+            "$病理組織診断",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$病理組織診断",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】病理組織診断を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": "Abort"
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@4",
+            "$FIGO",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】FIGO分類を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": "Abort"
+        }
+      ]
+    },
+    {
+      "title": "GO-RT_TD_2024_2025_check_basic_info",
+      "description": "GO-RT_TD_2024_2025_trophoblastic_disease: FIGOスコア",
+      "source": [
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.FIGOスコア.年齢"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.FIGOスコア.先行妊娠"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.FIGOスコア.先行妊娠からの期間"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.FIGOスコア.治療前血中hCG値(mIU/ml)"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.FIGOスコア.腫瘍の最大径"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.FIGOスコア.転移部位"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.FIGOスコア.転移の数(個)"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.FIGOスコア.効果不良の既往化学療法"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象年",
+            "value",
+            "2025",
+            "le"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】FIGOスコア：年齢を選択して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】FIGOスコア：先行妊娠を選択して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】FIGOスコア：先行妊娠からの期間を選択して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】FIGOスコア：治療前血中hCG値(mIU/ml)を選択して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@5",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】FIGOスコア：腫瘍の最大径を選択して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@6",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】FIGOスコア：転移部位を選択して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@7",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】FIGOスコア：転移の数(個)を選択して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@8",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】FIGOスコア：効果不良の既往化学療法を選択して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-RT_TD_2024_2025_check_pTNM",
+      "description": "GO-RT_TD_2024_2025_trophoblastic_disease: 絨毛癌診断スコア",
+      "source": [
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.絨毛癌診断スコア.先行妊娠"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.絨毛癌診断スコア.潜伏期"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.絨毛癌診断スコア.原発病巣"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.絨毛癌診断スコア.転移部位"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.絨毛癌診断スコア.肺転移巣.個数"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.絨毛癌診断スコア.肺転移巣.直径"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.絨毛癌診断スコア.肺転移巣.大小不同"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.絨毛癌診断スコア.hCG値(mlU/ml)"
+        },
+        {
+          "path": "$.[0].患者台帳.[0].病期診断.絨毛癌診断スコア.基礎体温(月経周期)"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象年",
+            "value",
+            "2025",
+            "le"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】絨毛癌診断スコア：先行妊娠を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】絨毛癌診断スコア：潜伏期を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】絨毛癌診断スコア：原発病巣を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】絨毛癌診断スコア：転移部位を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@5",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】絨毛癌診断スコア：肺転移巣の個数を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@6",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】絨毛癌診断スコア：肺転移巣の直径を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@7",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】絨毛癌診断スコア：肺転移巣の大小不同を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@8",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】絨毛癌診断スコア：hCG値(mlU/ml)を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@9",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】絨毛癌診断スコア：基礎体温(月経周期)を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    }
+  ]
+}

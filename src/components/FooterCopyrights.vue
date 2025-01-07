@@ -1,13 +1,16 @@
 <template>
   <div class="footer">
     <div>
-      JESGOsupport version {{version}} / Copyright &copy; 2023 by P4mohnet
+      JESGOsupport version {{version}} / Copyright &copy; 2023-2024 by P4mohnet, releaed under the MIT license
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-const version = process.env.VUE_APP_VERSION || 'NA'
+const version = import.meta.env.VITE_APP_VERSION || 'NA'
+const licensefield = import.meta.env.LICENSE || 'MIT'
+
+
 </script>
 
 <style>

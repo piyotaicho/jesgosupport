@@ -39,7 +39,7 @@
                     }
                 }
 
-                const result = await plugin.main({caseList: []}, getdummyDocument)
+                const result = await plugin.main({caseList: []}, dummyAPI)
 
                 console.dir(result)
                 document.getElementById('result').value = JSON.stringify(result, '', '  ')

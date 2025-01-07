@@ -10,14 +10,15 @@ import { convertDaichoToJOED, formatJOED } from './jesgo-joed-translator'
 import { createElementFromHtml, showModalDialog } from './modal-dialog'
 import { dialogHTMLstrings } from './export-to-joed-ui'
 
+const version = '1.1.0'
 const script_info: scriptInfo = {
-  plugin_name: 'JOED5用インポートデータの作成',
-  plugin_version: '1.0',
+  plugin_name: 'JOED5インポートデータの作成',
+  plugin_version: `${version.split('.')[0]}.${(Number(version.split('.')[1]) * 100 + Number(version.split('.')[2])).toString().padStart(2,'0')}`,
   all_patient: true,
   attach_patient_info: true,
   update_db: false,
   show_upload_dialog: false,
-  explain: 'JOED5アプリケーションで読み込み可能なJSONファイルを作成します.'
+  explain: '産科婦人科内視鏡学会症例登録で使用するJOED5アプリケーションで読み込み可能なJSONファイルを作成します.'
 }
 
 export async function init () {
@@ -25,6 +26,8 @@ export async function init () {
 }
 
 export async function main (docData: getterPluginArgument, apifunc: (docData: getterPluginArgument) => string): Promise<mainOutput> {
+  console.info(`export-to-joed.ts@${version} (C) 2023-2024 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
+
   if (docData.caseList) {
     const apiresult = await apifunc(docData)
     let documents:pulledDocument[]
@@ -44,16 +47,18 @@ export async function finalize () {
 
 async function handler (docData: pulledDocument[]) {
   if (docData.length === 0) {
+    window.alert('取得できた症例がありません.')
     return undefined
   }
 
   const JOEDdocuments:formatJOED[] = []
 
   // modal dialog に要素を配置する
+  // これをしておかないと以下の getElementById が null を返すので問題をおこす
   const createDialogContent = (parent:Element) => parent.appendChild(createElementFromHtml(dialogHTMLstrings))
 
   // メインのデータ変換処理
-  const procedure = async (yearFilter: string) => {
+  const mainProcess = async (yearFilter: string, anonymizeSetting: string) => {
     // ダイアログ内容の初期化
     const numberOfCases = docData.length
     const statusline1 = document.getElementById('plugin-statusline1')
@@ -62,6 +67,8 @@ async function handler (docData: pulledDocument[]) {
     }
 
     let count = 0
+  
+    // 1症例レコードずつparseしてJOED5用に変換
     for (const caseEntry of docData) {
       // ダイアログのプログレスバーを更新
       count++
@@ -70,7 +77,7 @@ async function handler (docData: pulledDocument[]) {
         progressbar.style.width = (count * 100 / numberOfCases).toString().substring(0, 5) + '%'
       } else {
         // ダイアログのDOMが消失した = modalがcloseされた と判断して処理を中止する
-        console.log('Plugin-aborted.')
+        console.warn('Plugin-aborted.')
         return undefined
       }
 
@@ -84,6 +91,8 @@ async function handler (docData: pulledDocument[]) {
       for (const item of caseEntry.documentList) {
         const documentEntry = item as formatJESGOdocument
         const daichoArray:(formatJESGOdaicho|formatJESGOrelapse)[] = []
+
+        // 治療台帳をdepth 1の配列化
         if (documentEntry?.患者台帳 !== undefined) {
           if (Array.isArray(documentEntry.患者台帳)) {
             daichoArray.push(...documentEntry.患者台帳 as formatJESGOdaicho[])
@@ -98,16 +107,22 @@ async function handler (docData: pulledDocument[]) {
             daichoArray.push(documentEntry.再発)
           }
         }
-        // 変換
+
+        // 治療台帳をJOED5用に変換
         for (const daicho of daichoArray) {
+          // IDの匿名化は変換ルーチンでは順序がわからないのでこの時点で行う
+          const patientIdCoded = anonymizeSetting.includes('ID') ? `jesgo-${count}`: patientId
+
           const exportDocument = await convertDaichoToJOEDwrapper(
-            patientId,
+            patientIdCoded,
             patientName,
             patientDOB,
             daicho,
-            yearFilter
+            yearFilter,
+            anonymizeSetting
           )
-          if (exportDocument) {
+          // 変換結果を JOEDdocuments に push
+          if (exportDocument && exportDocument.length > 0) {
             JOEDdocuments.push(...exportDocument)
           }
         }
@@ -130,13 +145,15 @@ async function handler (docData: pulledDocument[]) {
   // modal dialog 内で実行される処理
   const dialogProcedure = async () => {
     const selectElement = document.getElementById('plugin-selection')
+    const anonymizeElement = document.getElementById('anonymize')
     const processButton = document.getElementById('plugin-process-script')
-    if (!selectElement || !processButton) {
+    if (!selectElement || !anonymizeElement || !processButton) {
       throw new Error('DOM loading failure.')
     }
-    // ダイアログの select / option を追加
-    const currentYear: number = new Date().getFullYear()
 
+    // ダイアログの年次 select / option を追加
+    const currentYear: number = new Date().getFullYear()
+  
     for (let year = currentYear; year > 2019; year--) {
       const option = document.createElement('option')
       option.text = `${year}年`
@@ -157,7 +174,10 @@ async function handler (docData: pulledDocument[]) {
             processDiv.style.display = ''
 
             // メインルーチンへ
-            resolve(await procedure((selectElement as HTMLSelectElement).value))
+            resolve(await mainProcess(
+              (selectElement as HTMLSelectElement).value,
+              (anonymizeElement as HTMLSelectElement).value
+            ))
           } else {
             throw new Error('Div DOM loading failure.')
           }
@@ -181,15 +201,19 @@ async function handler (docData: pulledDocument[]) {
  * ロックアップ回避のための変換ルーチンのラッパー
  */
 async function convertDaichoToJOEDwrapper (
-  patientId: string|undefined, patientName: string|undefined, patientDOB:string|undefined, daicho: formatJESGOdaicho|formatJESGOrelapse, filterYear: string
+  patientId: string|undefined,
+  patientName: string|undefined,
+  patientDOB:string|undefined,
+  daicho: formatJESGOdaicho|formatJESGOrelapse,
+  filterYear: string,
+  anonymizeSetting = 'NO'
 ): Promise<formatJOED[]|undefined> {
   return await new Promise(resolve => {
     setTimeout(() => {
       try {
-        resolve(convertDaichoToJOED(patientId, patientName, patientDOB, daicho, filterYear))
+        resolve(convertDaichoToJOED(patientId, patientName, patientDOB, daicho, filterYear, anonymizeSetting))
       } catch (e) {
-        console.log(`症例(${patientId})の処理中に例外が発生しました.`)
-        console.dir(daicho)
+        console.warn(`症例(${patientId})の処理中に例外が発生しました.`)
         console.error(e)
         resolve(undefined)
       }
