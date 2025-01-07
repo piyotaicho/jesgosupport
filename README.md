@@ -1,12 +1,14 @@
 # JESGOサポートツール
 JESGOからプラグイン経由で出力された全症例に該当するJSONファイルをCSVに加工するツールです。JSONドキュメントからJSONPathを用いて情報を抽出してそれをルールセットに基づきCSVにマッピングします。  
+デモは https://mohnet.com/products/JESGOsupport/ からご利用いただけます。
+
 実際の出力ドキュメントを参照しながら変換ルールを作成できますが、ドキュメント中に全てのドキュメント構造が網羅されることは原則ありませんのでスキーマ定義 https://github.com/jesgo-toitu/jesgo-schema も参照して作業することをお薦めします。
 
-上記の如くでJSONパスに関する知識が必要になります。  
+上記の如くJSONとJSONパスに関する知識があるとより柔軟な操作が可能になります。
 日本語での簡単なJSONパスの資料として https://qiita.com/takkii1010/items/0ce1c834d3a73496ccef があります。また、使用しているライブラリJSONPath Plus https://www.npmjs.com/package/jsonpath-plus のドキュメントも余裕があったら参照することをお薦めします。 
 
 ## プラグインの登録
-JSONファイルの出力には [/jesgo-plugin/jesgo-json.js](jesgo-plugin/jesgo-json.js) をダウンロードして、JESGOにプラグインとして登録してご利用下さい。  
+JESGOのプラグインAPIで取得可能な全データを含むJSONファイルの出力には [/jesgo-plugin/jesgo-json.js](jesgo-plugin/jesgo-json.js) をダウンロードして、JESGOにプラグインとして登録してご利用下さい。  
 エラーメッセージのJSONファイルを JESGOに取り込むには /jesgo-plugin/jesgo-error-import.js をJESGOにプラグインとして登録してご利用下さい。
 
 ## 本ユーティリティの機能
