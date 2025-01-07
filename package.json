@@ -7,14 +7,15 @@
     "name": "Yasuhiro Yamamoto",
     "email": "mohyama@mohnet.com"
   },
-  "license": "MIT (C) 2023-2024 by P4mohnet",
+  "license": "MIT (C) 2023-2025 by P4mohnet",
   "type": "module",
   "scripts": {
     "serve": "vite",
     "build": "vite build",
+    "build.production": "vite build --mode=production",
     "lint": "eslint --fix 'src/*.{js, ts, vue}' &&  eslint --fix 'src/**/*.{js, ts, vue}'",
     "build-plugin": "webpack --config jesgo-plugin/webpack.config.cjs",
-    "build-plugin-production": "webpack --config jesgo-plugin/webpack.config.cjs --mode=production"
+    "build-plugin.production": "webpack --config jesgo-plugin/webpack.config.cjs --mode=production"
   },
   "dependencies": {
     "@types/encoding-japanese": "^2.0.5",
