@@ -88,6 +88,10 @@ module.exports = {
   experiments: {
     outputModule: true
   },
+  performance: {
+    maxAssetSize: 1000000, // 500KB
+    maxEntrypointSize: 2000000, // 1MB
+  },
   output: {
     library: {
       type: 'module'
