@@ -1,18 +1,18 @@
 import { mainOutput, scriptInfo, getterPluginArgument, updateDocument, setterPluginArgument } from './types'
 import { dialogHTML } from './embedded-runtime-single-ui'
 import { handler, verbose } from './runtime-common'
-import { scriptCheckCC as checkRule } from './support-scripts/scriptsForCheck'
+import { scriptCheckTD as checkRule } from './support-scripts/scriptsForCheckRaretumors'
 
 export async function init ():Promise<scriptInfo> {
   return {
-    plugin_name: '子宮頸がん個別チェック(2023-2024)',
+    plugin_name: '絨毛性疾患個別チェック(2023-2024)',
     plugin_version: '1.201',
     all_patient: false,
     attach_patient_info: true,
     show_upload_dialog: false,
     update_db: true,
     target_schema_id_string: '',
-    explain: '症例毎に子宮頸がん登録のロジカルチェックを行います.(2023年～2024年登録対応)'
+    explain: '症例毎に絨毛性疾患登録のロジカルチェックを行います.(2023年～2024年登録対応)'
   }
 }
 

@@ -1,12 +1,12 @@
 import { mainOutput, scriptInfo, getterPluginArgument, updateDocument, setterPluginArgument } from './types'
 import { dialogHTML } from './embedded-runtime-single-ui'
 import { handler, verbose } from './runtime-common'
-import { checkOV as checkRule } from './support-scripts/scripts-v1'
+import { scriptCheckOV as checkRule } from './support-scripts/scriptsForCheck'
 
 export async function init ():Promise<scriptInfo> {
   return {
     plugin_name: '卵巣がん個別チェック(2023-2024)',
-    plugin_version: '1.2',
+    plugin_version: '1.201',
     all_patient: false,
     attach_patient_info: true,
     show_upload_dialog: false,

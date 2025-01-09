@@ -2,7 +2,7 @@ import { mainOutput, scriptInfo, getterPluginArgument, updateDocument, setterPlu
 import { dialogHTML } from './jesgo-support-runtime-single-ui'
 import { handler, verbose, loadJSONfile } from './runtime-common'
 
-const version = '1.1.0'
+const version = '1.1.1'
 const filename = 'jesgo-support-runtime-for-single.ts'
 export async function init ():Promise<scriptInfo> {
   return {
@@ -29,7 +29,7 @@ export async function init ():Promise<scriptInfo> {
  *  - 取得系 void
  */
 export async function main (docData: setterPluginArgument[], apicall: (docData: getterPluginArgument|updateDocument|updateDocument[], mode: boolean) => string): Promise<mainOutput> {
-  console.log(`${filename}@${version} (C) 2023-2024 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
+  console.log(`${filename}@${version} (C) 2023-2025 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
 
   // 更新モードなのでdocDataには表示されている全てのドキュメントが入っている
   const getterAPIcall = (request: getterPluginArgument) => apicall(request, true)
