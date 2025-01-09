@@ -12,10 +12,10 @@
   "scripts": {
     "serve": "vite",
     "build": "vite build",
-    "build-production": "vite build --production",
+    "build.production": "vite build --mode=production",
     "lint": "eslint --fix 'src/*.{js, ts, vue}' &&  eslint --fix 'src/**/*.{js, ts, vue}'",
     "plugin:build": "webpack --config jesgo-plugin/webpack.config.cjs",
-    "plugin:build-production": "webpack --config jesgo-plugin/webpack.config.cjs --mode=production"
+    "plugin:build.production": "webpack --config jesgo-plugin/webpack.config.cjs --mode=production"
   },
   "dependencies": {
     "@types/encoding-japanese": "^2.0.5",
