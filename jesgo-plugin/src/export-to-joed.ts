@@ -26,7 +26,7 @@ export async function init () {
 }
 
 export async function main (docData: getterPluginArgument, apifunc: (docData: getterPluginArgument) => string): Promise<mainOutput> {
-  console.info(`export-to-joed.ts@${version} (C) 2023-2024 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
+  console.info(`export-to-joed.ts@${version} (C) 2023-2025 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
 
   if (docData.caseList) {
     const apiresult = await apifunc(docData)

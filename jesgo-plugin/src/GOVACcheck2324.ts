@@ -5,7 +5,7 @@ import { scriptCheckVAC as checkRule } from './support-scripts/scriptsForCheckRa
 
 export async function init ():Promise<scriptInfo> {
   return {
-    plugin_name: '腟がん個別チェック(2023-2024)＄',
+    plugin_name: '腟がん個別チェック(2023-2024)',
     plugin_version: '1.201',
     all_patient: false,
     attach_patient_info: true,
