@@ -3,13 +3,12 @@ import { dialogHTML } from './jesgo-support-runtime-ui'
 import { handler, verbose, loadJSONfile } from './runtime-common'
 // スクリプトプリセット
 import { scriptCC, scriptEM, scriptOV, scriptCheckCC, scriptCheckEM, scriptCheckOV, scriptCheckUS, scriptCheckUA, scriptCheckTD, scriptCheckVAC, scriptCheckVUC } from './support-scripts/scripts-v1'
-import { ca } from 'element-plus/es/locale'
 
 const version = '1.1.1'
 const filename = 'jesgo-support-runtime.ts'
 export async function init ():Promise<scriptInfo> {
   return {
-    plugin_name: '腫瘍登録スクリプト一括実行RC',
+    plugin_name: '腫瘍登録スクリプト一括実行RC＄',
     plugin_version: `${version.split('.')[0]}.${(Number(version.split('.')[1]) * 100 + Number(version.split('.')[2])).toString().padStart(2,'0')}`,
     all_patient: true,
     attach_patient_info: true,

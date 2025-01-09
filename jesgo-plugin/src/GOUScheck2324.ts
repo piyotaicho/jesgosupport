@@ -5,7 +5,7 @@ import { scriptCheckUS as checkRule } from './support-scripts/scriptsForCheckRar
 
 export async function init ():Promise<scriptInfo> {
   return {
-    plugin_name: '子宮肉腫個別チェック(2023-2024)',
+    plugin_name: '子宮肉腫個別チェック(2023-2024)＄',
     plugin_version: '1.201',
     all_patient: false,
     attach_patient_info: true,
