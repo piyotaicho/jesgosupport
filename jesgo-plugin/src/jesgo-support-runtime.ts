@@ -3,7 +3,6 @@ import { dialogHTML } from './jesgo-support-runtime-ui'
 import { handler, verbose, loadJSONfile } from './runtime-common'
 // スクリプトプリセット
 import { scriptCC, scriptEM, scriptOV, scriptCheckCC, scriptCheckEM, scriptCheckOV, scriptCheckUS, scriptCheckUA, scriptCheckTD, scriptCheckVAC, scriptCheckVUC } from './support-scripts/scripts-v1'
-import { ca } from 'element-plus/es/locale'
 
 const version = '1.1.1'
 const filename = 'jesgo-support-runtime.ts'
