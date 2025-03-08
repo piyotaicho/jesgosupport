@@ -2,13 +2,14 @@ import { mainOutput, scriptInfo, getterPluginArgument, updateDocument, setterPlu
 import { dialogHTML } from './jesgo-support-runtime-ui'
 import { handler, verbose, loadJSONfile } from './runtime-common'
 // スクリプトプリセット
-import { scriptCC, scriptEM, scriptOV, checkCC, checkEM, checkOV } from './support-scripts/scripts-v1'
+import { scriptCC, scriptEM, scriptOV, scriptCheckCC, scriptCheckEM, scriptCheckOV, scriptCheckUS, scriptCheckUA, scriptCheckTD, scriptCheckVAC, scriptCheckVUC } from './support-scripts/scripts-v1'
+import { ca } from 'element-plus/es/locale'
 
-const version = '1.1.0'
+const version = '1.1.1'
 const filename = 'jesgo-support-runtime.ts'
 export async function init ():Promise<scriptInfo> {
   return {
-    plugin_name: '腫瘍登録スクリプト一括実行RC',
+    plugin_name: '腫瘍登録スクリプト一括実行',
     plugin_version: `${version.split('.')[0]}.${(Number(version.split('.')[1]) * 100 + Number(version.split('.')[2])).toString().padStart(2,'0')}`,
     all_patient: true,
     attach_patient_info: true,
@@ -31,7 +32,7 @@ export async function init ():Promise<scriptInfo> {
  *  - 取得系 void
  */
 export async function main (docData: setterPluginArgument[], apicall: (docData: getterPluginArgument|updateDocument|updateDocument[], mode: boolean) => string): Promise<mainOutput> {
-  console.log(`${filename}@${version} (C) 2023-2024 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
+  console.log(`${filename}@${version} (C) 2023-2025 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
 
   // 更新モードなのでdocDataには表示されている全てのドキュメントが入っている
   const getterAPIcall = (request: getterPluginArgument) => apicall(request, true)
@@ -56,7 +57,7 @@ export async function finalize (): Promise<void> {
 }
 
 async function getRuleSet (): Promise<unknown> {
-  type ScriptTypeFormat = 'loadscript'|'CC'|'EM'|'OV'|'CCcheck'|'EMcheck'|'OVcheck'
+  type ScriptTypeFormat = 'loadscript'|'CC'|'EM'|'OV'|'CCcheck'|'EMcheck'|'OVcheck'|'UScheck'|'UAcheck'|'TDcheck'|'VACcheck'|'VUCcheck'
 
   return new Promise<unknown>((resolve, reject) => {
     // DOMイベントを設定
@@ -114,13 +115,28 @@ async function getRuleSet (): Promise<unknown> {
             resolve(scriptOV)
             break
           case 'CCcheck':
-            resolve(checkCC)
+            resolve(scriptCheckCC)
             break
           case 'EMcheck':
-            resolve(checkEM)
+            resolve(scriptCheckEM)
             break
           case 'OVcheck':
-            resolve(checkOV)
+            resolve(scriptCheckOV)
+            break
+          case 'UScheck':
+            resolve(scriptCheckUS)
+            break
+          case 'UAcheck':
+            resolve(scriptCheckUA)
+            break
+          case 'TDcheck':
+            resolve(scriptCheckTD)
+            break
+          case 'VACcheck':
+            resolve(scriptCheckVAC)
+            break
+          case 'VUCcheck':
+            resolve(scriptCheckVUC)
             break
           default:
             reject(new Error('選択肢から不正な値が取得されました.'))
