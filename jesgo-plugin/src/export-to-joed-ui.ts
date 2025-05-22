@@ -8,10 +8,10 @@ export const dialogHTMLstrings = `
             />
         </div>
         <div>
-            <span style="font-size: 0.8rem;">Version 1.0.1</span>
+            <span style="font-size: 0.8rem;">$$VERSION$$</span>
         </div>
         <div>
-            <span style="font-size: 0.8rem;">Copyright &copy; 2023 by P4mohnet</span>
+            <span style="font-size: 0.8rem;">$$CREDIT$$</span>
         </div>
     </div>
     <div id="plugin-setting" style="margin-left: 1rem;">

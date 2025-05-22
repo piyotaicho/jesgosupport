@@ -11,6 +11,7 @@ import { createElementFromHtml, showModalDialog } from './modal-dialog'
 import { dialogHTMLstrings } from './export-to-joed-ui'
 
 const version = '1.1.0'
+const credit = 'Copyright 2023-2025 by P4mohnet'
 const script_info: scriptInfo = {
   plugin_name: 'JOED5インポートデータの作成',
   plugin_version: `${version.split('.')[0]}.${(Number(version.split('.')[1]) * 100 + Number(version.split('.')[2])).toString().padStart(2,'0')}`,
@@ -26,7 +27,7 @@ export async function init () {
 }
 
 export async function main (docData: getterPluginArgument, apifunc: (docData: getterPluginArgument) => string): Promise<mainOutput> {
-  console.info(`export-to-joed.ts@${version} (C) 2023-2025 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
+  console.info(`export-to-joed.ts@${version} ${credit}\nhttps://github.com/piyotaicho/jesgosupport`)
 
   if (docData.caseList) {
     const apiresult = await apifunc(docData)
@@ -55,7 +56,8 @@ async function handler (docData: pulledDocument[]) {
 
   // modal dialog に要素を配置する
   // これをしておかないと以下の getElementById が null を返すので問題をおこす
-  const createDialogContent = (parent:Element) => parent.appendChild(createElementFromHtml(dialogHTMLstrings))
+  // HTML文字列の $$CREDIT$$ と $$VERSION$$ はcredit, version で置換される
+  const createDialogContent = (parent:Element) => parent.appendChild(createElementFromHtml(dialogHTMLstrings.replace('$$VERSION$$', `Version ${version}`).replace('$$CREDIT$$', credit)))
 
   // メインのデータ変換処理
   const mainProcess = async (yearFilter: string, anonymizeSetting: string) => {
