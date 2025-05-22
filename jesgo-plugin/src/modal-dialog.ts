@@ -57,24 +57,37 @@ export async function showModalDialog (contentCreator:(bodyElement:Element) => v
 
   // イベント処理コールバック関数が指定された場合はCloseButtonと並列動作させる
   if (eventHandler && typeof eventHandler === 'function') {
-    let closeButtonBehavior = false
-    return await Promise.all([
+    let forceDownloadOnClose = false
+    let eventHandlerFinished = false
+    return Promise.all([
+      // Promise(1) - イベントハンドラ
       eventHandler()
-        // 処理の終了を通知する
+        // fullfilled or rejected問わず処理の終了を通知する
         .then(value => {
-          closeButtonBehavior = true
+          eventHandlerFinished = true
           return value
+        })
+        .catch(_ => {
+          eventHandlerFinished = true
         }),
+      // Promise(2) - 閉じるボタンのイベントハンドラ
       new Promise<void>((resolve, reject) => closeButton.addEventListener(
         'click',
-        () => {
+        (event: MouseEvent) => {
+          // シフトキー押し下げで結果の強制ダウンロードを行う
+          if (event.shiftKey) {
+            forceDownloadOnClose = true
+          }
+
+          // modalの表示を終了
           if (loadingElement && loadingDisplayStyle !== '') {
             loadingElement.style.display = loadingDisplayStyle
           }
           modal.style.display = 'none'
           body.removeChild(modalElement)
-          // 他のルーチンが動作中(closeButtonBehavior)に閉じるが押された場合はPromise.allをrejectで終了させる
-          if (closeButtonBehavior) {
+
+          // 他のルーチンが動作中(eventHandlerFinished == false)に閉じるが押された場合はPromise.allをrejectで終了させる
+          if (eventHandlerFinished) {
             resolve()
           } else {
             // eslint-disable-next-line prefer-promise-reject-errors
@@ -86,13 +99,23 @@ export async function showModalDialog (contentCreator:(bodyElement:Element) => v
         }
       ))
     ])
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      .then(values => values[0])
-      // rejectで閉じるボタンで強制終了
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      .catch(_ => undefined)
+      // 正常終了して閉じるボタンでモーダルダイアログを閉じる
+      // イベントハンドラの返り値を返す
+      .then(results => {
+        // forceDownloadOnCloseがtrueの場合は、ダウンロード処理を実行する
+        if (forceDownloadOnClose) {
+          const filename = 'jesgo-plugin-export.json'
+          const content = JSON.stringify(results[0], null, 2)
+          forceDownload(content, filename)
+        }
+        return results[0]
+      })
+      // rejectはエラーもしくは閉じるボタンで強制終了
+      // undefinedを返す
+      .catch(_ => new Promise<undefined>((resolve) => { resolve(undefined)}))
   } else {
-    return await new Promise<void>(resolve => closeButton.addEventListener(
+    // イベント処理コールバック関数が指定されていない場合は、閉じるボタンを押すまで待機する
+    return new Promise<void>(resolve => closeButton.addEventListener(
       'click',
       () => {
         if (loadingElement && loadingDisplayStyle !== '') {
@@ -149,6 +172,13 @@ interface buttonOptions {
   disabled?: boolean
 }
 
+/**
+ * ボタンエレメントを作成する
+ * @param label 
+ * @param id 
+ * @param options 
+ * @returns 
+ */
 export function createButton (label: string, id = '', options?: buttonOptions): HTMLButtonElement {
   // オプションの規定値を設定
   const style = options?.style || 'btn-primary'
@@ -174,6 +204,13 @@ interface inputOptions {
   readonly?: boolean
 }
 
+/**
+ * フォームの入力エレメントを作成する
+ * @param label 
+ * @param id 
+ * @param options 
+ * @returns 
+ */
 export function createFormInput (label: string, id = '', options?: inputOptions): HTMLDivElement|HTMLInputElement {
   const size = (options?.size || 'normal') === 'large'
     ? 'form-control-lg'
@@ -203,4 +240,26 @@ export function createFormInput (label: string, id = '', options?: inputOptions)
   } else {
     return inputElement
   }
+}
+
+/**
+ * contentを強制的にダウンロードする
+ * @param content 
+ * @param filename 
+ */
+function forceDownload (content: string, filename?: string) {
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename || 'download-data.txt'
+  document.body.appendChild(a)
+  a.click()
+
+  setTimeout(() => {
+    URL.revokeObjectURL(url) // メモリ解放
+    if (a.parentNode) {
+      a.parentNode.removeChild(a) // DOMから削除
+    }
+  } , 250)
 }
