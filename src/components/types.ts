@@ -87,6 +87,7 @@ export type fileRuleSetV1 = {
   config?: configObject
   rules: LogicRuleSet[]
   languageMajorVersion?: number // 新エンジンに載せ変わったら>1になる
+  verbose?: boolean // デバッグ用(読み込みルーチンで付与)
 }
 // V0.9未満はルールセットのアレイ
 export type fileRuleSetV0 = LogicRuleSet[]

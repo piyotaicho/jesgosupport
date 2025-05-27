@@ -7,8 +7,8 @@ import { LogicRuleSet, configObject, fileRuleSetV1 } from '../../src/components/
 import { queryDocument, userDownload } from '../../src/components/utilities'
 import { JSONPath } from 'jsonpath-plus'
 
-export const runtimeVersion = '1.1.0'
-export const runtimeCredit = `Version ${runtimeVersion} Copyright &copy; 2023-2024 by P4mohnet`
+export const runtimeVersion = '1.1.2'
+export const runtimeCredit = 'Copyright &copy; 2023-2025 by P4mohnet'
 
 /**
  * メッセージログとデータダンプを表示
@@ -102,7 +102,7 @@ export function saveCSV (data:unknown[], offset = 0, filename = 'JESGO出力デ�
  * SPAN #plugin-statusline1 #plugin-statusline2 #plugin-statusline3
  */
 export async function handler (data: setterPluginArgument[], scriptGetter: () => Promise<unknown>, dialogHTMLsource: string, getterAPIcall?: (arg: getterPluginArgument) => string): Promise<updateDocument[]|undefined> {
-  console.info(`JESGO support tool runtime ${runtimeCredit}`)
+  console.info(`JESGO support tool runtime - Version ${runtimeVersion} ${runtimeCredit}`)
 
   // データ無し
   const dataLength = data.length
@@ -131,6 +131,9 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
 
   // ダイアログ内処理
   const dialogProcedure = async () => {
+    // verboseフラグ
+    let verbose = false
+  
     // ページのセットアップ
     const dialogPage1 = document.getElementById('plugin-settings')
     const dialogPage2 = document.getElementById('plugin-processing')
@@ -150,6 +153,11 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
       rulesetTitle = loadedContent.title
       rulesetConfig = loadedContent?.config || {}
       rulesetScript = loadedContent.rules
+
+      // スクリプトロード時のverboseフラグ
+      if (loadedContent?.verbose) {
+        verbose = true
+      }
     } catch (e: unknown) {
       const message = (e as Error)?.message || 'エラーです'
       window.alert(message)
@@ -191,8 +199,8 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
       statusline2.innerText = `${rulesetTitle} - コンパイル中です`
     }
 
-    // プロセッサの構築 (プラグインではログを行わない)
-    const processor = new Processor(rulesetConfig?.documentVariables || [], true)
+    // プロセッサの構築
+    const processor = new Processor(rulesetConfig?.documentVariables || [], !verbose)
     try {
       await processor.compile(rulesetScript)  
     } catch (e) {
@@ -246,6 +254,7 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
           continue
         }
 
+        // シングルドキュメントなのでコンパイルを行わず逐次実行
         const result = await processor.run(queriedDocument) as processorOutputFormat
 
         if (result) {

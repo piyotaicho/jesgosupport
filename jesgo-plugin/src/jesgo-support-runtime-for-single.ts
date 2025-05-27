@@ -1,13 +1,12 @@
 import { mainOutput, scriptInfo, getterPluginArgument, updateDocument, setterPluginArgument } from './types'
 import { dialogHTML } from './jesgo-support-runtime-single-ui'
-import { handler, verbose, loadJSONfile } from './runtime-common'
+import { runtimeCredit, runtimeVersion, handler, verbose, loadJSONfile } from './runtime-common'
 
-const version = '1.1.1'
 const filename = 'jesgo-support-runtime-for-single.ts'
 export async function init ():Promise<scriptInfo> {
   return {
     plugin_name: 'JESGO-supportランタイム(個別)',
-    plugin_version: `${version.split('.')[0]}.${(Number(version.split('.')[1]) * 100 + Number(version.split('.')[2])).toString().padStart(2,'0')}`,
+    plugin_version: `${runtimeVersion.split('.')[0]}.${(Number(runtimeVersion.split('.')[1]) * 100 + Number(runtimeVersion.split('.')[2])).toString().padStart(2,'0')}`,
     all_patient: false,
     attach_patient_info: true,
     show_upload_dialog: false,
@@ -29,7 +28,7 @@ export async function init ():Promise<scriptInfo> {
  *  - 取得系 void
  */
 export async function main (docData: setterPluginArgument[], apicall: (docData: getterPluginArgument|updateDocument|updateDocument[], mode: boolean) => string): Promise<mainOutput> {
-  console.log(`${filename}@${version} (C) 2023-2025 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
+  console.log(`${filename}@${runtimeCredit}`)
 
   // 更新モードなのでdocDataには表示されている全てのドキュメントが入っている
   const getterAPIcall = (request: getterPluginArgument) => apicall(request, true)
@@ -58,8 +57,11 @@ async function getRuleSet (): Promise<unknown> {
     // DOMイベントを設定
     const runButton = document.getElementById('plugin-process-script') as HTMLButtonElement
     if (runButton) {
-      runButton.addEventListener('click', async () => {
+      runButton.addEventListener('click', async (event: MouseEvent) => {
         try {
+          // シフトキー押し下げでクリックでverboseモード(singleのみの実装)
+          const verbose = event.shiftKey
+
           // eslint-disable-next-line no-case-declarations
           const JSONstring = await loadJSONfile()
           const ruleset = JSON.parse(JSONstring)
@@ -80,7 +82,14 @@ async function getRuleSet (): Promise<unknown> {
           ) {
             throw new Error('このファイルは有効なルールセットが記載されたJSONファイルではないようです.')
           }
-          console.dir(ruleset)
+
+          if (verbose) {
+            console.log('Verbose mode enabled.')
+            console.log('Ruleset loaded.')
+            console.dir(ruleset)
+
+            ruleset.verbose = true
+          }
           resolve(ruleset)
         } catch (e) {
           if ((e as Error).name === 'SyntaxError') {

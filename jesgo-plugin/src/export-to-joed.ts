@@ -242,5 +242,5 @@ async function handler (docData: pulledDocument[]) {
   }
 
   // ダイアログの表示をする
-  return await showModalDialog(createDialogContent, dialogProcedure) as Promise<formatJOED[] | undefined>
+  return await showModalDialog(createDialogContent, dialogProcedure, false) as Promise<formatJOED[] | undefined>
 }

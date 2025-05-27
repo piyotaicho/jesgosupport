@@ -14,9 +14,10 @@ export async function showModalMessageBox (message = ''): Promise<unknown> {
  * モーダルダイアログを表示する
  * @param contentCreator モーダルダイアログの内容を設定するコールバック関数
  * @param eventHandler モーダルダイアログ内での動作を設定するコールバック関数(Promise)
+ * @param disableDownloadOnClose SHIFT+閉じるボタンを押したときにダウンロードを行わない
  * @returns ダイアログを閉じるまでのpromise
  */
-export async function showModalDialog (contentCreator:(bodyElement:Element) => void, eventHandler?:() => Promise<unknown>): Promise<unknown> {
+export async function showModalDialog (contentCreator:(bodyElement:Element) => void, eventHandler?:() => Promise<unknown>, disableDownloadOnClose = true): Promise<unknown> {
   // based on bootstrap document : https://getbootstrap.jp/docs/5.0/components/modal/
   const body = document.getElementsByTagName('body')[0]
 
@@ -75,7 +76,7 @@ export async function showModalDialog (contentCreator:(bodyElement:Element) => v
         'click',
         (event: MouseEvent) => {
           // シフトキー押し下げで結果の強制ダウンロードを行う
-          if (event.shiftKey) {
+          if (disableDownloadOnClose === false && event.shiftKey) {
             forceDownloadOnClose = true
           }
 
