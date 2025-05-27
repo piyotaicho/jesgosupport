@@ -17,8 +17,8 @@ interface codeBuffer {
 type v1BlockType = 'oper' | 'var' | 'query' | 'tr' | 'sort' | 'period' | 'set' | 'put'
 export type newBlockType = v1BlockType | BlockType
 
-type commandValueTypes = 'value' | 'length' | 'count' | 'number'
-type commandOperatorExpressions = 'eq' | '=' | 'gt' | '>' | 'ge' | '>=' | 'lt' | '<' | 'le' | '<=' | 'in' | 'incl' | 're' | 'regexp'
+type commandValueTypes = 'value' | 'whole' | 'length' | 'count' | 'number'
+type commandOperatorExpressions = 'eq' | '=' | 'gt' | '>' | 'ge' | '>=' | 'lt' | '<' | 'le' | '<=' | 'in' | 'incl' | 'same' | 're' | 'regexp'
 type commandSetsOperators = 'add' | 'union' | 'intersect' | 'difference' | 'xor'
 type commandSortDirections = 'asc' | 'ascend' | 'desc' | 'descend'
 type commandPeriodOperators = 'years' | 'years,roundup' | 'months' | 'months,roundup' | 'weeks' | 'weeks,roundup' | 'days'
@@ -666,32 +666,40 @@ export class Processor {
    * @returns {boolean}
    */
   private commandOperators = (valueA: string[] = [], valueAtype: commandValueTypes = 'value', valueB: string[] = [], operator: commandOperatorExpressions): boolean => {
-    let valueOfA: JsonObject[]
-    let valueOfB: JsonObject[]
+    let valueOfA: (string | number)[]
+    let valueOfB: (string | number)[]
     switch (valueAtype) {
       case 'value':
         valueOfA = valueA
         valueOfB = valueB
         break
+      case 'whole':
+        valueOfA = [valueA.join('\0')]
+        valueOfB = [valueB.join('\0')]
+        break
       case 'length':
       case 'count':
         valueOfA = [valueA.length]
         valueOfB = valueB.map(item => Number(item)).filter(item => !Number.isNaN(item))
+        if (valueOfB.length === 0) {
+          throw new SyntaxError('比較対象の値がありません.')  
+        }
         break
       case 'number':
         valueOfA = valueA.map(item => Number(item)).filter(item => !Number.isNaN(item))
         valueOfB = valueB.map(item => Number(item)).filter(item => !Number.isNaN(item))
+        if (valueOfA.length === 0 || valueOfB.length === 0) {
+          throw new SyntaxError('比較対象の値がありません.')  
+        }
         break
       default:
         throw new SyntaxError(`不正な型指定${valueAtype}です.`)
     }
 
     switch (operator) {
-      // 単純な比較演算子は先頭要素のみ(Number-Stringの型は自動変換に任せる)
       case 'eq':
       case '=':
-        // eslint-disable-next-line eqeqeq
-        return valueOfA[0] == valueOfB[0]
+        return valueOfA[0] === valueOfB[0]
       case 'gt':
       case '>':
         return valueOfA[0] > valueOfB[0]
@@ -709,6 +717,10 @@ export class Processor {
         return valueOfA.some(item => valueOfB.includes(item))
       case 'incl':
         return valueOfB.some(item => valueOfA.includes(item))
+      case 'same':
+        return valueOfA.length === valueOfB.length &&
+          valueOfA.every(item => valueOfB.includes(item)) &&
+          valueOfB.every(item => valueOfA.includes(item))
       case 're':
       case 'regexp':
         return valueOfA.some(item => {
