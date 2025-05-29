@@ -7,9 +7,9 @@ module.exports = {
   entry: {
     'jesgo-supporttool-runtime': './jesgo-plugin/src/jesgo-support-runtime.ts',
     'jesgo-supporttool-runtime-for-singlecase': './jesgo-plugin/src/jesgo-support-runtime-for-single.ts',
-    'GOCCcheck2324-single': './jesgo-plugin/src/GOCCcheck2324.ts',
+    'GOCCcheck2325-single': './jesgo-plugin/src/GOCCcheck2324.ts',
     'GOEMcheck2324-single': './jesgo-plugin/src/GOEMcheck2324.ts',
-    'GOOVcheck2324-single': './jesgo-plugin/src/GOOVcheck2324.ts',
+    'GOOVcheck2325-single': './jesgo-plugin/src/GOOVcheck2324.ts',
     'GOTDcheck2324-single': './jesgo-plugin/src/GOTDcheck2324.ts',
     'GOUAcheck2324-single': './jesgo-plugin/src/GOUAcheck2324.ts',
     'GOUScheck2324-single': './jesgo-plugin/src/GOUScheck2324.ts',

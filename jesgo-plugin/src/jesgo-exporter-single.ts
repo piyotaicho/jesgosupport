@@ -7,10 +7,10 @@
 //
 import { mainOutput, scriptInfo, getterPluginArgument, pulledDocument } from './types'
 
-const version = '1.0.0'
+const version = '1.0.1'
 const script_info: scriptInfo = {
   plugin_name: '患者文書出力(個別)',
-  plugin_version: '1.0',
+  plugin_version: `${version.split('.')[0]}.${(Number(version.split('.')[1]) * 100 + Number(version.split('.')[2])).toString().padStart(2,'0')}`,
   all_patient: false,
   attach_patient_info: true,
   update_db: false,
@@ -23,7 +23,7 @@ export async function init () {
 }
 
 export async function main (docData: getterPluginArgument, apifunc: (docData: getterPluginArgument) => string): Promise<mainOutput> {
-  console.log(`jesgo-exporter-single.ts@${version} (C) 2023 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
+  console.log(`jesgo-exporter-single.ts@${version} (C) 2023-2025 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
 
   if (docData.caseList) {
     const apiresult = await apifunc(docData)

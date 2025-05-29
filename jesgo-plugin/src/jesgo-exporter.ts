@@ -8,10 +8,10 @@
 import { mainOutput, scriptInfo, getterPluginArgument, pulledDocument } from './types'
 import { showModalMessageBox } from './modal-dialog'
 
-const version = '1.0.0'
+const version = '1.0.1'
 const script_info: scriptInfo = {
   plugin_name: '全患者文書出力',
-  plugin_version: '1.0',
+  plugin_version: `${version.split('.')[0]}.${(Number(version.split('.')[1]) * 100 + Number(version.split('.')[2])).toString().padStart(2,'0')}`,
   all_patient: true,
   attach_patient_info: true,
   update_db: false,
@@ -24,7 +24,7 @@ export async function init () {
 }
 
 export async function main (docData: getterPluginArgument, apifunc: (docData: getterPluginArgument) => string): Promise<mainOutput> {
-  console.log(`jesgo-exporter.ts@${version} (C) 2023 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
+  console.log(`jesgo-exporter.ts@${version} (C) 2023-2025 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
 
   if (docData.caseList) {
     const apiresult = await apifunc(docData)
