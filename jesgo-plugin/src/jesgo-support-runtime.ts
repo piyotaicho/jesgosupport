@@ -1,6 +1,6 @@
 import { mainOutput, scriptInfo, getterPluginArgument, updateDocument, setterPluginArgument } from './types'
 import { dialogHTML } from './jesgo-support-runtime-ui'
-import { handler, verbose, loadJSONfile } from './runtime-common'
+import { handler, verbose, loadJSONfile, runtimeCredit } from './runtime-common'
 // スクリプトプリセット
 import { scriptCC, scriptEM, scriptOV, scriptCheckCC, scriptCheckEM, scriptCheckOV, scriptCheckUS, scriptCheckUA, scriptCheckTD, scriptCheckVAC, scriptCheckVUC } from './support-scripts/scripts-v1'
 
@@ -31,7 +31,7 @@ export async function init ():Promise<scriptInfo> {
  *  - 取得系 void
  */
 export async function main (docData: setterPluginArgument[], apicall: (docData: getterPluginArgument|updateDocument|updateDocument[], mode: boolean) => string): Promise<mainOutput> {
-  console.log(`${filename}@${version} (C) 2023-2025 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
+  console.log(`${filename}@${version} ${runtimeCredit}\nhttps://github.com/piyotaicho/jesgosupport`)
 
   // 更新モードなのでdocDataには表示されている全てのドキュメントが入っている
   const getterAPIcall = (request: getterPluginArgument) => apicall(request, true)
