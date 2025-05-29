@@ -3,10 +3,12 @@ import { dialogHTML } from './embedded-runtime-single-ui'
 import { handler, verbose } from './runtime-common'
 import { scriptCheckTD as checkRule } from './support-scripts/scriptsForCheckRaretumors'
 
+const version = '1.2.1'
+
 export async function init ():Promise<scriptInfo> {
   return {
     plugin_name: '絨毛性疾患個別チェック(2023-2024)',
-    plugin_version: '1.201',
+    plugin_version: `${version.split('.')[0]}.${Number(version.split('.')[1]).toString()}${Number(version.split('.')[2]).toString().padStart(2,'0')}`,
     all_patient: false,
     attach_patient_info: true,
     show_upload_dialog: false,
