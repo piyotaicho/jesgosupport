@@ -4,7 +4,7 @@ import { handler, verbose, loadJSONfile } from './runtime-common'
 // スクリプトプリセット
 import { scriptCC, scriptEM, scriptOV, scriptCheckCC, scriptCheckEM, scriptCheckOV, scriptCheckUS, scriptCheckUA, scriptCheckTD, scriptCheckVAC, scriptCheckVUC } from './support-scripts/scripts-v1'
 
-const version = '1.1.1'
+const version = '1.2.0'
 const filename = 'jesgo-support-runtime.ts'
 export async function init ():Promise<scriptInfo> {
   return {

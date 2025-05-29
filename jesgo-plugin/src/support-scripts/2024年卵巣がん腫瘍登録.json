@@ -1,0 +1,8289 @@
+{
+  "title": "卵巣がん腫瘍登録(2024)",
+  "config": {
+    "masterQuery": [
+      "$..患者台帳",
+      "$.[?(@.がん種 == \"卵巣がん\")]",
+      "$"
+    ],
+    "masterBasePointer": "/患者台帳/-",
+    "skipUnmatchedRecord": true,
+    "documentVariables": [
+      "$腫瘍登録対象",
+      "$初回治療開始日",
+      "$腫瘍登録対象年",
+      "$年齢",
+      "$治療施行状況",
+      "$FIGO",
+      "$手術経過",
+      "$薬物療法経過",
+      "$放射線療法経過",
+      "$初回治療経過",
+      "$骨盤リンパ節郭清",
+      "$傍大動脈リンパ節郭清",
+      "$要修正項目",
+      "$要確認項目"
+    ],
+    "csvOffset": 6,
+    "csvUnicode": false,
+    "errorPointer": "/jesgo:error",
+    "errorTargetSchemaId": "/schema/OV/root"
+  },
+  "rules": [
+    {
+      "title": "GO-OV_2021_20XX_basic_info",
+      "source": [
+        {
+          "path": "$.[0].腫瘍登録対象"
+        },
+        {
+          "path": "$.[0].初回治療開始日"
+        },
+        {
+          "path": "$.[0].病期診断.治療施行状況"
+        },
+        {
+          "path": "$.[0].病期診断.FIGO"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Variables",
+          "arguments": [
+            "@1",
+            "$腫瘍登録対象",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象",
+            "value",
+            "はい",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Exit"
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@2",
+            "$初回治療開始日",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$初回治療開始日",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "初回治療開始日を入力して下さい。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": "Abort"
+        },
+        {
+          "type": "Period",
+          "arguments": [
+            "$date_of_birth",
+            "$初回治療開始日",
+            "years",
+            "$年齢"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$年齢",
+            "value",
+            "10",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$年齢",
+            "value",
+            "99",
+            "le"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "患者年齢が10歳未満または100歳以上です。",
+            "$要確認項目",
+            "add",
+            "$要確認項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$初回治療開始日",
+            "$腫瘍登録対象年",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$腫瘍登録対象年"
+          ],
+          "trueBehavior": 1,
+          "lookup": [
+            [
+              "/^(\\d{4})-(\\d{2})-(\\d{2})$/",
+              "$1"
+            ]
+          ]
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@3",
+            "$治療施行状況",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "治療施行状況を入力して下さい。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "手術療法、薬物療法、放射線療法を実施せず",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "「手術療法、薬物療法、放射線療法を実施せず」が選択されています。腫瘍登録対象症例かご確認下さい。",
+            "$要確認項目",
+            "add",
+            "$要確認項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@4",
+            "$FIGO",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "FIGO分類を入力して下さい。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-OV_registration_check",
+      "description": "GO-OV_2024_ovarian_cancer：registration_year_check",
+      "source": [
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象年",
+            "value",
+            "2024",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Exit"
+        }
+      ]
+    },
+    {
+      "title": "GO-OV_2024_2025_check_basic_info",
+      "description": "GO-OV_2024_2025_ovarian_cancer：Diagnosis_FIGO",
+      "source": [
+        {
+          "path": "$.[0].診断"
+        },
+        {
+          "path": "$.[0].病変の主座"
+        },
+        {
+          "path": "$.[0].病期診断.IC期の場合"
+        },
+        {
+          "path": "$.[0].病期診断.IIIA1期の場合"
+        },
+        {
+          "path": "$.[0].病期診断.領域リンパ節"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "診断を入力して下さい。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "腹膜癌",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 6
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "IA期,IB期,IC期,IIA期",
+            "$1",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$FIGO",
+            "$1",
+            "intersect",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$2",
+            "$2",
+            "count"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$2",
+            "value",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "腹膜癌にも関わらず、FIGO分類にⅠ期またはIIA期が入力されています。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "病変の主座を入力して下さい。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IC期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "IC期の詳細を入力して下さい。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIIA1期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "IIIA1期の詳細を入力して下さい。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@5",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "病期診断：領域リンパ節を入力して下さい。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-OV_2021_2025_check_basic_info",
+      "description": "GO-OV_2021_2025_ovarian_cancer：cTNM",
+      "source": [
+        {
+          "path": "$.[0].病期診断.cTNM.T"
+        },
+        {
+          "path": "$.[0].病期診断.cTNM.N"
+        },
+        {
+          "path": "$.[0].病期診断.cTNM.M"
+        },
+        {
+          "path": "$.[0].病期診断.cTNM.遠隔転移部位"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "初回手術施行例",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "cT分類を入力して下さい。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "cN分類を入力して下さい。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "cM分類を入力して下さい。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "1b：実質転移ならびに腹腔外臓器（鼠径リンパ節ならびに腹腔外リンパ節を含む）に転移を認めるもの",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "遠隔転移部位を入力して下さい。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-OV_2021_2025_check_pTNM",
+      "description": "GO-OV_2021_2025_ovarian_cancer: pTNM",
+      "source": [
+        {
+          "path": "$.[0].病期診断.pTNM.T"
+        },
+        {
+          "path": "$.[0].病期診断.pTNM.N"
+        },
+        {
+          "path": "$.[0].病期診断.pTNM.M"
+        },
+        {
+          "path": "$.[0].病期診断.pTNM.遠隔転移部位"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "初回手術施行例",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "pT分類を入力して下さい。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "pN分類を入力して下さい。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "pM分類を入力して下さい。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "1b：実質転移ならびに腹腔外臓器（鼠径リンパ節ならびに腹腔外リンパ節を含む）に転移を認めるもの",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "遠隔転移部位を入力して下さい。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-OV_2021_2025_check_ypTNM",
+      "description": "GO-OV_2021_2025_ovarian_cancer：ypTNM",
+      "source": [
+        {
+          "path": "$.[0].病期診断.ypTNM.T"
+        },
+        {
+          "path": "$.[0].病期診断.ypTNM.N"
+        },
+        {
+          "path": "$.[0].病期診断.ypTNM.M"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "術前治療後に手術施行",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "ypT分類を入力して下さい。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "ypN分類を入力して下さい。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "ypM分類を入力して下さい。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-OV_2021_2025_check_findings",
+      "description": "GO-OV_2021_2025_ovarian_cancer：Findings",
+      "source": [
+        {
+          "path": "$.[0].診断所見.漿液性卵管上皮内癌（STIC）"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "診断所見:漿液性卵管上皮内癌（STIC）を入力して下さい。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-OV_2024_2025_check_histology",
+      "description": "GO-OV_2024_2025_ovarian_cancer：Histology",
+      "source": [
+        {
+          "path": "$.[0].組織診断.組織型"
+        },
+        {
+          "path": "$.[0].組織診断.遺伝子プロファイル"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "組織診断：組織型を入力して下さい。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "組織診断：遺伝子プロファイルを入力して下さい。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-OV_2021_2025_check_treatment_info",
+      "description": "GO-OV_2021_2025_ovarian_cancer：Treatment",
+      "source": [
+        {
+          "path": "$.[0].初回治療.手術療法.[*]"
+        },
+        {
+          "path": "$.[0].初回治療.薬物療法.[*]"
+        },
+        {
+          "path": "$.[0].初回治療.放射線療法.[*]"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Variables",
+          "arguments": [
+            "骨盤リンパ節センチネルリンパ節生検,骨盤リンパ節選択的郭清,骨盤リンパ節系統的郭清,腹腔鏡下センチネルリンパ節生検,腹腔鏡下骨盤内リンパ節郭清,ロボット支援下センチネルリンパ節生検,ロボット支援下骨盤内リンパ節郭清",
+            "$骨盤リンパ節郭清"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "傍大動脈リンパ節センチネルリンパ節生検,傍大動脈リンパ節選択的郭清,傍大動脈リンパ節系統的郭清,腹腔鏡下傍大動脈リンパ節郭清,ロボット支援下傍大動脈リンパ節郭清",
+            "$傍大動脈リンパ節郭清"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "@1",
+            "$.[*].手術日",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 9,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@1",
+            "$1",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$1"
+          ],
+          "trueBehavior": 1,
+          "lookup": [
+            [
+              "/^\\{(.*?)\"手術日\":(\"[^\"]+\"),(.*?)\\}$/",
+              "{\"区分\":\"手術\",\"治療開始日\":$2,$1$3}"
+            ]
+          ]
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$1"
+          ],
+          "trueBehavior": 1,
+          "lookup": [
+            [
+              "/^\\{(.*?)\"実施手術\":\\{\"実施手術\":(\\[(?:\\{.*?\"術式\":\"[^\"]+\".*?\\}(?:,\\{.*?\"術式\":\"[^\"]+\".*?\\})*)\\]),\"jesgo.*?\\}.*?\\}$/",
+              "{$1\"治療\":$2}"
+            ]
+          ]
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$1"
+          ],
+          "trueBehavior": 1,
+          "lookup": [
+            [
+              "/\\{\"術式\":\"([^\"]*)\"(?:,[^{}]*(?:\\{[^{}]*\\})?)*\\}/g",
+              "{\"治療詳細\":\"$1\"}"
+            ]
+          ]
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$1"
+          ],
+          "trueBehavior": 1,
+          "lookup": [
+            [
+              "/(.*?),\"jesgo:document_id\":\\d+,\"jesgo:schema_id\":\"[^\"]+\"(?=,|\\})(.*?)/g",
+              "$1$2"
+            ]
+          ]
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$1"
+          ],
+          "trueBehavior": 1,
+          "lookup": [
+            [
+              "/(.*?),\"実施手術\":\\{\"jesgo:document_id\":\\d+,\"jesgo:schema_id\":\"[^\"]+\"\\}(.*?)/g",
+              "$1,\"治療\":[{\"治療詳細\":\"登録なし（手術）\"}]$2"
+            ]
+          ]
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$1"
+          ],
+          "trueBehavior": 1,
+          "lookup": [
+            [
+              "/^\\{\"区分\":\"手術\",\"治療開始日\":(\"[^\"]+\"),(.*?)\"治療\":\\[(.*?\\{\"治療詳細\":\"登録なし（手術）\"\\}.*?)\\].*?\\}$/",
+              "{\"区分\":\"手術（登録なし）\",\"治療開始日\":$1,$2\"治療\":[$3]}"
+            ],
+            [
+              "/^\\{\"区分\":\"手術\",\"治療開始日\":(\"[^\"]+\"),(.*?)\"治療\":\\[(.*?\\{\"治療詳細\":\"(?!(腹腔鏡下病変生検・審査腹腔鏡|大網生検|腹腔鏡下に大網生検)\")[^\"]+\"\\}.*?)\\].*?\\}$/",
+              "{\"区分\":\"手術（試験開腹術以外）\",\"治療開始日\":$1,$2\"治療\":[$3]}"
+            ],
+            [
+              "/^\\{\"区分\":\"手術\",\"治療開始日\":(\"[^\"]+\"),(.*?)\"治療\":\\[(.*?\\{\"治療詳細\":\"(腹腔鏡下病変生検・審査腹腔鏡|大網生検|腹腔鏡下に大網生検)\"\\}.*?)\\].*?\\}$/",
+              "{\"区分\":\"手術（試験開腹術のみ）\",\"治療開始日\":$1,$2\"治療\":[$3]}"
+            ]
+          ]
+        },
+        {
+          "type": "Sort",
+          "arguments": [
+            "$1",
+            "$.[*].治療開始日",
+            "asc"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "@2",
+            "$.[*].投与開始日",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$2",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 5,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@2",
+            "$2",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$2"
+          ],
+          "trueBehavior": 1,
+          "lookup": [
+            [
+              "/^\\{(.*?)\"投与開始日\":(\"[^\"]+\"),(.*?)\\}$/",
+              "{\"治療開始日\":$2,$1$3}"
+            ]
+          ]
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$2"
+          ],
+          "trueBehavior": 1,
+          "lookup": [
+            [
+              "/^\\{\"治療開始日\":(\"[^\"]+\"),.*?\"分子標的治療の種類\":\"([^\"]+)\",.*?\"治療区分\":\"(.*?)分子標的治療(.*?)\",.*?\\}$/",
+              "{\"区分\":\"薬物療法\",\"治療開始日\":$1,\"治療\":[{\"治療詳細\":\"$3$2$4\"}]}"
+            ],
+            [
+              "/^\\{\"治療開始日\":(\"[^\"]+\"),.*?\"治療区分\":\"(.*?)分子標的治療(.*?)\",.*?\"分子標的治療の種類\":\"([^\"]+)\",.*?\\}$/",
+              "{\"区分\":\"薬物療法\",\"治療開始日\":$1,\"治療\":[{\"治療詳細\":\"$2$4$3\"}]}"
+            ],
+            [
+              "/^\\{\"治療開始日\":(\"[^\"]+\"),.*?\"治療区分\":\"(.*?)分子標的治療(.*?)\",.*?\\}$/",
+              "{\"区分\":\"薬物療法（分子標的治療登録なし）\",\"治療開始日\":$1,\"治療\":[{\"治療詳細\":\"登録なし（分子標的治療）\"}]}"
+            ],
+            [
+              "/^\\{\"治療開始日\":(\"[^\"]+\"),.*?\"治療区分\":\"([^\"]+)\",.*?\\}$/",
+              "{\"区分\":\"薬物療法\",\"治療開始日\":$1,\"治療\":[{\"治療詳細\":\"$2\"}]}"
+            ],
+            [
+              "/^\\{\"治療開始日\":(\"[^\"]+\"),.*?\\}$/",
+              "{\"区分\":\"薬物療法（登録なし）\",\"治療開始日\":$1,\"治療\":[{\"治療詳細\":\"登録なし（薬物療法）\"}]}"
+            ]
+          ]
+        },
+        {
+          "type": "Sort",
+          "arguments": [
+            "$2",
+            "$.[*].治療開始日",
+            "asc"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "@3",
+            "$.[*].治療開始日",
+            "$3"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 5,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@3",
+            "$3",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$3"
+          ],
+          "trueBehavior": 1,
+          "lookup": [
+            [
+              "/^\\{.*?\"治療開始日\":(\"[^\"]+\"),.*?\"治療区分\":(\"[^\"]+\"),.*?\\}$/",
+              "{\"区分\":\"放射線療法\",\"治療開始日\":$1,\"治療\":[{\"治療詳細\":$2}]}"
+            ],
+            [
+              "/^\\{.*?\"治療区分\":(\"[^\"]+\"),.*?\"治療開始日\":(\"[^\"]+\"),.*?\\}$/",
+              "{\"区分\":\"放射線療法\",\"治療開始日\":$2,\"治療\":[{\"治療詳細\":$1}]}"
+            ],
+            [
+              "/^\\{.*?\"治療開始日\":(\"[^\"]+\"),.*?\\}$/",
+              "{\"区分\":\"放射線療法（登録なし）\",\"治療開始日\":$2,\"治療\":[{\"治療詳細\":\"登録なし（放射線治療）\"}]}"
+            ]
+          ]
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$3"
+          ],
+          "trueBehavior": 1,
+          "lookup": [
+            [
+              "/^\\{\"区分\":\"放射線療法\",\"治療開始日\":(\"[^\"]+\"),\"治療\":\\[\\{\"治療詳細\":\"同時化学放射線治療（体外照射＋腔内照射）\"\\}\\]\\}$/",
+              "{\"区分\":\"放射線療法\",\"治療開始日\":$1,\"治療\":[{\"治療詳細\":\"同時化学放射線治療（体外照射）\"},{\"治療詳細\":\"同時化学放射線治療（腔内照射）\"}]}"
+            ],
+            [
+              "/^\\{\"区分\":\"放射線療法\",\"治療開始日\":(\"[^\"]+\"),\"治療\":\\[\\{\"治療詳細\":\"体外照射＋腔内照射\"\\}\\]\\}$/",
+              "{\"区分\":\"放射線療法\",\"治療開始日\":$1,\"治療\":[{\"治療詳細\":\"体外照射\"},{\"治療詳細\":\"腔内照射\"}]}"
+            ]
+          ]
+        },
+        {
+          "type": "Sort",
+          "arguments": [
+            "$3",
+            "$.[*].治療開始日",
+            "asc"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$1",
+            "$手術経過",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$2",
+            "$薬物療法経過",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$3",
+            "$放射線療法経過",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$1",
+            "$2",
+            "add",
+            "$4"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$4",
+            "$3",
+            "add",
+            "$初回治療経過"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sort",
+          "arguments": [
+            "$初回治療経過",
+            "$.[*].治療開始日",
+            "asc"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-OV_2021_2025_check_treatment_data",
+      "description": "GO-OV_2021_2025_ovarian_cancer：treatment_data_sufficiency",
+      "source": [
+        {
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Query",
+          "arguments": [
+            "$初回治療経過",
+            "$.[*].治療開始日",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "初回治療の詳細情報において手術日、投与開始日、治療開始日のいずれも登録されていません。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "初回手術施行例",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$手術経過",
+            "$.[0].治療開始日",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$2",
+            "value",
+            "$初回治療開始日",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "初回手術施行例にも関わらず、初回の手術日が治療開始日と一致しません。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "術前治療後に手術施行",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "手術未施行例",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 6
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$薬物療法経過",
+            "$放射線療法経過",
+            "add",
+            "$3"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sort",
+          "arguments": [
+            "$3",
+            "$.[*].治療開始日",
+            "asc"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$3",
+            "$.[0].治療開始日",
+            "$4"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$4",
+            "value",
+            "$初回治療開始日",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "術前治療後に手術施行、あるいは、手術未施行例にも関わらず、初回の薬物療法又は放射線療法の治療開始日が初回治療開始日と一致しません。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$初回治療経過",
+            "$.[*].区分",
+            "$5"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "手術（登録なし）",
+            "$5",
+            "intersect",
+            "$6"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$6",
+            "value",
+            "手術（登録なし）",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "初回治療において、術式が登録されていない手術があります。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        }, 
+        {
+          "type": "Sets",
+          "arguments": [
+            "薬物療法（登録なし）",
+            "$5",
+            "intersect",
+            "$7"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$7",
+            "value",
+            "薬物療法（登録なし）",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "初回治療において、治療区分が登録されていない薬物療法があります。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        }, 
+        {
+          "type": "Sets",
+          "arguments": [
+            "放射線療法（登録なし）",
+            "$5",
+            "intersect",
+            "$8"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$8",
+            "value",
+            "放射線療法（登録なし）",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "初回治療において、治療区分が登録されていない放射線療法があります。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "薬物療法（分子標的治療登録なし）",
+            "$5",
+            "intersect",
+            "$9"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$9",
+            "value",
+            "薬物療法（分子標的治療登録なし）",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "薬物治療の治療区分で分子標的治療を含む治療を選択した場合、分子標的治療の種類を選択して下さい。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-OV_2021_2025_check_treatment_details",
+      "description": "GO-OV_2021_2025_ovarian_cancer：treatment_details",
+      "source": [
+        {
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Query",
+          "arguments": [
+            "$初回治療経過",
+            "$.[*].区分",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "手術（登録なし）,薬物療法（登録なし）,放射線療法（登録なし）,薬物療法（分子標的治療登録なし）",
+            "$1",
+            "intersect",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$2",
+            "$2",
+            "count"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$2",
+            "value",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$1",
+            "$3",
+            "count"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$放射線療法経過",
+            "$.[*].区分",
+            "$4"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$4",
+            "$5",
+            "count"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$3",
+            "value",
+            "$5",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "放射線療法のみ入力されていますがよろしいですか？",
+            "$要確認項目",
+            "add",
+            "$要確認項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$手術経過",
+            "$.[*].区分",
+            "$6"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$6",
+            "$7",
+            "count"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$手術経過",
+            "$.[*].手術完遂度",
+            "$8"
+          ],
+          "trueBehavior": 1
+        },
+                {
+          "type": "Variables",
+          "arguments": [
+            "$8",
+            "$9",
+            "count"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$7",
+            "value",
+            "$9",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "全ての手術に対して手術完遂度を入力して下さい。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$初回治療経過",
+            "$.[*].治療.[*].治療詳細",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$1",
+            "$2",
+            "comma"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$2"
+          ],
+          "trueBehavior": 1,
+          "lookup": [
+            [
+              "/^.*?免疫チェックポイント阻害剤.*$/",
+              "免疫チェックポイント阻害剤選択"
+            ],
+            [
+              "/^.*?ホルモン治療.*$/",
+              "ホルモン治療"
+            ],
+            [
+              "/^.*?化学療法＋分子標的治療同時併用.*$/",
+              "化学療法＋分子標的治療同時併用"
+            ],
+            [
+              "/^.*?化学療法＋分子標的治療.*?,分子標的治療.*$/",
+              "問題なし"
+            ],
+            [
+              "/^.*?化学療法＋分子標的治療.*?(?!.*分子標的治療（.*?）).*$/",
+              "分子標的治療確認"
+            ],
+            [
+              "/^.*?(?!.*化学療法＋分子標的治療（.*?）).*$/",
+              "問題なし"
+            ]
+          ]
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$2",
+            "value",
+            "免疫チェックポイント阻害剤選択",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "治療詳細で「免疫チェックポイント阻害剤」が選択されています。腫瘍登録において免疫チェックポイント阻害剤を含む治療は登録できませんがよろしいですか？",
+            "$要確認項目",
+            "add",
+            "$要確認項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$2",
+            "value",
+            "ホルモン治療選択",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "治療詳細で「ホルモン治療」が選択されています。腫瘍登録においてホルモン治療を含む治療は登録できませんがよろしいですか？",
+            "$要確認項目",
+            "add",
+            "$要確認項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$2",
+            "value",
+            "化学療法＋分子標的治療同時併用",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "治療詳細で「化学療法＋分子標的治療同時併用」が選択されています。腫瘍登録においては化学療法＋分子標的治療同時併用は登録できませんがよろしいですか？",
+            "$要確認項目",
+            "add",
+            "$要確認項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$2",
+            "value",
+            "分子標的治療確認",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "化学療法と分子標的治療を同時併用した後に、維持療法として分子標的治療の単独投与を行った際は「化学療法＋分子標的治療」と「分子標的治療」をそれぞれ入力することになっております。当該症例は維持療法として分子標的治療を行っておりませんでしょうか？",
+            "$要確認項目",
+            "add",
+            "$要確認項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$初回治療経過",
+            "$.[*].区分",
+            "$3"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$3",
+            "$4",
+            "comma"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$4"
+          ],
+          "trueBehavior": 1,
+          "lookup": [
+            [
+              "/^手術（試験開腹術以外）.*$/",
+              "初回手術施行例"
+            ],
+            [
+              "/^手術（試験開腹術のみ）,(薬物療法|放射線療法).*?手術（試験開腹術以外）.*$/",
+              "術前治療後に手術施行"
+            ],
+            [
+              "/^手術（試験開腹術のみ）,(薬物療法|放射線療法)(?!.*手術（試験開腹術以外）).*$/",
+              "手術未施行"
+            ],
+            [
+              "/^(薬物療法|放射線療法).*?手術（試験開腹術以外）.*$/",
+              "術前治療後に手術施行"
+            ],
+            [
+              "/^(薬物療法|放射線療法).*?手術（試験開腹術のみ）.*$/",
+              "エラー（治療経過中に試験開腹術）"
+            ],
+            [
+              "/^(薬物療法|放射線療法).*?(?!.*手術（.*?）).*$/",
+              "手術未施行"
+            ],
+            [
+              "/^手術（試験開腹術のみ）(?!.*?(薬物療法|放射線療法|手術（試験開腹術以外）)).*$/",
+              "エラー（試験開腹術のみ）"
+            ]
+          ]
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "$4",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$4",
+            "value",
+            "初回手術施行例",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "治療詳細で「初回手術施行」の治療経過が登録されています。治療施行状況と一致しません。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$4",
+            "value",
+            "術前治療後に手術施行",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "治療詳細で「術前治療後に手術施行」の治療経過が登録されています。治療施行状況と一致しません。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$4",
+            "value",
+            "手術未施行例",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "治療詳細で「手術未施行」の治療経過が登録されています。治療施行状況と一致しません。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$4",
+            "value",
+            "エラー（治療経過中に試験開腹術）",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "治療詳細で「薬物療法ないし放射線療法後に試験開腹術式」が登録されています。試験開腹術は初回手術時のみ登録が可能です。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$4",
+            "value",
+            "エラー（試験開腹術のみ）",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "治療詳細で「試験開腹術式のみしか」登録されていません。手術療法、薬物療法、放射線療法を登録下さい。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-OV_2021_2024_logicalcheck_FIGO_pTNM",
+      "description": "GO-OV_2021_2025_ovarian_cancer：Logical_check_between_FIGO_and_pTNM",
+      "source": [    
+        {
+          "path": "$.[0].病期診断.pTNM.T"
+        },
+        {
+          "path": "$.[0].病期診断.pTNM.N"
+        },
+        {
+          "path": "$.[0].病期診断.pTNM.M"
+        },
+        {
+          "path": "$.[0].病期診断.IC期の場合"
+        },
+        {
+          "path": "$.[0].病期診断.IIIA1期の場合"
+        },
+        {
+          "path": "$.[0].病期診断.領域リンパ節"
+        }
+        ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "初回手術施行例",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IA期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 7
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "1a",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "0：所属リンパ節に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "X：所属リンパ節に転移を判定するための病理学的検索が行われなかった",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "0：遠隔転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "X：遠隔転移を判定するための検索が行われなかった",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "FIGO分類「ⅠA期」と入力されていますが、pTNMで「T1a、N0／NX、M0／MX」以外が入力されています。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IB期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 7
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "1b",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "0：所属リンパ節に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "X：所属リンパ節に転移を判定するための病理学的検索が行われなかった",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "0：遠隔転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "X：遠隔転移を判定するための検索が行われなかった",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "FIGO分類「ⅠB期」と入力されていますが、pTNMで「T1b、N0／NX、M0／MX」以外が入力されています。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IC期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 8
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "1C1：手術操作による被膜破綻",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 7
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "1c1",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "0：所属リンパ節に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "X：所属リンパ節に転移を判定するための病理学的検索が行われなかった",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "0：遠隔転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "X：遠隔転移を判定するための検索が行われなかった",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "FIGO分類「ⅠC1期」と入力されていますが、pTNMで「T1c1、N0／NX、M0／MX」以外が入力されています。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IC期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 8
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "1C2：自然被膜破綻あるいは被膜表面への浸潤",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 7
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "1c2",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "0：所属リンパ節に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "X：所属リンパ節に転移を判定するための病理学的検索が行われなかった",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "0：遠隔転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "X：遠隔転移を判定するための検索が行われなかった",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "FIGO分類「ⅠC2期」と入力されていますが、pTNMで「T1c2、N0／NX、M0／MX」以外が入力されています。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IC期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 8
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "1C3：腹水または腹腔洗浄細胞診に悪性細胞が認められるもの",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 7
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "1c3",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "0：所属リンパ節に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "X：所属リンパ節に転移を判定するための病理学的検索が行われなかった",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "0：遠隔転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "X：遠隔転移を判定するための検索が行われなかった",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "FIGO分類「ⅠC3期」と入力されていますが、pTNMで「T1c3、N0／NX、M0／MX」以外が入力されています。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIA期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 7
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "2a",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "0：所属リンパ節に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "X：所属リンパ節に転移を判定するための病理学的検索が行われなかった",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "0：遠隔転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "X：遠隔転移を判定するための検索が行われなかった",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "FIGO分類「IIA期」と入力されていますが、pTNMで「T2a、N0／NX、M0／MX」以外が入力されています。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIB期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 7
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "2b",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "0：所属リンパ節に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "X：所属リンパ節に転移を判定するための病理学的検索が行われなかった",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "0：遠隔転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "X：遠隔転移を判定するための検索が行われなかった",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "FIGO分類「IIB期」と入力されていますが、pTNMで「T2b、N0／NX、M0／MX」以外が入力されています。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "1a,1b,1c1,1c2,1c3,2a,2b",
+            "$1",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIIA1期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 8
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@5",
+            "value",
+            "3A11：転移巣最大径10mm以下",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 7
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@1",
+            "$1",
+            "intersect",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$2",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 4,
+          "falseBehavior": 1
+        }, 
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "1a：所属リンパ節に転移を認める（転移巣最大径10mm以下、組織所見による）",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "0：遠隔転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "X：遠隔転移を判定するための検索が行われなかった",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "FIGO分類「IIIA1（i）期」と入力されていますが、pTNMで「T1／T2、N1a、M0／MX」以外が入力されています。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIIA1期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 8
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@5",
+            "value",
+            "3A12：転移巣最大径10mmをこえる",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 7
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@1",
+            "$1",
+            "intersect",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$2",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 4,
+          "falseBehavior": 1
+        },        
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "1b：所属リンパ節に転移を認める（転移巣最大径10mm超、組織所見による）",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "0：遠隔転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "X：遠隔転移を判定するための検索が行われなかった",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "FIGO分類「IIIA1（ii）期」と入力されていますが、pTNMで「T1／T2、N1b、M0／MX」以外が入力されています。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIIA1期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 8
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@5",
+            "value",
+            "3A1X：転移巣最大径による分類不能",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 7
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "@1",
+            "$1",
+            "intersect",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$2",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 4,
+          "falseBehavior": 1
+        },        
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "1：所属リンパ節に転移を認める（転移巣最大径不明）",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "0：遠隔転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "X：遠隔転移を判定するための検索が行われなかった",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "FIGO分類「IIIA1（分類不能）期」と入力されていますが、pTNMで「T1／T2、N1、M0／MX」以外が入力されています。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIIA2期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "3a",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "0：遠隔転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "X：遠隔転移を判定するための検索が行われなかった",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "FIGO分類「IIIA2期」と入力されていますが、pTNMで「T3a、M0／MX」以外が入力されています。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIIB期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "3b",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "0：遠隔転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "X：遠隔転移を判定するための検索が行われなかった",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "FIGO分類「IIIB期」と入力されていますが、pTNMで「T3b、M0／MX」以外が入力されています。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIIC期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "3c",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "0：遠隔転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "X：遠隔転移を判定するための検索が行われなかった",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "FIGO分類「IIIC期」と入力されていますが、pTNMで「T3c、M0／MX」以外が入力されています。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IVA期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "1a：胸水中に悪性細胞を認める",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "FIGO分類「IVA期」と入力されていますが、pTNMで「M1a」以外が入力されています。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IVB期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "1b：実質転移ならびに腹腔外臓器（鼠径リンパ節ならびに腹腔外リンパ節を含む）に転移を認めるもの",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "FIGO分類「IVB期」と入力されていますが、pTNMで「M1b」以外が入力されています。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "0：所属リンパ節に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "X：所属リンパ節に転移を判定するための病理学的検索が行われなかった",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@6",
+            "value",
+            "細胞診にてリンパ節転移と診断",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@6",
+            "value",
+            "組織診（郭清or生検）にてリンパ節転移と診断",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "pN0／Xにも関わらず、領域リンパ節の所見で「細胞診にてリンパ節転移」または「組織診（郭清or生検）にてリンパ節転移」が選択されています。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "1a：所属リンパ節に転移を認める（転移巣最大径10mm以下、組織所見による）",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "1b：所属リンパ節に転移を認める（転移巣最大径10mm超、組織所見による）",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "1：所属リンパ節に転移を認める（転移巣最大径不明）",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@6",
+            "value",
+            "細胞診にてリンパ節転移と診断",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@6",
+            "value",
+            "組織診（郭清or生検）にてリンパ節転移と診断",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "pN1a／1b／1にも関わらず、領域リンパ節の所見で「細胞診にてリンパ節転移と診断」、または、「組織診（郭清or生検）にてリンパ節転移と診断」が選択されていません。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-OV_2021_2025_logicalcheck_pTNM_surgery",
+      "description": "GO-OV_2021_2025_ovarian_cancer：Logical_check_between_pTNM_and_surgery",
+      "source": [
+        {
+          "path": "$.[0].病期診断.領域リンパ節"
+        },
+        {
+          "path": "$.[0].病期診断.pTNM.N"
+        }
+        ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "初回手術施行例",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$手術経過",
+            "$.[*].区分",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$手術経過",
+            "$.[*].治療.[*].治療詳細",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$骨盤リンパ節郭清",
+            "$傍大動脈リンパ節郭清",
+            "add",
+            "$3"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$3",
+            "$2",
+            "intersect",
+            "$4"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$4",
+            "$5",
+            "count"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "組織診（郭清or生検）にてリンパ節転移と診断",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$5",
+            "value",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "所属リンパ節の所見で「組織診（郭清or生検)にてリンパ節転移」が選択されているにも関わらず、治療においてリンパ節生検または郭清の術式が選択されていません。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "1a：所属リンパ節に転移を認める（転移巣最大径10mm以下、組織所見による）",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "1b：所属リンパ節に転移を認める（転移巣最大径10mm超、組織所見による）",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "1：所属リンパ節に転移を認める（転移巣最大径不明）",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$5",
+            "value",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "pN1a／1b／1にも関わらず、治療においてリンパ節生検または郭清の術式が選択されていません。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "X：所属リンパ節に転移を判定するための病理学的検索が行われなかった",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$5",
+            "value",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "pNXにも関わらず、治療においてリンパ節生検または郭清の術式が選択されています。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-OV_2024_export_errors",
+      "description": "GO-OV_2024_ovarian_cancer：export_errors",
+      "source": [],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$要修正項目",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 6
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$要修正項目",
+            "$1",
+            "count"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "【要修正事項】",
+            "$1",
+            "add",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$1",
+            "件：【修正事項詳細】",
+            "add",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$1",
+            "$要修正項目",
+            "add",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$1",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$要確認項目",
+            "count",
+            "1",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 6
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$要確認項目",
+            "$2",
+            "count"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "【要確認事項】",
+            "$2",
+            "add",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$2",
+            "件：【確認事項詳細】",
+            "add",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$2",
+            "$要確認項目",
+            "add",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$2",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-OV_2024_export_basic_info",
+      "description": "GO-OV_2024_ovarian_cancer：Diagnosis_FIGO",
+      "source": [
+        {
+          "path": "$.[0].診断"
+        },
+        {
+          "path": "$.[0].病変の主座"
+        },
+        {
+          "path": "$.[0].病期診断.IC期の場合"
+        },
+        {
+          "path": "$.[0].病期診断.IIIA1期の場合"
+        },
+        {
+          "path": "$.[0].病期診断.領域リンパ節"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$要修正項目",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior":"Abort"
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$腫瘍登録対象年",
+            "B",
+            "first"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "1",
+            "C",
+            "first"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$年齢",
+            "D",
+            "first"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@1",
+            "$1",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$1"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "卵巣癌、卵巣境界悪性腫瘍",
+              "1"
+            ],
+            [
+              "卵管癌、卵管境界悪性腫瘍",
+              "2"
+            ],
+            [
+              "腹膜癌",
+              "3"
+            ],
+            [
+              "卵巣・卵管・腹膜（分類不能）",
+              "4"
+            ],
+            [
+              "卵管・卵巣癌",
+              "5"
+            ]
+          ]
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$1",
+            "E",
+            "first"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@2",
+            "$2",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$2"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "卵巣",
+              "1"
+            ],
+            [
+              "卵管",
+              "2"
+            ],
+            [
+              "腹膜",
+              "3"
+            ],
+            [
+              "不明",
+              "4"
+            ]
+          ]
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$2",
+            "F",
+            "first"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$治療施行状況",
+            "$3",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$3"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "初回手術施行例",
+              "1"
+            ],
+            [
+              "術前治療後に手術施行",
+              "2"
+            ],
+            [
+              "手術未施行例",
+              "3"
+            ],
+            [
+              "手術療法、薬物療法、放射線療法を実施せず",
+              "3"
+            ]
+          ]
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$3",
+            "G",
+            "first"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$FIGO",
+            "$4",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "初回手術施行例",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$4"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "IA期",
+              "1"
+            ],
+            [
+              "IB期",
+              "2"
+            ],
+            [
+              "IC期",
+              "11"
+            ],
+            [
+              "IIA期",
+              "3"
+            ],
+            [
+              "IIB期",
+              "4"
+            ],
+            [
+              "IIIA1期",
+              "13"
+            ],
+            [
+              "IIIA2期",
+              "14"
+            ],
+            [
+              "IIIB期",
+              "6"
+            ],
+            [
+              "IIIC期",
+              "7"
+            ],
+            [
+              "IVA期",
+              "15"
+            ],
+            [
+              "IVB期",
+              "16"
+            ],
+            [
+              "不明",
+              "9"
+            ]
+          ]
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$4",
+            "H",
+            "first"
+          ],
+          "trueBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "10",
+            "H",
+            "first"
+          ],
+          "trueBehavior": 9
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IC期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@3",
+            "$5",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$5"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "1C1：手術操作による被膜破綻",
+              "1"
+            ],
+            [
+              "1C2：自然被膜破綻あるいは被膜表面への浸潤",
+              "2"
+            ],
+            [
+              "1C3：腹水または腹腔洗浄細胞診に悪性細胞が認められるもの",
+              "3"
+            ]
+          ]
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$5",
+            "I",
+            "first"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$FIGO",
+            "value",
+            "IIIA1期",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@4",
+            "$6",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$6"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "3A11：転移巣最大径10mm以下",
+              "1"
+            ],
+            [
+              "3A12：転移巣最大径10mmをこえる",
+              "2"
+            ],
+            [
+              "3A1X：転移巣最大径による分類不能",
+              "3"
+            ]
+          ]
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$6",
+            "J",
+            "first"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@5",
+            "$7",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$7"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "腫大なし",
+              "1"
+            ],
+            [
+              "触診もしくは画像診断にて明らかに転移を疑うリンパ節腫大あり",
+              "2"
+            ],
+            [
+              "細胞診にてリンパ節転移と診断",
+              "3"
+            ],
+            [
+              "組織診（郭清or生検）にてリンパ節転移と診断",
+              "4"
+            ]
+          ]
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$7",
+            "O",
+            "first"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$初回治療開始日",
+            "$8",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$8"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "/^(\\d{4})-(\\d{2})-(\\d{2})$/",
+              "$1/$2/$3"
+            ]
+          ]
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$8",
+            "S",
+            "first"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$hash",
+            "BB",
+            "first"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-OV_2024_export_cTNM",
+      "description": "GO-OV_2024_ovarian_cancer：cTNM",
+      "source": [
+        {
+          "path": "$.[0].病期診断.cTNM.T"
+        },
+        {
+          "path": "$.[0].病期診断.cTNM.N"
+        },
+        {
+          "path": "$.[0].病期診断.cTNM.M"
+        },
+        {
+          "path": "$.[0].病期診断.cTNM.遠隔転移部位.[*]"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$要修正項目",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior":"Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "初回手術施行例",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@1",
+            "$1",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$1"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "1a",
+              "1"
+            ],
+            [
+              "1b",
+              "2"
+            ],
+            [
+              "1c",
+              "3"
+            ],
+            [
+              "1c1",
+              "3"
+            ],
+            [
+              "1c2",
+              "3"
+            ],
+            [
+              "1c3",
+              "3"
+            ],
+            [
+              "2a",
+              "4"
+            ],
+            [
+              "2b",
+              "5"
+            ],
+            [
+              "3a",
+              "6"
+            ],
+            [
+              "3b",
+              "7"
+            ],
+            [
+              "3c",
+              "8"
+            ]
+          ]
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$1",
+            "AX",
+            "first"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@2",
+            "$2",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$2"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "0：所属リンパ節に転移を認めない",
+              "1"
+            ],
+            [
+              "1：所属リンパ節に転移を認める（画像所見などによる）",
+              "2"
+            ],
+            [
+              "X：所属リンパ節に転移を判定するための病理学的検索が行われなかった",
+              "3"
+            ]
+          ]
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$2",
+            "AY",
+            "first"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@3",
+            "$3",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$3"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "0：遠隔転移を認めない",
+              "1"
+            ],
+            [
+              "1a：胸水中に悪性細胞を認める",
+              "2"
+            ],
+            [
+              "1b：実質転移ならびに腹腔外臓器（鼠径リンパ節ならびに腹腔外リンパ節を含む）に転移を認めるもの",
+              "2"
+            ],
+            [
+              "X：遠隔転移を判定するための検索が行われなかった",
+              "3"
+            ]
+          ]
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$3",
+            "AZ",
+            "first"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "11",
+            "K",
+            "first"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "4",
+            "L",
+            "first"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$3",
+            "M",
+            "first"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@4",
+            "$4",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$4"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "PUL",
+              "1"
+            ],
+            [
+              "OSS",
+              "2"
+            ],
+            [
+              "HEP",
+              "3"
+            ],
+            [
+              "BRA",
+              "4"
+            ],
+            [
+              "LYM",
+              "5"
+            ],
+            [
+              "MAR",
+              "6"
+            ],
+            [
+              "PLE",
+              "7"
+            ],
+            [
+              "SKI",
+              "8"
+            ],
+            [
+              "OTH",
+              "9"
+            ]
+          ]
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$4",
+            "N",
+            "semicolon"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-OV_2024_export_pTNM",
+      "description": "GO-OV_2024_ovarian_cancer：pTNM",
+      "source": [
+        {
+          "path": "$.[0].病期診断.pTNM.T"
+        },
+        {
+          "path": "$.[0].病期診断.pTNM.N"
+        },
+        {
+          "path": "$.[0].病期診断.pTNM.M"
+        },
+        {
+          "path": "$.[0].病期診断.pTNM.遠隔転移部位.[*]"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$要修正項目",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior":"Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "初回手術施行例",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@1",
+            "$1",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$1"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "1a",
+              "1"
+            ],
+            [
+              "1b",
+              "2"
+            ],
+            [
+              "1c1",
+              "12"
+            ],
+            [
+              "1c2",
+              "13"
+            ],
+            [
+              "1c3",
+              "14"
+            ],
+            [
+              "2a",
+              "4"
+            ],
+            [
+              "2b",
+              "5"
+            ],
+            [
+              "3a",
+              "7"
+            ],
+            [
+              "3b",
+              "8"
+            ],
+            [
+              "3c",
+              "9"
+            ],
+            [
+              "不明",
+              "10"
+            ]
+          ]
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$1",
+            "K",
+            "first"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@2",
+            "$2",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$2"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "0：所属リンパ節に転移を認めない",
+              "1"
+            ],
+            [
+              "1a：所属リンパ節に転移を認める（転移巣最大径10mm以下、組織所見による）",
+              "5"
+            ],
+            [
+              "1b：所属リンパ節に転移を認める（転移巣最大径10mm超、組織所見による）",
+              "6"
+            ],
+            [
+              "1：所属リンパ節に転移を認める（転移巣最大径不明）",
+              "3"
+            ],
+            [
+              "X：所属リンパ節に転移を判定するための病理学的検索が行われなかった",
+              "4"
+            ]
+          ]
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$2",
+            "L",
+            "first"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@3",
+            "$3",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$3"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "0：遠隔転移を認めない",
+              "1"
+            ],
+            [
+              "1a：胸水中に悪性細胞を認める",
+              "4"
+            ],
+            [
+              "1b：実質転移ならびに腹腔外臓器（鼠径リンパ節ならびに腹腔外リンパ節を含む）に転移を認めるもの",
+              "5"
+            ],
+            [
+              "X：遠隔転移を判定するための検索が行われなかった",
+              "3"
+            ]
+          ]
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$3",
+            "M",
+            "first"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@4",
+            "$4",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$4"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "PUL",
+              "1"
+            ],
+            [
+              "OSS",
+              "2"
+            ],
+            [
+              "HEP",
+              "3"
+            ],
+            [
+              "BRA",
+              "4"
+            ],
+            [
+              "LYM",
+              "5"
+            ],
+            [
+              "MAR",
+              "6"
+            ],
+            [
+              "PLE",
+              "7"
+            ],
+            [
+              "SKI",
+              "8"
+            ],
+            [
+              "OTH",
+              "9"
+            ]
+          ]
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$4",
+            "N",
+            "semicolon"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-OV_2024_export_ypTNM",
+      "description": "GO-OV_2024_ovarian_cancer：ypTNM",
+      "source": [
+        {
+          "path": "$.[0].病期診断.ypTNM.T"
+        },
+        {
+          "path": "$.[0].病期診断.ypTNM.N"
+        },
+        {
+          "path": "$.[0].病期診断.ypTNM.M"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$要修正項目",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior":"Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "術前治療後に手術施行",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@1",
+            "$1",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$1"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "1a",
+              "1"
+            ],
+            [
+              "1b",
+              "2"
+            ],
+            [
+              "1c",
+              "3"
+            ],
+            [
+              "1c1",
+              "11"
+            ],
+            [
+              "1c2",
+              "12"
+            ],
+            [
+              "1c3",
+              "13"
+            ],
+            [
+              "2a",
+              "4"
+            ],
+            [
+              "2b",
+              "5"
+            ],
+            [
+              "3a",
+              "7"
+            ],
+            [
+              "3b",
+              "8"
+            ],
+            [
+              "3c",
+              "9"
+            ],
+            [
+              "不明",
+              "10"
+            ]
+          ]
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$1",
+            "AU",
+            "first"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@2",
+            "$2",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$2"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "0：所属リンパ節に転移を認めない",
+              "1"
+            ],
+            [
+              "1a：所属リンパ節に転移を認める（転移巣最大径10mm以下、組織所見による）",
+              "5"
+            ],
+            [
+              "1b：所属リンパ節に転移を認める（転移巣最大径10mm超、組織所見による）",
+              "6"
+            ],
+            [
+              "1：所属リンパ節に転移を認める（転移巣最大径不明）",
+              "2"
+            ],
+            [
+              "X：所属リンパ節に転移を判定するための病理学的検索が行われなかった",
+              "4"
+            ]
+          ]
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$2",
+            "AV",
+            "first"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@3",
+            "$3",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$3"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "0：遠隔転移を認めない",
+              "1"
+            ],
+            [
+              "1a：胸水中に悪性細胞を認める",
+              "4"
+            ],
+            [
+              "1b：実質転移ならびに腹腔外臓器（鼠径リンパ節ならびに腹腔外リンパ節を含む）に転移を認めるもの",
+              "5"
+            ],
+            [
+              "X：遠隔転移を判定するための検索が行われなかった",
+              "2"
+            ]
+          ]
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$3",
+            "AW",
+            "first"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-OV_2024_export_findings",
+      "description": "GO-OV_2024_ovarian_cancer：Findings",
+      "source": [
+        {
+          "path": "$.[0].診断所見.漿液性卵管上皮内癌（STIC）"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$要修正項目",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior":"Abort"
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@1",
+            "$1",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$1"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "なし",
+              "1"
+            ],
+            [
+              "あり",
+              "2"
+            ],
+            [
+              "検索せず",
+              "3"
+            ]
+          ]
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$1",
+            "Q",
+            "first"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-OV_2024_export_histology",
+      "description": "GO-OV_2024_ovarian_cancer：Histology",
+      "source": [
+        {
+          "path": "$.[0].組織診断.組織型"
+        },
+        {
+          "path":"$.[0].組織診断.遺伝子プロファイル"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$要修正項目",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior":"Abort"
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@1",
+            "$1",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$1"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "漿液性境界悪性腫瘍",
+              "61"
+            ],
+            [
+              "漿液性卵管上皮内癌",
+              "62"
+            ],
+            [
+              "微小乳頭状漿液性境界悪性腫瘍",
+              "63"
+            ],
+            [
+              "低異型度漿液性癌",
+              "64"
+            ],
+            [
+              "高異型度漿液性癌",
+              "65"
+            ],
+            [
+              "粘液性境界悪性腫瘍",
+              "66"
+            ],
+            [
+              "粘液性癌",
+              "67"
+            ],
+            [
+              "類内膜境界悪性腫瘍",
+              "68"
+            ],
+            [
+              "類内膜癌",
+              "69"
+            ],
+            [
+              "漿液粘液性癌",
+              "75"
+            ],
+            [
+              "明細胞境界悪性腫瘍",
+              "70"
+            ],
+            [
+              "明細胞癌",
+              "71"
+            ],
+            [
+              "境界悪性ブレンナー腫瘍",
+              "72"
+            ],
+            [
+              "悪性ブレンナー腫瘍",
+              "73"
+            ],
+            [
+              "中腎様腺癌",
+              "128"
+            ],
+            [
+              "漿液粘液性境界悪性腫瘍",
+              "74"
+            ],
+            [
+              "未分化癌",
+              "76"
+            ],
+            [
+              "脱分化癌",
+              "129"
+            ],
+            [
+              "癌肉腫",
+              "80"
+            ],
+            [
+              "混合癌",
+              "130"
+            ],
+            [
+              "低異型度類内膜間質肉腫",
+              "77"
+            ],
+            [
+              "高異型度類内膜間質肉腫",
+              "78"
+            ],
+            [
+              "腺肉腫",
+              "79"
+            ],
+            [
+              "富細胞性線維腫",
+              "81"
+            ],
+            [
+              "線維肉腫",
+              "82"
+            ],
+            [
+              "悪性ステロイド細胞腫瘍",
+              "83"
+            ],
+            [
+              "成人型顆粒膜細胞腫",
+              "84"
+            ],
+            [
+              "若年型顆粒膜細胞腫",
+              "85"
+            ],          
+            [
+              "セルトリ細胞腫",
+              "86"
+            ],
+            [
+              "輪状細管を伴う性索腫瘍",
+              "87"
+            ],
+            [
+              "中分化型セルトリ・ライディッヒ細胞腫",
+              "88"
+            ],
+            [
+              "低分化型セルトリ・ライディッヒ細胞腫",
+              "89"
+            ],
+            [
+              "網状型セルトリ・ライディッヒ細胞腫",
+              "91"
+            ],
+            [
+              "未分化胚細胞腫",
+              "92"
+            ],
+            [
+              "卵黄嚢腫瘍",
+              "93"
+            ],
+            [
+              "胎芽性癌",
+              "94"
+            ],
+            [
+              "絨毛癌",
+              "95"
+            ],          
+            [
+              "未熟奇形腫G1",
+              "96"
+            ],
+            [
+              "未熟奇形腫G2",
+              "97"
+            ],
+            [
+              "未熟奇形腫G3",
+              "98"
+            ],
+            [
+              "未熟奇形種グレード不明",
+              "99"
+            ],
+            [
+              "混合型胚細胞性腫瘍",
+              "100"
+            ],          
+            [
+              "混合型胚細胞性腫瘍：卵黄嚢腫瘍＋未分化胚細胞腫",
+              "101"
+            ],
+            [
+              "混合型胚細胞性腫瘍：卵黄嚢腫瘍＋未熟奇形腫",
+              "102"
+            ],
+            [
+              "悪性卵巣甲状腺腫",
+              "103"
+            ],
+            [
+              "扁平上皮癌",
+              "104"
+            ],
+            [
+              "カルチノイド腫瘍",
+              "105"
+            ],
+            [
+              "脂腺癌",
+              "108"
+            ],
+            [
+              "性腺芽腫",
+              "109"
+            ],
+            [
+              "分類不能な混合型胚細胞・性索間質性腫瘍",
+              "110"
+            ],
+            [
+              "卵巣網腺癌",
+              "111"
+            ],          
+            [
+              "ウォルフ菅腫瘍",
+              "112"
+            ],
+            [
+              "高カルシウム血症性小細胞癌",
+              "113"
+            ],
+            [
+              "小細胞神経内分泌癌",
+              "114"
+            ],
+            [
+              "ウィルムス腫瘍",
+              "115"
+            ],    
+            [
+              "充実性偽乳頭状腫瘍",
+              "117"
+            ],
+            [
+              "中皮腫",
+              "118"
+            ],
+            [
+              "悪性リンパ腫",
+              "56"
+            ],
+            [
+              "形質細胞腫",
+              "119"
+            ],
+            [
+              "播種性腹膜平滑筋腫症",
+              "120"
+            ],
+            [
+              "線維形成性小型円形細胞腫瘍",
+              "121"
+            ],
+            [
+              "孤立性線維性腫瘍",
+              "122"
+            ],
+            [
+              "悪性孤立性線維性腫瘍",
+              "123"
+            ],
+            [
+              "腹部線維腫症",
+              "124"
+            ],
+            [
+              "消化管外間質腫瘍",
+              "126"
+            ],
+            [
+              "その他の腫瘍",
+              "127"
+            ],
+            [
+              "組織型診断保留中",
+              "60"
+            ]
+          ]
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$1",
+            "P",
+            "first"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "@2",
+            "$2",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$2"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "HRP",
+              "1"
+            ],
+            [
+              "BRCA1/2病的バリアント陽性",
+              "2"
+            ],
+            [
+              "HRDかつBRCA1/2病的バリアント陰性",
+              "3"
+            ],
+            [
+              "HR不明かつBRCA1/2病的バリアント陰性",
+              "4"
+            ],
+            [
+              "不明",
+              "5"
+            ]
+          ]
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$2",
+            "R",
+            "first"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-CC_2023_export_treatment_pattern",
+      "description": "GO-CC_2023_cervical_cancer：Extract_treatment_pattern",
+      "source": [],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$要修正項目",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior":"Abort"
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$初回治療経過",
+            "$.[0].治療.[*].治療詳細",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$1"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "腹腔鏡下病変生検・審査腹腔鏡",
+              "1-0"
+            ],
+            [
+              "大網生検",
+              "1-0"
+            ],
+            [
+              "腹腔鏡下に大網生検",
+              "1-0"
+            ],
+            [
+              "右側付属器摘出術（嚢腫摘出術含む）",
+              "2-0"
+            ],
+            [
+              "左側付属器摘出術（嚢腫摘出術含む）",
+              "2-0"
+            ],
+            [
+              "腹腔鏡下右付属器摘出術",
+              "2-0"
+            ],
+            [
+              "腹腔鏡下左付属器摘出術",
+              "2-0"
+            ],
+            [
+              "両側付属器摘出術",
+              "3-0"
+            ],
+            [
+              "腹腔鏡下両付属器摘出術",
+              "3-0"
+            ],
+            [
+              "腟上部切断術",
+              "4-0"
+            ],
+            [
+              "単純子宮全摘出術（筋膜内）",
+              "4-0"
+            ],
+            [
+              "単純子宮全摘出術（筋膜外）",
+              "4-0"
+            ],
+            [
+              "拡大子宮全摘術",
+              "4-0"
+            ],
+            [
+              "準広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "準広汎子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "広汎子宮全摘出術（神経温存術式）",
+              "4-0"
+            ],
+            [
+              "広汎子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "腟式単純子宮全摘術（筋膜内）",
+              "4-0"
+            ],
+            [
+              "腟式準広汎子宮全摘術（筋膜外）",
+              "4-0"
+            ],
+            [
+              "腟式広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "腟式広汎子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下単純子宮全摘出術（筋膜内）",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下単純子宮全摘出術（筋膜外）",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下準広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下単純子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下準広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "大網部分切除",
+              "5-0"
+            ],
+            [
+              "大網亜全摘",
+              "5-0"
+            ],
+            [
+              "腹腔鏡下に大網部分切除",
+              "5-0"
+            ],
+            [
+              "腹腔鏡下に大網亜全摘",
+              "5-0"
+            ],        
+            [
+              "骨盤リンパ節選択的郭清（生検）",
+              "6-0"
+            ],
+            [
+              "骨盤リンパ節系統的郭清",
+              "6-0"
+            ],
+            [
+              "骨盤リンパ節センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "傍大動脈リンパ節選択的郭清（生検）",
+              "6-0"
+            ],
+            [
+              "傍大動脈リンパ節系統的郭清",
+              "6-0"
+            ],
+            [
+              "傍大動脈リンパ節センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "腹腔鏡下センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "腹腔鏡下骨盤内リンパ節郭清",
+              "6-0"
+            ],
+            [
+              "腹腔鏡下傍大動脈リンパ節郭清",
+              "6-0"
+            ],
+            [
+              "ロボット支援下センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "ロボット支援下骨盤内リンパ節郭清",
+              "6-0"
+            ],
+            [
+              "ロボット支援下傍大動脈リンパ節郭清",
+              "6-0"
+            ], 
+            [
+              "腹膜播種切除",
+              "7-0"
+            ],
+            [
+              "その他の臓器の切除",
+              "7-0"
+            ],
+            [
+              "腹腔鏡下に他の診療科との合同手術",
+              "7-0"
+            ],
+            [
+              "その他の開腹手術",
+              ""
+            ],
+            [
+              "子宮頸部円錐切除術（本術式のみで治療終了した場合）",
+              ""
+            ],
+            [
+              "その他の開腹手術",
+              ""
+            ],
+            [
+              "その他の腟式手術",
+              ""
+            ],
+            [
+              "その他の腹腔鏡手術",
+              ""
+            ],
+            [
+              "その他のロボット支援下手術",
+              ""
+            ],
+            [
+              "化学療法",
+              "8-0"
+            ],
+            [
+              "分子標的治療（血管新生阻害剤）",
+              "10-1"
+            ],
+            [
+              "分子標的治療（PARP阻害剤）",
+              "10-2"
+            ],
+            [
+              "分子標的治療（その他）",
+              "10-3"
+            ],
+            [
+              "分子標的治療同時併用（血管新生阻害剤＋PARP阻害剤）",
+              "10-4"
+            ],
+            [
+              "化学療法＋分子標的治療（血管新生阻害剤）",
+              "11-5"
+            ],
+            [
+              "化学療法＋分子標的治療（PARP阻害剤）",
+              "11-6"
+            ],
+            [
+              "化学療法＋分子標的治療（その他）",
+              "11-7"
+            ],
+            [
+              "腔内照射",
+              "9-0"
+            ],
+            [
+              "体外照射",
+              "9-0"
+            ],
+            [
+              "体外照射＋腔内照射",
+              "9-0"
+            ],
+            [
+              "同時化学放射線治療（腔内照射）",
+              "9-0"
+            ],
+            [
+              "同時化学放射線治療（体外照射）",
+              "9-0"
+            ],
+            [
+              "同時化学放射線治療（体外照射＋腔内照射）",
+              "9-0"
+            ],
+            [
+              "核医学治療",
+              "9-0"
+            ],
+            [
+              "/^(.*)$/",
+              ""
+            ]
+          ]
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "1-0,2-0,3-0,4-0,5-0,6-0,7-0,8-0,9-0,10-1,10-2,10-3,10-4,11-5,11-6,11-7",
+            "$1",
+            "intersect",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$初回治療経過",
+            "$.[1].治療.[*].治療詳細",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$2"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "腹腔鏡下病変生検・審査腹腔鏡",
+              "1-0"
+            ],
+            [
+              "大網生検",
+              "1-0"
+            ],
+            [
+              "腹腔鏡下に大網生検",
+              "1-0"
+            ],
+            [
+              "右側付属器摘出術（嚢腫摘出術含む）",
+              "2-0"
+            ],
+            [
+              "左側付属器摘出術（嚢腫摘出術含む）",
+              "2-0"
+            ],
+            [
+              "腹腔鏡下右付属器摘出術",
+              "2-0"
+            ],
+            [
+              "腹腔鏡下左付属器摘出術",
+              "2-0"
+            ],
+            [
+              "両側付属器摘出術",
+              "3-0"
+            ],
+            [
+              "腹腔鏡下両付属器摘出術",
+              "3-0"
+            ],
+            [
+              "腟上部切断術",
+              "4-0"
+            ],
+            [
+              "単純子宮全摘出術（筋膜内）",
+              "4-0"
+            ],
+            [
+              "単純子宮全摘出術（筋膜外）",
+              "4-0"
+            ],
+            [
+              "拡大子宮全摘術",
+              "4-0"
+            ],
+            [
+              "準広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "準広汎子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "広汎子宮全摘出術（神経温存術式）",
+              "4-0"
+            ],
+            [
+              "広汎子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "腟式単純子宮全摘術（筋膜内）",
+              "4-0"
+            ],
+            [
+              "腟式準広汎子宮全摘術（筋膜外）",
+              "4-0"
+            ],
+            [
+              "腟式広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "腟式広汎子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下単純子宮全摘出術（筋膜内）",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下単純子宮全摘出術（筋膜外）",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下準広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下単純子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下準広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "大網部分切除",
+              "5-0"
+            ],
+            [
+              "大網亜全摘",
+              "5-0"
+            ],
+            [
+              "腹腔鏡下に大網部分切除",
+              "5-0"
+            ],
+            [
+              "腹腔鏡下に大網亜全摘",
+              "5-0"
+            ],        
+            [
+              "骨盤リンパ節選択的郭清（生検）",
+              "6-0"
+            ],
+            [
+              "骨盤リンパ節系統的郭清",
+              "6-0"
+            ],
+            [
+              "骨盤リンパ節センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "傍大動脈リンパ節選択的郭清（生検）",
+              "6-0"
+            ],
+            [
+              "傍大動脈リンパ節系統的郭清",
+              "6-0"
+            ],
+            [
+              "傍大動脈リンパ節センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "腹腔鏡下センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "腹腔鏡下骨盤内リンパ節郭清",
+              "6-0"
+            ],
+            [
+              "腹腔鏡下傍大動脈リンパ節郭清",
+              "6-0"
+            ],
+            [
+              "ロボット支援下センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "ロボット支援下骨盤内リンパ節郭清",
+              "6-0"
+            ],
+            [
+              "ロボット支援下傍大動脈リンパ節郭清",
+              "6-0"
+            ], 
+            [
+              "腹膜播種切除",
+              "7-0"
+            ],
+            [
+              "その他の臓器の切除",
+              "7-0"
+            ],
+            [
+              "腹腔鏡下に他の診療科との合同手術",
+              "7-0"
+            ],
+            [
+              "その他の開腹手術",
+              ""
+            ],
+            [
+              "子宮頸部円錐切除術（本術式のみで治療終了した場合）",
+              ""
+            ],
+            [
+              "その他の開腹手術",
+              ""
+            ],
+            [
+              "その他の腟式手術",
+              ""
+            ],
+            [
+              "その他の腹腔鏡手術",
+              ""
+            ],
+            [
+              "その他のロボット支援下手術",
+              ""
+            ],
+            [
+              "化学療法",
+              "8-0"
+            ],
+            [
+              "分子標的治療（血管新生阻害剤）",
+              "10-1"
+            ],
+            [
+              "分子標的治療（PARP阻害剤）",
+              "10-2"
+            ],
+            [
+              "分子標的治療（その他）",
+              "10-3"
+            ],
+            [
+              "分子標的治療同時併用（血管新生阻害剤＋PARP阻害剤）",
+              "10-4"
+            ],
+            [
+              "化学療法＋分子標的治療（血管新生阻害剤）",
+              "11-5"
+            ],
+            [
+              "化学療法＋分子標的治療（PARP阻害剤）",
+              "11-6"
+            ],
+            [
+              "化学療法＋分子標的治療（その他）",
+              "11-7"
+            ],
+            [
+              "腔内照射",
+              "9-0"
+            ],
+            [
+              "体外照射",
+              "9-0"
+            ],
+            [
+              "体外照射＋腔内照射",
+              "9-0"
+            ],
+            [
+              "同時化学放射線治療（腔内照射）",
+              "9-0"
+            ],
+            [
+              "同時化学放射線治療（体外照射）",
+              "9-0"
+            ],
+            [
+              "同時化学放射線治療（体外照射＋腔内照射）",
+              "9-0"
+            ],
+            [
+              "核医学治療",
+              "9-0"
+            ],
+            [
+              "/^(.*)$/",
+              ""
+            ]
+          ]
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "1-0,2-0,3-0,4-0,5-0,6-0,7-0,8-0,9-0,10-1,10-2,10-3,10-4,11-5,11-6,11-7",
+            "$2",
+            "intersect",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$初回治療経過",
+            "$.[2].治療.[*].治療詳細",
+            "$3"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$3"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "腹腔鏡下病変生検・審査腹腔鏡",
+              "1-0"
+            ],
+            [
+              "大網生検",
+              "1-0"
+            ],
+            [
+              "腹腔鏡下に大網生検",
+              "1-0"
+            ],
+            [
+              "右側付属器摘出術（嚢腫摘出術含む）",
+              "2-0"
+            ],
+            [
+              "左側付属器摘出術（嚢腫摘出術含む）",
+              "2-0"
+            ],
+            [
+              "腹腔鏡下右付属器摘出術",
+              "2-0"
+            ],
+            [
+              "腹腔鏡下左付属器摘出術",
+              "2-0"
+            ],
+            [
+              "両側付属器摘出術",
+              "3-0"
+            ],
+            [
+              "腹腔鏡下両付属器摘出術",
+              "3-0"
+            ],
+            [
+              "腟上部切断術",
+              "4-0"
+            ],
+            [
+              "単純子宮全摘出術（筋膜内）",
+              "4-0"
+            ],
+            [
+              "単純子宮全摘出術（筋膜外）",
+              "4-0"
+            ],
+            [
+              "拡大子宮全摘術",
+              "4-0"
+            ],
+            [
+              "準広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "準広汎子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "広汎子宮全摘出術（神経温存術式）",
+              "4-0"
+            ],
+            [
+              "広汎子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "腟式単純子宮全摘術（筋膜内）",
+              "4-0"
+            ],
+            [
+              "腟式準広汎子宮全摘術（筋膜外）",
+              "4-0"
+            ],
+            [
+              "腟式広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "腟式広汎子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下単純子宮全摘出術（筋膜内）",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下単純子宮全摘出術（筋膜外）",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下準広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下単純子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下準広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "大網部分切除",
+              "5-0"
+            ],
+            [
+              "大網亜全摘",
+              "5-0"
+            ],
+            [
+              "腹腔鏡下に大網部分切除",
+              "5-0"
+            ],
+            [
+              "腹腔鏡下に大網亜全摘",
+              "5-0"
+            ],        
+            [
+              "骨盤リンパ節選択的郭清（生検）",
+              "6-0"
+            ],
+            [
+              "骨盤リンパ節系統的郭清",
+              "6-0"
+            ],
+            [
+              "骨盤リンパ節センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "傍大動脈リンパ節選択的郭清（生検）",
+              "6-0"
+            ],
+            [
+              "傍大動脈リンパ節系統的郭清",
+              "6-0"
+            ],
+            [
+              "傍大動脈リンパ節センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "腹腔鏡下センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "腹腔鏡下骨盤内リンパ節郭清",
+              "6-0"
+            ],
+            [
+              "腹腔鏡下傍大動脈リンパ節郭清",
+              "6-0"
+            ],
+            [
+              "ロボット支援下センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "ロボット支援下骨盤内リンパ節郭清",
+              "6-0"
+            ],
+            [
+              "ロボット支援下傍大動脈リンパ節郭清",
+              "6-0"
+            ], 
+            [
+              "腹膜播種切除",
+              "7-0"
+            ],
+            [
+              "その他の臓器の切除",
+              "7-0"
+            ],
+            [
+              "腹腔鏡下に他の診療科との合同手術",
+              "7-0"
+            ],
+            [
+              "その他の開腹手術",
+              ""
+            ],
+            [
+              "子宮頸部円錐切除術（本術式のみで治療終了した場合）",
+              ""
+            ],
+            [
+              "その他の開腹手術",
+              ""
+            ],
+            [
+              "その他の腟式手術",
+              ""
+            ],
+            [
+              "その他の腹腔鏡手術",
+              ""
+            ],
+            [
+              "その他のロボット支援下手術",
+              ""
+            ],
+            [
+              "化学療法",
+              "8-0"
+            ],
+            [
+              "分子標的治療（血管新生阻害剤）",
+              "10-1"
+            ],
+            [
+              "分子標的治療（PARP阻害剤）",
+              "10-2"
+            ],
+            [
+              "分子標的治療（その他）",
+              "10-3"
+            ],
+            [
+              "分子標的治療同時併用（血管新生阻害剤＋PARP阻害剤）",
+              "10-4"
+            ],
+            [
+              "化学療法＋分子標的治療（血管新生阻害剤）",
+              "11-5"
+            ],
+            [
+              "化学療法＋分子標的治療（PARP阻害剤）",
+              "11-6"
+            ],
+            [
+              "化学療法＋分子標的治療（その他）",
+              "11-7"
+            ],
+            [
+              "腔内照射",
+              "9-0"
+            ],
+            [
+              "体外照射",
+              "9-0"
+            ],
+            [
+              "体外照射＋腔内照射",
+              "9-0"
+            ],
+            [
+              "同時化学放射線治療（腔内照射）",
+              "9-0"
+            ],
+            [
+              "同時化学放射線治療（体外照射）",
+              "9-0"
+            ],
+            [
+              "同時化学放射線治療（体外照射＋腔内照射）",
+              "9-0"
+            ],
+            [
+              "核医学治療",
+              "9-0"
+            ],
+            [
+              "/^(.*)$/",
+              ""
+            ]
+          ]
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "1-0,2-0,3-0,4-0,5-0,6-0,7-0,8-0,9-0,10-1,10-2,10-3,10-4,11-5,11-6,11-7",
+            "$3",
+            "intersect",
+            "$3"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$初回治療経過",
+            "$.[3].治療.[*].治療詳細",
+            "$4"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$4"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "腹腔鏡下病変生検・審査腹腔鏡",
+              "1-0"
+            ],
+            [
+              "大網生検",
+              "1-0"
+            ],
+            [
+              "腹腔鏡下に大網生検",
+              "1-0"
+            ],
+            [
+              "右側付属器摘出術（嚢腫摘出術含む）",
+              "2-0"
+            ],
+            [
+              "左側付属器摘出術（嚢腫摘出術含む）",
+              "2-0"
+            ],
+            [
+              "腹腔鏡下右付属器摘出術",
+              "2-0"
+            ],
+            [
+              "腹腔鏡下左付属器摘出術",
+              "2-0"
+            ],
+            [
+              "両側付属器摘出術",
+              "3-0"
+            ],
+            [
+              "腹腔鏡下両付属器摘出術",
+              "3-0"
+            ],
+            [
+              "腟上部切断術",
+              "4-0"
+            ],
+            [
+              "単純子宮全摘出術（筋膜内）",
+              "4-0"
+            ],
+            [
+              "単純子宮全摘出術（筋膜外）",
+              "4-0"
+            ],
+            [
+              "拡大子宮全摘術",
+              "4-0"
+            ],
+            [
+              "準広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "準広汎子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "広汎子宮全摘出術（神経温存術式）",
+              "4-0"
+            ],
+            [
+              "広汎子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "腟式単純子宮全摘術（筋膜内）",
+              "4-0"
+            ],
+            [
+              "腟式準広汎子宮全摘術（筋膜外）",
+              "4-0"
+            ],
+            [
+              "腟式広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "腟式広汎子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下単純子宮全摘出術（筋膜内）",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下単純子宮全摘出術（筋膜外）",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下準広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下単純子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下準広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "大網部分切除",
+              "5-0"
+            ],
+            [
+              "大網亜全摘",
+              "5-0"
+            ],
+            [
+              "腹腔鏡下に大網部分切除",
+              "5-0"
+            ],
+            [
+              "腹腔鏡下に大網亜全摘",
+              "5-0"
+            ],        
+            [
+              "骨盤リンパ節選択的郭清（生検）",
+              "6-0"
+            ],
+            [
+              "骨盤リンパ節系統的郭清",
+              "6-0"
+            ],
+            [
+              "骨盤リンパ節センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "傍大動脈リンパ節選択的郭清（生検）",
+              "6-0"
+            ],
+            [
+              "傍大動脈リンパ節系統的郭清",
+              "6-0"
+            ],
+            [
+              "傍大動脈リンパ節センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "腹腔鏡下センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "腹腔鏡下骨盤内リンパ節郭清",
+              "6-0"
+            ],
+            [
+              "腹腔鏡下傍大動脈リンパ節郭清",
+              "6-0"
+            ],
+            [
+              "ロボット支援下センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "ロボット支援下骨盤内リンパ節郭清",
+              "6-0"
+            ],
+            [
+              "ロボット支援下傍大動脈リンパ節郭清",
+              "6-0"
+            ], 
+            [
+              "腹膜播種切除",
+              "7-0"
+            ],
+            [
+              "その他の臓器の切除",
+              "7-0"
+            ],
+            [
+              "腹腔鏡下に他の診療科との合同手術",
+              "7-0"
+            ],
+            [
+              "その他の開腹手術",
+              ""
+            ],
+            [
+              "子宮頸部円錐切除術（本術式のみで治療終了した場合）",
+              ""
+            ],
+            [
+              "その他の開腹手術",
+              ""
+            ],
+            [
+              "その他の腟式手術",
+              ""
+            ],
+            [
+              "その他の腹腔鏡手術",
+              ""
+            ],
+            [
+              "その他のロボット支援下手術",
+              ""
+            ],
+            [
+              "化学療法",
+              "8-0"
+            ],
+            [
+              "分子標的治療（血管新生阻害剤）",
+              "10-1"
+            ],
+            [
+              "分子標的治療（PARP阻害剤）",
+              "10-2"
+            ],
+            [
+              "分子標的治療（その他）",
+              "10-3"
+            ],
+            [
+              "分子標的治療同時併用（血管新生阻害剤＋PARP阻害剤）",
+              "10-4"
+            ],
+            [
+              "化学療法＋分子標的治療（血管新生阻害剤）",
+              "11-5"
+            ],
+            [
+              "化学療法＋分子標的治療（PARP阻害剤）",
+              "11-6"
+            ],
+            [
+              "化学療法＋分子標的治療（その他）",
+              "11-7"
+            ],
+            [
+              "腔内照射",
+              "9-0"
+            ],
+            [
+              "体外照射",
+              "9-0"
+            ],
+            [
+              "体外照射＋腔内照射",
+              "9-0"
+            ],
+            [
+              "同時化学放射線治療（腔内照射）",
+              "9-0"
+            ],
+            [
+              "同時化学放射線治療（体外照射）",
+              "9-0"
+            ],
+            [
+              "同時化学放射線治療（体外照射＋腔内照射）",
+              "9-0"
+            ],
+            [
+              "核医学治療",
+              "9-0"
+            ],
+            [
+              "/^(.*)$/",
+              ""
+            ]
+          ]
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "1-0,2-0,3-0,4-0,5-0,6-0,7-0,8-0,9-0,10-1,10-2,10-3,10-4,11-5,11-6,11-7",
+            "$4",
+            "intersect",
+            "$4"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$初回治療経過",
+            "$.[4].治療.[*].治療詳細",
+            "$5"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$5"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "腹腔鏡下病変生検・審査腹腔鏡",
+              "1-0"
+            ],
+            [
+              "大網生検",
+              "1-0"
+            ],
+            [
+              "腹腔鏡下に大網生検",
+              "1-0"
+            ],
+            [
+              "右側付属器摘出術（嚢腫摘出術含む）",
+              "2-0"
+            ],
+            [
+              "左側付属器摘出術（嚢腫摘出術含む）",
+              "2-0"
+            ],
+            [
+              "腹腔鏡下右付属器摘出術",
+              "2-0"
+            ],
+            [
+              "腹腔鏡下左付属器摘出術",
+              "2-0"
+            ],
+            [
+              "両側付属器摘出術",
+              "3-0"
+            ],
+            [
+              "腹腔鏡下両付属器摘出術",
+              "3-0"
+            ],
+            [
+              "腟上部切断術",
+              "4-0"
+            ],
+            [
+              "単純子宮全摘出術（筋膜内）",
+              "4-0"
+            ],
+            [
+              "単純子宮全摘出術（筋膜外）",
+              "4-0"
+            ],
+            [
+              "拡大子宮全摘術",
+              "4-0"
+            ],
+            [
+              "準広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "準広汎子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "広汎子宮全摘出術（神経温存術式）",
+              "4-0"
+            ],
+            [
+              "広汎子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "腟式単純子宮全摘術（筋膜内）",
+              "4-0"
+            ],
+            [
+              "腟式準広汎子宮全摘術（筋膜外）",
+              "4-0"
+            ],
+            [
+              "腟式広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "腟式広汎子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下単純子宮全摘出術（筋膜内）",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下単純子宮全摘出術（筋膜外）",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下準広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下単純子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下準広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "大網部分切除",
+              "5-0"
+            ],
+            [
+              "大網亜全摘",
+              "5-0"
+            ],
+            [
+              "腹腔鏡下に大網部分切除",
+              "5-0"
+            ],
+            [
+              "腹腔鏡下に大網亜全摘",
+              "5-0"
+            ],        
+            [
+              "骨盤リンパ節選択的郭清（生検）",
+              "6-0"
+            ],
+            [
+              "骨盤リンパ節系統的郭清",
+              "6-0"
+            ],
+            [
+              "骨盤リンパ節センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "傍大動脈リンパ節選択的郭清（生検）",
+              "6-0"
+            ],
+            [
+              "傍大動脈リンパ節系統的郭清",
+              "6-0"
+            ],
+            [
+              "傍大動脈リンパ節センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "腹腔鏡下センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "腹腔鏡下骨盤内リンパ節郭清",
+              "6-0"
+            ],
+            [
+              "腹腔鏡下傍大動脈リンパ節郭清",
+              "6-0"
+            ],
+            [
+              "ロボット支援下センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "ロボット支援下骨盤内リンパ節郭清",
+              "6-0"
+            ],
+            [
+              "ロボット支援下傍大動脈リンパ節郭清",
+              "6-0"
+            ], 
+            [
+              "腹膜播種切除",
+              "7-0"
+            ],
+            [
+              "その他の臓器の切除",
+              "7-0"
+            ],
+            [
+              "腹腔鏡下に他の診療科との合同手術",
+              "7-0"
+            ],
+            [
+              "その他の開腹手術",
+              ""
+            ],
+            [
+              "子宮頸部円錐切除術（本術式のみで治療終了した場合）",
+              ""
+            ],
+            [
+              "その他の開腹手術",
+              ""
+            ],
+            [
+              "その他の腟式手術",
+              ""
+            ],
+            [
+              "その他の腹腔鏡手術",
+              ""
+            ],
+            [
+              "その他のロボット支援下手術",
+              ""
+            ],
+            [
+              "化学療法",
+              "8-0"
+            ],
+            [
+              "分子標的治療（血管新生阻害剤）",
+              "10-1"
+            ],
+            [
+              "分子標的治療（PARP阻害剤）",
+              "10-2"
+            ],
+            [
+              "分子標的治療（その他）",
+              "10-3"
+            ],
+            [
+              "分子標的治療同時併用（血管新生阻害剤＋PARP阻害剤）",
+              "10-4"
+            ],
+            [
+              "化学療法＋分子標的治療（血管新生阻害剤）",
+              "11-5"
+            ],
+            [
+              "化学療法＋分子標的治療（PARP阻害剤）",
+              "11-6"
+            ],
+            [
+              "化学療法＋分子標的治療（その他）",
+              "11-7"
+            ],
+            [
+              "腔内照射",
+              "9-0"
+            ],
+            [
+              "体外照射",
+              "9-0"
+            ],
+            [
+              "体外照射＋腔内照射",
+              "9-0"
+            ],
+            [
+              "同時化学放射線治療（腔内照射）",
+              "9-0"
+            ],
+            [
+              "同時化学放射線治療（体外照射）",
+              "9-0"
+            ],
+            [
+              "同時化学放射線治療（体外照射＋腔内照射）",
+              "9-0"
+            ],
+            [
+              "核医学治療",
+              "9-0"
+            ],
+            [
+              "/^(.*)$/",
+              ""
+            ]
+          ]
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "1-0,2-0,3-0,4-0,5-0,6-0,7-0,8-0,9-0,10-1,10-2,10-3,10-4,11-5,11-6,11-7",
+            "$5",
+            "intersect",
+            "$5"
+          ],
+          "trueBehavior": 1
+        },
+                {
+          "type": "Query",
+          "arguments": [
+            "$初回治療経過",
+            "$.[5].治療.[*].治療詳細",
+            "$6"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$6"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "腹腔鏡下病変生検・審査腹腔鏡",
+              "1-0"
+            ],
+            [
+              "大網生検",
+              "1-0"
+            ],
+            [
+              "腹腔鏡下に大網生検",
+              "1-0"
+            ],
+            [
+              "右側付属器摘出術（嚢腫摘出術含む）",
+              "2-0"
+            ],
+            [
+              "左側付属器摘出術（嚢腫摘出術含む）",
+              "2-0"
+            ],
+            [
+              "腹腔鏡下右付属器摘出術",
+              "2-0"
+            ],
+            [
+              "腹腔鏡下左付属器摘出術",
+              "2-0"
+            ],
+            [
+              "両側付属器摘出術",
+              "3-0"
+            ],
+            [
+              "腹腔鏡下両付属器摘出術",
+              "3-0"
+            ],
+            [
+              "腟上部切断術",
+              "4-0"
+            ],
+            [
+              "単純子宮全摘出術（筋膜内）",
+              "4-0"
+            ],
+            [
+              "単純子宮全摘出術（筋膜外）",
+              "4-0"
+            ],
+            [
+              "拡大子宮全摘術",
+              "4-0"
+            ],
+            [
+              "準広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "準広汎子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "広汎子宮全摘出術（神経温存術式）",
+              "4-0"
+            ],
+            [
+              "広汎子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "腟式単純子宮全摘術（筋膜内）",
+              "4-0"
+            ],
+            [
+              "腟式準広汎子宮全摘術（筋膜外）",
+              "4-0"
+            ],
+            [
+              "腟式広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "腟式広汎子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下単純子宮全摘出術（筋膜内）",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下単純子宮全摘出術（筋膜外）",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下準広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下単純子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下準広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "大網部分切除",
+              "5-0"
+            ],
+            [
+              "大網亜全摘",
+              "5-0"
+            ],
+            [
+              "腹腔鏡下に大網部分切除",
+              "5-0"
+            ],
+            [
+              "腹腔鏡下に大網亜全摘",
+              "5-0"
+            ],        
+            [
+              "骨盤リンパ節選択的郭清（生検）",
+              "6-0"
+            ],
+            [
+              "骨盤リンパ節系統的郭清",
+              "6-0"
+            ],
+            [
+              "骨盤リンパ節センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "傍大動脈リンパ節選択的郭清（生検）",
+              "6-0"
+            ],
+            [
+              "傍大動脈リンパ節系統的郭清",
+              "6-0"
+            ],
+            [
+              "傍大動脈リンパ節センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "腹腔鏡下センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "腹腔鏡下骨盤内リンパ節郭清",
+              "6-0"
+            ],
+            [
+              "腹腔鏡下傍大動脈リンパ節郭清",
+              "6-0"
+            ],
+            [
+              "ロボット支援下センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "ロボット支援下骨盤内リンパ節郭清",
+              "6-0"
+            ],
+            [
+              "ロボット支援下傍大動脈リンパ節郭清",
+              "6-0"
+            ], 
+            [
+              "腹膜播種切除",
+              "7-0"
+            ],
+            [
+              "その他の臓器の切除",
+              "7-0"
+            ],
+            [
+              "腹腔鏡下に他の診療科との合同手術",
+              "7-0"
+            ],
+            [
+              "その他の開腹手術",
+              ""
+            ],
+            [
+              "子宮頸部円錐切除術（本術式のみで治療終了した場合）",
+              ""
+            ],
+            [
+              "その他の開腹手術",
+              ""
+            ],
+            [
+              "その他の腟式手術",
+              ""
+            ],
+            [
+              "その他の腹腔鏡手術",
+              ""
+            ],
+            [
+              "その他のロボット支援下手術",
+              ""
+            ],
+            [
+              "化学療法",
+              "8-0"
+            ],
+            [
+              "分子標的治療（血管新生阻害剤）",
+              "10-1"
+            ],
+            [
+              "分子標的治療（PARP阻害剤）",
+              "10-2"
+            ],
+            [
+              "分子標的治療（その他）",
+              "10-3"
+            ],
+            [
+              "分子標的治療同時併用（血管新生阻害剤＋PARP阻害剤）",
+              "10-4"
+            ],
+            [
+              "化学療法＋分子標的治療（血管新生阻害剤）",
+              "11-5"
+            ],
+            [
+              "化学療法＋分子標的治療（PARP阻害剤）",
+              "11-6"
+            ],
+            [
+              "化学療法＋分子標的治療（その他）",
+              "11-7"
+            ],
+            [
+              "腔内照射",
+              "9-0"
+            ],
+            [
+              "体外照射",
+              "9-0"
+            ],
+            [
+              "体外照射＋腔内照射",
+              "9-0"
+            ],
+            [
+              "同時化学放射線治療（腔内照射）",
+              "9-0"
+            ],
+            [
+              "同時化学放射線治療（体外照射）",
+              "9-0"
+            ],
+            [
+              "同時化学放射線治療（体外照射＋腔内照射）",
+              "9-0"
+            ],
+            [
+              "核医学治療",
+              "9-0"
+            ],
+            [
+              "/^(.*)$/",
+              ""
+            ]
+          ]
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "1-0,2-0,3-0,4-0,5-0,6-0,7-0,8-0,9-0,10-1,10-2,10-3,10-4,11-5,11-6,11-7",
+            "$6",
+            "intersect",
+            "$6"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$初回治療経過",
+            "$.[6].治療.[*].治療詳細",
+            "$7"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$7"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "腹腔鏡下病変生検・審査腹腔鏡",
+              "1-0"
+            ],
+            [
+              "大網生検",
+              "1-0"
+            ],
+            [
+              "腹腔鏡下に大網生検",
+              "1-0"
+            ],
+            [
+              "右側付属器摘出術（嚢腫摘出術含む）",
+              "2-0"
+            ],
+            [
+              "左側付属器摘出術（嚢腫摘出術含む）",
+              "2-0"
+            ],
+            [
+              "腹腔鏡下右付属器摘出術",
+              "2-0"
+            ],
+            [
+              "腹腔鏡下左付属器摘出術",
+              "2-0"
+            ],
+            [
+              "両側付属器摘出術",
+              "3-0"
+            ],
+            [
+              "腹腔鏡下両付属器摘出術",
+              "3-0"
+            ],
+            [
+              "腟上部切断術",
+              "4-0"
+            ],
+            [
+              "単純子宮全摘出術（筋膜内）",
+              "4-0"
+            ],
+            [
+              "単純子宮全摘出術（筋膜外）",
+              "4-0"
+            ],
+            [
+              "拡大子宮全摘術",
+              "4-0"
+            ],
+            [
+              "準広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "準広汎子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "広汎子宮全摘出術（神経温存術式）",
+              "4-0"
+            ],
+            [
+              "広汎子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "腟式単純子宮全摘術（筋膜内）",
+              "4-0"
+            ],
+            [
+              "腟式準広汎子宮全摘術（筋膜外）",
+              "4-0"
+            ],
+            [
+              "腟式広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "腟式広汎子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下単純子宮全摘出術（筋膜内）",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下単純子宮全摘出術（筋膜外）",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下準広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下単純子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下準広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "大網部分切除",
+              "5-0"
+            ],
+            [
+              "大網亜全摘",
+              "5-0"
+            ],
+            [
+              "腹腔鏡下に大網部分切除",
+              "5-0"
+            ],
+            [
+              "腹腔鏡下に大網亜全摘",
+              "5-0"
+            ],        
+            [
+              "骨盤リンパ節選択的郭清（生検）",
+              "6-0"
+            ],
+            [
+              "骨盤リンパ節系統的郭清",
+              "6-0"
+            ],
+            [
+              "骨盤リンパ節センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "傍大動脈リンパ節選択的郭清（生検）",
+              "6-0"
+            ],
+            [
+              "傍大動脈リンパ節系統的郭清",
+              "6-0"
+            ],
+            [
+              "傍大動脈リンパ節センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "腹腔鏡下センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "腹腔鏡下骨盤内リンパ節郭清",
+              "6-0"
+            ],
+            [
+              "腹腔鏡下傍大動脈リンパ節郭清",
+              "6-0"
+            ],
+            [
+              "ロボット支援下センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "ロボット支援下骨盤内リンパ節郭清",
+              "6-0"
+            ],
+            [
+              "ロボット支援下傍大動脈リンパ節郭清",
+              "6-0"
+            ], 
+            [
+              "腹膜播種切除",
+              "7-0"
+            ],
+            [
+              "その他の臓器の切除",
+              "7-0"
+            ],
+            [
+              "腹腔鏡下に他の診療科との合同手術",
+              "7-0"
+            ],
+            [
+              "その他の開腹手術",
+              ""
+            ],
+            [
+              "子宮頸部円錐切除術（本術式のみで治療終了した場合）",
+              ""
+            ],
+            [
+              "その他の開腹手術",
+              ""
+            ],
+            [
+              "その他の腟式手術",
+              ""
+            ],
+            [
+              "その他の腹腔鏡手術",
+              ""
+            ],
+            [
+              "その他のロボット支援下手術",
+              ""
+            ],
+            [
+              "化学療法",
+              "8-0"
+            ],
+            [
+              "分子標的治療（血管新生阻害剤）",
+              "10-1"
+            ],
+            [
+              "分子標的治療（PARP阻害剤）",
+              "10-2"
+            ],
+            [
+              "分子標的治療（その他）",
+              "10-3"
+            ],
+            [
+              "分子標的治療同時併用（血管新生阻害剤＋PARP阻害剤）",
+              "10-4"
+            ],
+            [
+              "化学療法＋分子標的治療（血管新生阻害剤）",
+              "11-5"
+            ],
+            [
+              "化学療法＋分子標的治療（PARP阻害剤）",
+              "11-6"
+            ],
+            [
+              "化学療法＋分子標的治療（その他）",
+              "11-7"
+            ],
+            [
+              "腔内照射",
+              "9-0"
+            ],
+            [
+              "体外照射",
+              "9-0"
+            ],
+            [
+              "体外照射＋腔内照射",
+              "9-0"
+            ],
+            [
+              "同時化学放射線治療（腔内照射）",
+              "9-0"
+            ],
+            [
+              "同時化学放射線治療（体外照射）",
+              "9-0"
+            ],
+            [
+              "同時化学放射線治療（体外照射＋腔内照射）",
+              "9-0"
+            ],
+            [
+              "核医学治療",
+              "9-0"
+            ],
+            [
+              "/^(.*)$/",
+              ""
+            ]
+          ]
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "1-0,2-0,3-0,4-0,5-0,6-0,7-0,8-0,9-0,10-1,10-2,10-3,10-4,11-5,11-6,11-7",
+            "$7",
+            "intersect",
+            "$7"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$初回治療経過",
+            "$.[7].治療.[*].治療詳細",
+            "$8"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$8"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "腹腔鏡下病変生検・審査腹腔鏡",
+              "1-0"
+            ],
+            [
+              "大網生検",
+              "1-0"
+            ],
+            [
+              "腹腔鏡下に大網生検",
+              "1-0"
+            ],
+            [
+              "右側付属器摘出術（嚢腫摘出術含む）",
+              "2-0"
+            ],
+            [
+              "左側付属器摘出術（嚢腫摘出術含む）",
+              "2-0"
+            ],
+            [
+              "腹腔鏡下右付属器摘出術",
+              "2-0"
+            ],
+            [
+              "腹腔鏡下左付属器摘出術",
+              "2-0"
+            ],
+            [
+              "両側付属器摘出術",
+              "3-0"
+            ],
+            [
+              "腹腔鏡下両付属器摘出術",
+              "3-0"
+            ],
+            [
+              "腟上部切断術",
+              "4-0"
+            ],
+            [
+              "単純子宮全摘出術（筋膜内）",
+              "4-0"
+            ],
+            [
+              "単純子宮全摘出術（筋膜外）",
+              "4-0"
+            ],
+            [
+              "拡大子宮全摘術",
+              "4-0"
+            ],
+            [
+              "準広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "準広汎子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "広汎子宮全摘出術（神経温存術式）",
+              "4-0"
+            ],
+            [
+              "広汎子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "腟式単純子宮全摘術（筋膜内）",
+              "4-0"
+            ],
+            [
+              "腟式準広汎子宮全摘術（筋膜外）",
+              "4-0"
+            ],
+            [
+              "腟式広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "腟式広汎子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下単純子宮全摘出術（筋膜内）",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下単純子宮全摘出術（筋膜外）",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下準広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "腹腔鏡下子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下単純子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下準広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下広汎子宮全摘出術",
+              "4-0"
+            ],
+            [
+              "ロボット支援下子宮頸部摘出術",
+              "4-0"
+            ],
+            [
+              "大網部分切除",
+              "5-0"
+            ],
+            [
+              "大網亜全摘",
+              "5-0"
+            ],
+            [
+              "腹腔鏡下に大網部分切除",
+              "5-0"
+            ],
+            [
+              "腹腔鏡下に大網亜全摘",
+              "5-0"
+            ],        
+            [
+              "骨盤リンパ節選択的郭清（生検）",
+              "6-0"
+            ],
+            [
+              "骨盤リンパ節系統的郭清",
+              "6-0"
+            ],
+            [
+              "骨盤リンパ節センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "傍大動脈リンパ節選択的郭清（生検）",
+              "6-0"
+            ],
+            [
+              "傍大動脈リンパ節系統的郭清",
+              "6-0"
+            ],
+            [
+              "傍大動脈リンパ節センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "腹腔鏡下センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "腹腔鏡下骨盤内リンパ節郭清",
+              "6-0"
+            ],
+            [
+              "腹腔鏡下傍大動脈リンパ節郭清",
+              "6-0"
+            ],
+            [
+              "ロボット支援下センチネルリンパ節生検",
+              "6-0"
+            ],
+            [
+              "ロボット支援下骨盤内リンパ節郭清",
+              "6-0"
+            ],
+            [
+              "ロボット支援下傍大動脈リンパ節郭清",
+              "6-0"
+            ], 
+            [
+              "腹膜播種切除",
+              "7-0"
+            ],
+            [
+              "その他の臓器の切除",
+              "7-0"
+            ],
+            [
+              "腹腔鏡下に他の診療科との合同手術",
+              "7-0"
+            ],
+            [
+              "その他の開腹手術",
+              ""
+            ],
+            [
+              "子宮頸部円錐切除術（本術式のみで治療終了した場合）",
+              ""
+            ],
+            [
+              "その他の開腹手術",
+              ""
+            ],
+            [
+              "その他の腟式手術",
+              ""
+            ],
+            [
+              "その他の腹腔鏡手術",
+              ""
+            ],
+            [
+              "その他のロボット支援下手術",
+              ""
+            ],
+            [
+              "化学療法",
+              "8-0"
+            ],
+            [
+              "分子標的治療（血管新生阻害剤）",
+              "10-1"
+            ],
+            [
+              "分子標的治療（PARP阻害剤）",
+              "10-2"
+            ],
+            [
+              "分子標的治療（その他）",
+              "10-3"
+            ],
+            [
+              "分子標的治療同時併用（血管新生阻害剤＋PARP阻害剤）",
+              "10-4"
+            ],
+            [
+              "化学療法＋分子標的治療（血管新生阻害剤）",
+              "11-5"
+            ],
+            [
+              "化学療法＋分子標的治療（PARP阻害剤）",
+              "11-6"
+            ],
+            [
+              "化学療法＋分子標的治療（その他）",
+              "11-7"
+            ],
+            [
+              "腔内照射",
+              "9-0"
+            ],
+            [
+              "体外照射",
+              "9-0"
+            ],
+            [
+              "体外照射＋腔内照射",
+              "9-0"
+            ],
+            [
+              "同時化学放射線治療（腔内照射）",
+              "9-0"
+            ],
+            [
+              "同時化学放射線治療（体外照射）",
+              "9-0"
+            ],
+            [
+              "同時化学放射線治療（体外照射＋腔内照射）",
+              "9-0"
+            ],
+            [
+              "核医学治療",
+              "9-0"
+            ],
+            [
+              "/^(.*)$/",
+              ""
+            ]
+          ]
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "1-0,2-0,3-0,4-0,5-0,6-0,7-0,8-0,9-0,10-1,10-2,10-3,10-4,11-5,11-6,11-7",
+            "$8",
+            "intersect",
+            "$8"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$1",
+            "$2",
+            "add",
+            "$9"
+          ],
+          "trueBehavior": 1
+        },   
+        {
+          "type": "Sets",
+          "arguments": [
+            "$9",
+            "$3",
+            "add",
+            "$9"
+          ],
+          "trueBehavior": 1
+        }, 
+        {
+          "type": "Sets",
+          "arguments": [
+            "$9",
+            "$4",
+            "add",
+            "$9"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$9",
+            "$5",
+            "add",
+            "$9"
+          ],
+          "trueBehavior": 1
+        },  
+        {
+          "type": "Sets",
+          "arguments": [
+            "$9",
+            "$6",
+            "add",
+            "$9"
+          ],
+          "trueBehavior": 1
+        }, 
+        {
+          "type": "Sets",
+          "arguments": [
+            "$9",
+            "$7",
+            "add",
+            "$9"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$9",
+            "$8",
+            "add",
+            "$9"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$9",
+            "$1",
+            "comma"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$1"
+          ],
+          "trueBehavior": 1,
+          "lookup": [
+            [
+              "/([0-9]+-[0-9]+),\\1/g",
+              "$1,"
+            ]
+          ]
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$1"
+          ],
+          "trueBehavior": 1,
+          "lookup": [
+            [
+              "/([0-9]+)-([0-9]+),?/g",
+              "\"$1\",\"$2\","
+            ]
+          ]
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$1"
+          ],
+          "trueBehavior": 1,
+          "lookup": [
+            [
+              "/^,?(.+),$/",
+              "[$1]"
+            ]
+          ]
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$1",
+            "$.[*]",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$2"
+          ],
+          "trueBehavior": 1,
+          "lookup": [
+            [
+              "0",
+              ""
+            ]
+          ]
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$2",
+            "T:AQ",
+            "array"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-OV_2024_export_treatment",
+      "description": "GO-OV_2024_ovarian_cancer：Treatment",
+      "source": [],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$要修正項目",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior":"Abort"
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$初回治療経過",
+            "$.[*].治療.[*].治療詳細",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$骨盤リンパ節郭清",
+            "$1",
+            "intersect",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$2",
+            "$2",
+            "count"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$傍大動脈リンパ節郭清",
+            "$1",
+            "intersect",
+            "$3"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$3",
+            "$3",
+            "count"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$2",
+            "value",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$3",
+            "value",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "0",
+            "AR"
+          ],
+          "trueBehavior": 5
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "3",
+            "AR"
+          ],
+          "trueBehavior": 4
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$3",
+            "value",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "1",
+            "AR"
+          ],
+          "trueBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "4",
+            "AR"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$手術経過",
+            "$.[*].手術完遂度",
+            "$4"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$4",
+            "$4",
+            "count"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$4",
+            "value",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$手術経過",
+            "$.[0].手術完遂度",
+            "$5"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$5"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "完全摘出",
+              "1"
+            ],
+            [
+              "不完全摘出（残存腫瘍径が1cm未満）",
+              "2"
+            ],
+            [
+              "不完全摘出（残存腫瘍径が1cm～2cm）",
+              "3"
+            ],
+            [
+              "不完全摘出（2cmを超える）",
+              "4"
+            ],
+            [
+              "不明",
+              "5"
+            ]
+          ]
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$5",
+            "AS"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$4",
+            "value",
+            "1",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "施行せず",
+            "$6",
+            "value"
+          ],
+          "trueBehavior": 2
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$手術経過",
+            "$.[1].手術完遂度",
+            "$6"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },        
+        {
+          "type": "Translation",
+          "arguments": [
+            "$6"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "施行せず",
+              "1"
+            ],            
+            [
+              "完全摘出",
+              "2"
+            ],
+            [
+              "不完全摘出（残存腫瘍径が1cm未満）",
+              "3"
+            ],
+            [
+              "不完全摘出（残存腫瘍径が1cm～2cm）",
+              "4"
+            ],
+            [
+              "不完全摘出（2cmを超える）",
+              "5"
+            ],
+            [
+              "不明",
+              "6"
+            ]
+          ]
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$6",
+            "AT"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    }
+  ]
+}

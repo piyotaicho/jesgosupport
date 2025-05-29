@@ -5,14 +5,14 @@ import { scriptCheckCC as checkRule } from './support-scripts/scriptsForCheck'
 
 export async function init ():Promise<scriptInfo> {
   return {
-    plugin_name: '子宮頸がん個別チェック(2023-2024)',
-    plugin_version: '1.201',
+    plugin_name: '子宮頸がん個別チェック(2023-2025)',
+    plugin_version: '1.300',
     all_patient: false,
     attach_patient_info: true,
     show_upload_dialog: false,
     update_db: true,
     target_schema_id_string: '',
-    explain: '症例毎に子宮頸がん登録のロジカルチェックを行います.(2023年～2024年登録対応)'
+    explain: '症例毎に子宮頸がん登録のロジカルチェックを行います.(2023年～2025年登録対応)'
   }
 }
 
