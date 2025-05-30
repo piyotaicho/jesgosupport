@@ -19,8 +19,6 @@
       "$薬物療法経過",
       "$放射線療法経過",
       "$初回治療経過",
-      "$骨盤リンパ節郭清",
-      "$傍大動脈リンパ節郭清",
       "$T1a症例"
     ],
     "csvOffset": 6,
@@ -1974,22 +1972,6 @@
           ],
           "trueBehavior": 1,
           "falseBehavior": "Abort"
-        },
-        {
-          "type": "Variables",
-          "arguments": [
-            "骨盤リンパ節センチネルリンパ節生検,骨盤リンパ節選択的郭清,骨盤リンパ節系統的郭清,腹腔鏡下センチネルリンパ節生検,腹腔鏡下骨盤内リンパ節郭清,ロボット支援下センチネルリンパ節生検,ロボット支援下骨盤内リンパ節郭清",
-            "$骨盤リンパ節郭清"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Variables",
-          "arguments": [
-            "傍大動脈リンパ節センチネルリンパ節生検,傍大動脈リンパ節選択的郭清,傍大動脈リンパ節系統的郭清,腹腔鏡下傍大動脈リンパ節郭清,ロボット支援下傍大動脈リンパ節郭清",
-            "$傍大動脈リンパ節郭清"
-          ],
-          "trueBehavior": 1
         },
         {
           "type": "Query",
@@ -4736,8 +4718,8 @@
             "領域リンパ節転移なし",
             "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
+          "trueBehavior": 2,
+          "falseBehavior": 1
         },
         {
           "type": "Operators",
@@ -4811,8 +4793,8 @@
             "領域リンパ節転移なし",
             "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
+          "trueBehavior": 2,
+          "falseBehavior": 1
         },
         {
           "type": "Operators",
@@ -4875,8 +4857,8 @@
             "領域リンパ節転移なし",
             "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
+          "trueBehavior": 2,
+          "falseBehavior": 1
         },
         {
           "type": "Operators",
@@ -4939,8 +4921,8 @@
             "領域リンパ節転移なし",
             "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
+          "trueBehavior": 2,
+          "falseBehavior": 1
         },
         {
           "type": "Operators",
@@ -5003,8 +4985,8 @@
             "領域リンパ節転移なし",
             "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
+          "trueBehavior": 2,
+          "falseBehavior": 1
         },
         {
           "type": "Operators",
@@ -5067,8 +5049,8 @@
             "領域リンパ節転移なし",
             "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
+          "trueBehavior": 2,
+          "falseBehavior": 1
         },
         {
           "type": "Operators",
@@ -5131,8 +5113,8 @@
             "領域リンパ節転移なし",
             "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
+          "trueBehavior": 2,
+          "falseBehavior": 1
         },
         {
           "type": "Operators",
@@ -5195,8 +5177,8 @@
             "領域リンパ節転移なし",
             "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
+          "trueBehavior": 2,
+          "falseBehavior": 1
         },
         {
           "type": "Operators",
@@ -5259,8 +5241,8 @@
             "領域リンパ節転移なし",
             "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
+          "trueBehavior": 2,
+          "falseBehavior": 1
         },
         {
           "type": "Operators",
@@ -5323,8 +5305,8 @@
             "領域リンパ節転移なし",
             "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
+          "trueBehavior": 2,
+          "falseBehavior": 1
         },
         {
           "type": "Operators",

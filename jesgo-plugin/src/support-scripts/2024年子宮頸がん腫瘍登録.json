@@ -19,8 +19,6 @@
       "$薬物療法経過",
       "$放射線療法経過",
       "$初回治療経過",
-      "$骨盤リンパ節郭清",
-      "$傍大動脈リンパ節郭清",
       "$T1a症例",
       "$要修正項目",
       "$要確認項目",
@@ -280,7 +278,7 @@
     },
     {
       "title": "GO-CC_2021_2025_check_basic_info",
-      "description": "GO-CC_2021_2025_cervical_cancer：cTNM",
+      "description": "GO-CC_2021_2025_cervical_cancer：basic_info",
       "source": [
         {
           "path": "$.[0].病期診断.cTNM.T.T"
@@ -1497,22 +1495,6 @@
         }
       ],
       "procedure": [
-        {
-          "type": "Variables",
-          "arguments": [
-            "骨盤リンパ節センチネルリンパ節生検,骨盤リンパ節選択的郭清,骨盤リンパ節系統的郭清,腹腔鏡下センチネルリンパ節生検,腹腔鏡下骨盤内リンパ節郭清,ロボット支援下センチネルリンパ節生検,ロボット支援下骨盤内リンパ節郭清",
-            "$骨盤リンパ節郭清"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Variables",
-          "arguments": [
-            "傍大動脈リンパ節センチネルリンパ節生検,傍大動脈リンパ節選択的郭清,傍大動脈リンパ節系統的郭清,腹腔鏡下傍大動脈リンパ節郭清,ロボット支援下傍大動脈リンパ節郭清",
-            "$傍大動脈リンパ節郭清"
-          ],
-          "trueBehavior": 1
-        },
         {
           "type": "Query",
           "arguments": [
@@ -4263,8 +4245,8 @@
             "領域リンパ節転移なし",
             "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
+          "trueBehavior": 2,
+          "falseBehavior": 1
         },
         {
           "type": "Operators",
@@ -4339,8 +4321,8 @@
             "領域リンパ節転移なし",
             "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
+          "trueBehavior": 2,
+          "falseBehavior": 1
         },
         {
           "type": "Operators",
@@ -4404,8 +4386,8 @@
             "領域リンパ節転移なし",
             "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
+          "trueBehavior": 2,
+          "falseBehavior": 1
         },
         {
           "type": "Operators",
@@ -4469,8 +4451,8 @@
             "領域リンパ節転移なし",
             "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
+          "trueBehavior": 2,
+          "falseBehavior": 1
         },
         {
           "type": "Operators",
@@ -4534,8 +4516,8 @@
             "領域リンパ節転移なし",
             "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
+          "trueBehavior": 2,
+          "falseBehavior": 1
         },
         {
           "type": "Operators",
@@ -4599,8 +4581,8 @@
             "領域リンパ節転移なし",
             "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
+          "trueBehavior": 2,
+          "falseBehavior": 1
         },
         {
           "type": "Operators",
@@ -4664,8 +4646,8 @@
             "領域リンパ節転移なし",
             "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
+          "trueBehavior": 2,
+          "falseBehavior": 1
         },
         {
           "type": "Operators",
@@ -4729,8 +4711,8 @@
             "領域リンパ節転移なし",
             "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
+          "trueBehavior": 2,
+          "falseBehavior": 1
         },
         {
           "type": "Operators",
@@ -4794,8 +4776,8 @@
             "領域リンパ節転移なし",
             "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
+          "trueBehavior": 2,
+          "falseBehavior": 1
         },
         {
           "type": "Operators",
@@ -4859,8 +4841,8 @@
             "領域リンパ節転移なし",
             "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
+          "trueBehavior": 2,
+          "falseBehavior": 1
         },
         {
           "type": "Operators",
@@ -6464,38 +6446,9 @@
           "trueBehavior": 1
         },
         {
-          "type": "Operators",
-          "arguments": [
-            "$治療施行状況",
-            "value",
-            "初回手術施行例",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 2
-        },
-        {
-          "type": "Store",
-          "arguments": [
-            "1",
-            "E",
-            "first"
-          ],
-          "trueBehavior": 2
-        },
-        {
-          "type": "Store",
-          "arguments": [
-            "2",
-            "E",
-            "first"
-          ],
-          "trueBehavior": 1
-        },
-        {
           "type": "Variables",
           "arguments": [
-            "$FIGO",
+            "$治療施行状況",
             "$1",
             "value"
           ],
@@ -6505,6 +6458,50 @@
           "type": "Translation",
           "arguments": [
             "$1"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [
+            [
+              "初回手術施行例",
+              "1"
+            ],
+            [
+              "手術未施行例",
+              "2"
+            ],
+            [
+              "術前治療後に手術施行",
+              "2"
+            ],
+            [
+              "手術療法、薬物療法、放射線療法を実施せず",
+              "2"
+            ]
+          ]
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$1",
+            "E",
+            "first"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$FIGO",
+            "$2",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$2"
           ],
           "trueBehavior": 1,
           "falseBehavior": "Abort",
@@ -6610,7 +6607,7 @@
         {
           "type": "Store",
           "arguments": [
-            "$1",
+            "$2",
             "F",
             "first"
           ],
@@ -6620,7 +6617,7 @@
           "type": "Variables",
           "arguments": [
             "$初回治療開始日",
-            "$2",
+            "$3",
             "value"
           ],
           "trueBehavior": 1
@@ -6628,7 +6625,7 @@
         {
           "type": "Translation",
           "arguments": [
-            "$2"
+            "$3"
           ],
           "trueBehavior": 1,
           "falseBehavior": "Abort",
@@ -6642,7 +6639,7 @@
         {
           "type": "Store",
           "arguments": [
-            "$2",
+            "$3",
             "AO",
             "first"
           ],
@@ -9269,7 +9266,7 @@
       ]
     },
     {
-      "title": "GO-CC_2023_surgical_parameters",
+      "title": "GO-CC_2024_surgical_parameters",
       "description": "GO-CC_2024_cervical_cancer：Set_surgical_parameters",
       "procedure": [
         {
@@ -9484,10 +9481,6 @@
               "15"
             ],
             [
-              "分子標的治療＋免疫チェックポイント阻害剤",
-              "5,6"
-            ],
-            [
               "その他の治療",
               "7"
             ],
@@ -9687,10 +9680,6 @@
             [
               "化学療法＋分子標的治療＋免疫チェックポイント阻害剤",
               "15"
-            ],
-            [
-              "分子標的治療＋免疫チェックポイント阻害剤",
-              "5,6"
             ],
             [
               "その他の治療",
@@ -9894,10 +9883,6 @@
               "15"
             ],
             [
-              "分子標的治療＋免疫チェックポイント阻害剤",
-              "5,6"
-            ],
-            [
               "その他の治療",
               "7"
             ],
@@ -10097,10 +10082,6 @@
             [
               "化学療法＋分子標的治療＋免疫チェックポイント阻害剤",
               "15"
-            ],
-            [
-              "分子標的治療＋免疫チェックポイント阻害剤",
-              "5,6"
             ],
             [
               "その他の治療",
@@ -10304,10 +10285,6 @@
               "15"
             ],
             [
-              "分子標的治療＋免疫チェックポイント阻害剤",
-              "5,6"
-            ],
-            [
               "その他の治療",
               "7"
             ],
@@ -10509,10 +10486,6 @@
               "15"
             ],
             [
-              "分子標的治療＋免疫チェックポイント阻害剤",
-              "5,6"
-            ],
-            [
               "その他の治療",
               "7"
             ],
@@ -10692,7 +10665,7 @@
           "trueBehavior": 1,
           "lookup": [
             [
-              "/([^,]+),/g",
+              "/([^,]+),?/g",
               "\"$1\","
             ]
           ]
@@ -10732,7 +10705,7 @@
     },
     {
       "title": "GO-CC_2024_export_treatment",
-      "description": "GO-CC_2024_ovarian_cancer：Treatment",
+      "description": "GO-CC_2024_cervical_cancer：Treatment",
       "source": [],
       "procedure": [
         {
@@ -10745,6 +10718,17 @@
           ],
           "trueBehavior": 1,
           "falseBehavior":"Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "初回手術施行例",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
         },
         {
           "type": "Query",
