@@ -4,7 +4,7 @@
 import { mainOutput, getterPluginArgument, updateDocument, setterPluginArgument } from './types'
 import { fileRuleSetV1 } from '../../src/components/types'
 import { dialogHTML } from './embedded-runtime-ui'
-import { handler, verbose } from './runtime-common'
+import { handler, verbose, runtimeCredit } from './runtime-common'
 
 export type pluginInformation = {
   version: string
@@ -30,7 +30,7 @@ export async function main (
   apicall: (docData: getterPluginArgument|updateDocument|updateDocument[], mode: boolean) => string,
   pluginInfo: pluginInformation
 ): Promise<mainOutput> {
-  console.log(`${pluginInfo.rulesetObject.title}@${pluginInfo.version} (C) 2023-2024 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
+  console.log(`${pluginInfo.rulesetObject.title}@${pluginInfo.version} ${runtimeCredit}\nhttps://github.com/piyotaicho/jesgosupport`)
 
   // 更新モードなのでdocDataには表示されている全てのドキュメントが入っている
   const getterAPIcall = (request: getterPluginArgument) => apicall(request, true)

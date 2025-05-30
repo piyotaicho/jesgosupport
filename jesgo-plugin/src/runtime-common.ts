@@ -2,13 +2,13 @@
 import { getterPluginArgument, pulledDocument, updateDocument, setterPluginArgument } from './types'
 import { showModalDialog, createElementFromHtml } from './modal-dialog'
 import { unparse as papaUnparse } from 'papaparse'
-import { Processor } from '../../src/components/newProcessor'
+import { Processor, processorVersion } from '../../src/components/newProcessor'
 import { LogicRuleSet, configObject, fileRuleSetV1 } from '../../src/components/types'
 import { queryDocument, userDownload } from '../../src/components/utilities'
 import { JSONPath } from 'jsonpath-plus'
 
-export const runtimeVersion = '1.1.0'
-export const runtimeCredit = `Version ${runtimeVersion} Copyright &copy; 2023-2024 by P4mohnet`
+export const runtimeVersion = '1.1.1'
+export const runtimeCredit = `Version ${runtimeVersion}(${processorVersion}) Copyright &copy; 2023-2025 by P4mohnet`
 
 /**
  * メッセージログとデータダンプを表示

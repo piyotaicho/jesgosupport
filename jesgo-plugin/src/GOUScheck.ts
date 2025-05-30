@@ -1,18 +1,20 @@
 import { mainOutput, scriptInfo, getterPluginArgument, updateDocument, setterPluginArgument } from './types'
 import { dialogHTML } from './embedded-runtime-single-ui'
 import { handler, verbose } from './runtime-common'
-import { scriptCheckUA as checkRule } from './support-scripts/scriptsForCheckRaretumors'
+import { scriptCheckUS as checkRule } from './support-scripts/scriptsForCheckRaretumors'
+
+const version = '1.2.2'
 
 export async function init ():Promise<scriptInfo> {
   return {
-    plugin_name: '子宮腺肉腫個別チェック(2023-2024)',
-    plugin_version: '1.201',
+    plugin_name: '子宮肉腫個別チェック',
+    plugin_version: `${version.split('.')[0]}.${Number(version.split('.')[1]).toString()}${Number(version.split('.')[2]).toString().padStart(2,'0')}`,
     all_patient: false,
     attach_patient_info: true,
     show_upload_dialog: false,
     update_db: true,
     target_schema_id_string: '',
-    explain: '症例毎に子宮腺肉腫登録のロジカルチェックを行います.(2023年～2024年登録対応)'
+    explain: '症例毎に子宮肉腫登録のロジカルチェックを行います.(2023年～2024年登録対応)'
   }
 }
 

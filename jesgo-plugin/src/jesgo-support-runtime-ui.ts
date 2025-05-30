@@ -21,21 +21,21 @@ export const dialogHTML = `
           <select id="plugin-selection-mode" class="form-control">
               <option value="loadscript" selected>スクリプトファイルを指定して実行</option>
               <hr style="padding-top: 0.5rem; padding-bottom: 0.5rem;"/>
-            <optgroup label="2023年腫瘍登録用CSV出力">
+            <optgroup label="2024年症例腫瘍登録用CSV出力">
                 <option value="CC">子宮頸がん</option>
                 <option value="EM">子宮体がん</option>
                 <option value="OV">卵巣がん</option>
               </optgroup>
               <hr style="padding-top: 0.5rem; padding-bottom: 0.5rem;"/>
-              <optgroup label="2023-2024年一括チェック">
-                <option value="CCcheck">子宮頸がん</option>
-                <option value="EMcheck">子宮体がん</option>
-                <option value="OVcheck">卵巣がん</option>
-                <option value="UScheck">子宮肉腫</option>
-                <option value="UAcheck">子宮腺肉腫</option>
-                <option value="TDcheck">絨毛性疾患</option>
-                <option value="VACcheck">外陰がん</option>
-                <option value="VUCcheck">腟がん</option>
+              <optgroup label="一括チェック">
+                <option value="CCcheck">子宮頸がん(2023-2025)</option>
+                <option value="EMcheck">子宮体がん(2023-2025)</option>
+                <option value="OVcheck">卵巣がん(2023-2025)</option>
+                <option value="UScheck">子宮肉腫(2023-2024)</option>
+                <option value="UAcheck">子宮腺肉腫(2023-2024)</option>
+                <option value="TDcheck">絨毛性疾患(2023-2024)</option>
+                <option value="VACcheck">外陰がん(2023-2024)</option>
+                <option value="VUCcheck">腟がん(2023-2024)</option>
               </optgroup>
           </select>        
       </div>

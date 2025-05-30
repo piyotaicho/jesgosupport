@@ -1,13 +1,13 @@
 import { mainOutput, scriptInfo, getterPluginArgument, updateDocument, setterPluginArgument } from './types'
 import { dialogHTML } from './jesgo-support-runtime-single-ui'
-import { handler, verbose, loadJSONfile } from './runtime-common'
+import { handler, verbose, loadJSONfile, runtimeCredit } from './runtime-common'
 
 const version = '1.1.1'
 const filename = 'jesgo-support-runtime-for-single.ts'
 export async function init ():Promise<scriptInfo> {
   return {
     plugin_name: 'JESGO-supportランタイム(個別)',
-    plugin_version: `${version.split('.')[0]}.${(Number(version.split('.')[1]) * 100 + Number(version.split('.')[2])).toString().padStart(2,'0')}`,
+    plugin_version: `${version.split('.')[0]}.${Number(version.split('.')[1]).toString()}${Number(version.split('.')[2]).toString().padStart(2,'0')}`,
     all_patient: false,
     attach_patient_info: true,
     show_upload_dialog: false,
@@ -29,7 +29,7 @@ export async function init ():Promise<scriptInfo> {
  *  - 取得系 void
  */
 export async function main (docData: setterPluginArgument[], apicall: (docData: getterPluginArgument|updateDocument|updateDocument[], mode: boolean) => string): Promise<mainOutput> {
-  console.log(`${filename}@${version} (C) 2023-2025 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
+  console.log(`${filename}@${version} ${runtimeCredit}\nhttps://github.com/piyotaicho/jesgosupport`)
 
   // 更新モードなのでdocDataには表示されている全てのドキュメントが入っている
   const getterAPIcall = (request: getterPluginArgument) => apicall(request, true)
