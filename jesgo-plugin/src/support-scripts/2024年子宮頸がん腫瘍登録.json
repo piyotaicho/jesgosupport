@@ -29,6 +29,7 @@
       "$円錐切除術"
     ],
     "csvOffset": 6,
+    "csvUnicode": false,
     "errorPointer": "/jesgo:error",
     "errorTargetSchemaId": "/schema/CC/root"
   },
