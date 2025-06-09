@@ -4034,6 +4034,17 @@
         {
           "type": "Operators",
           "arguments": [
+            "$治療施行状況",
+            "value",
+            "初回手術施行例",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
             "@1",
             "value",
             "骨盤リンパ節を摘出しなかった（病理学的検索が行われなかった）",
@@ -4375,7 +4386,7 @@
           "arguments": [
             "@1",
             "value",
-            "骨盤リンパ節の系統的郭清を行った",
+            "骨盤リンパ節の系統的郭清（すべての領域リンパ節）を行った",
             "eq"
           ],
           "trueBehavior": 1,
@@ -4575,7 +4586,7 @@
           "arguments": [
             "@3",
             "value",
-            "傍大動脈リンパ節の系統的郭清を行った",
+            "傍大動脈リンパ節の系統的郭清（すべての領域リンパ節）を行った",
             "eq"
           ],
           "trueBehavior": 1,
@@ -5021,7 +5032,7 @@
         {
           "type": "Operators",
           "arguments": [
-            "@1",
+            "@4",
             "value",
             "子宮傍組織浸潤を認めない",
             "eq"
@@ -5032,7 +5043,7 @@
         {
           "type": "Operators",
           "arguments": [
-            "@2",
+            "@5",
             "value",
             "腟壁浸潤を認めない",
             "eq"
@@ -5063,7 +5074,7 @@
         {
           "type": "Operators",
           "arguments": [
-            "@1",
+            "@4",
             "value",
             "子宮傍組織浸潤を認めない",
             "eq"
@@ -5074,7 +5085,7 @@
         {
           "type": "Operators",
           "arguments": [
-            "@2",
+            "@5",
             "value",
             "腟壁浸潤を認めない",
             "eq"
