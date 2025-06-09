@@ -1,7 +1,7 @@
 import { pulledDocument, processorOutput, JsonObject, LogicRuleSet, LogicBlock, BlockType, SourceBlock } from './types'
 import { parseJesgo, verbose } from './utilities'
 
-export const processorVersion = '1.1.0'
+export const processorVersion = '1.1.1'
 
 interface instructionResult {
   success: boolean
@@ -143,6 +143,7 @@ export class Processor {
   private csvRow: string[]
 
   // トランスパイル済みルールを保持
+  private compiling: boolean = false
   private transpiledRuleset: codeBuffer[]
   private disableLogging: boolean
 
@@ -213,14 +214,22 @@ export class Processor {
    * @param date_of_birth 
    */
   private initVariables (hash = '', his_id = '', name = '', date_of_birth = '') {
-    // ドキュメント変数
-    // 定数なので一度削除しないと書き換えができない
-    for(const variableName of ['$hash', '$his_id', '$name', '$date_of_birth']) {
-      try {
-        delete this.variables[variableName]
-      } catch {}
+    // $で始まる変数を初期化する
+    for (const variableName of Object.keys(this.variables)) {
+      if (variableName.charAt(0) === '$') {
+        if ([ '$hash', '$his_id', '$name', '$date_of_birth' ].includes(variableName)) {
+          // ドキュメント変数は一旦削除する
+          delete this.variables[variableName]
+        } else {
+          // レジスタ変数とグローバル変数を初期化する
+          try {
+            this.variables[variableName] = []
+          } catch {}
+        }
+      }
     }
 
+    // ドキュメント変数の再定義
     try {
       Object.defineProperties(this.variables, {
         $hash: {
@@ -240,9 +249,6 @@ export class Processor {
           writable: false
         }
       })
-
-      // レジスタ変数の初期化
-      this.initRegister()
     } catch {}
   }
 
@@ -252,10 +258,13 @@ export class Processor {
    */
   public async compile (ruleset: LogicRuleSet[]) {
     verbose('** COMPILER **', false, this.disableLogging)
+    this.compiling = true
+  
     // コードバッファを初期化
     this.transpiledRuleset = []
 
     // 空の内容でレジスタ変数とドキュメント変数を定義
+    this.initRegister()
     this.initVariables()
 
     // ルールセットを逐次処理
@@ -489,6 +498,7 @@ export class Processor {
             }, ''))
           } catch (e) {
             console.error(e as Error)
+            this.compiling = false
             throw new Error(`'${currentRuleTitle}' @${counter + 1} でコンパイルエラー\n` + (e as Error).message)
           }
         }
@@ -500,6 +510,7 @@ export class Processor {
         verbose(`# Skipped empty ruleset '${currentRuleTitle}'`, false, this.disableLogging)
       }
     }
+    this.compiling = false
   }
 
   /**
@@ -508,7 +519,7 @@ export class Processor {
    * @returns $.csv - csvの行アレイ $.errors - エラーメッセージアレイ
    */
   public async run (content: pulledDocument): Promise<processorOutput | undefined> {
-    verbose('** EXECUTOR **', false, this.disableLogging)
+    verbose('**** EXECUTOR ****', false, this.disableLogging)
     try {
       if (!content) {
         throw new Error('ドキュメントが指定されていません.')
@@ -522,8 +533,10 @@ export class Processor {
       this.errorMessages.splice(0)
       this.csvRow.splice(0)
 
-      // ドキュメント変数の再定義
+      // レジスタ・ドキュメント・グローバル変数の再定義と初期化(ドキュメントごと)
+      this.initRegister()
       this.initVariables( content?.hash, content?.his_id, content?.name, content?.date_of_birth)
+
     } catch (e) {
       console.error(e as Error)
       throw new Error('実行ユニット初期化中にエラー\n' + (e as Error).message)
@@ -538,7 +551,7 @@ export class Processor {
 
       verbose(`* ruleset '${currentRuleTitle}'`, false, this.disableLogging)
       try {
-        // レジスタ変数の初期化
+        // レジスタ変数の初期化(ルールセットごと)
         this.initRegister()
 
         // ソースの初期化
@@ -577,7 +590,7 @@ export class Processor {
         }
 
         if (!this.disableLogging) {
-          verbose('# variables')
+          verbose('# VARIABLES DUMP')
           Object.entries(this.variableStore).forEach(vars => verbose(` ${vars[0]} = ${JSON.stringify(vars[1])}`))
         }
       } catch (e) {
@@ -625,6 +638,14 @@ export class Processor {
         }
       }
     }
+
+    // Verbose出力 - 内容があったら出力する
+    verbose('# EXECUTION END', false, this.disableLogging)
+    verbose('** CSV ROW:', false, this.disableLogging || this.csvRow.length === 0)
+    verbose(this.csvRow.join(','), false, this.disableLogging || this.csvRow.length === 0)
+    verbose('** ERRORS:', false, this.disableLogging || this.errorMessages.length === 0)
+    verbose(this.errorMessages.join('\n'), false, this.disableLogging || this.errorMessages.length === 0)
+
     return {
       csv: this.csvRow,
       errors: this.errorMessages
@@ -920,62 +941,87 @@ export class Processor {
    * @param variableName 目的日に対して計算した値を保存, 日付として認識出来ないものは-1
    */
   private commandPeroid = (valueA: string[], valueB: string[], operator: commandPeriodOperators = 'months', variableName = ''): boolean => {
+    const result: string[] = []
+    let formatErrorFlag = false
+
     // 日付フォーマットのパターンマッチ
     const datePattern = /(?<year>\d{4})[-/](?<month>0?[1-9]|1[0-2])[-/](?<date>0?[1-9]|[12][0-9]|3[01])/
 
-    // 値の検証
-    const baseMatch = (valueA[0] || '').toString().match(datePattern)
-    if (baseMatch === null) {
-      throw new TypeError(`${(valueA[0] || '').toString()}は有効な日付文字列ではありません.`)
+    let baseDate: Date = new Date(1970, 0, 1) // 基準日を初期化
+    try {
+      // 基準値の検証
+      const baseMatch = (valueA[0] || '').toString().match(datePattern)
+      if (baseMatch === null) {
+        throw new TypeError(`基準日 ${(valueA[0] || '').toString()} は有効な日付文字列ではありません.`)
+      }
+      baseDate = new Date(
+        Number(baseMatch.groups?.year || '1970'),
+        Number(baseMatch.groups?.month || '1') - 1,
+        Number(baseMatch.groups?.date || '1')
+      )
+    } catch (e: any) {
+      if (this.compiling) {
+        throw e as Error
+      }
+      console.error(e.message)
+      formatErrorFlag = true      
     }
-    const baseDate = new Date(
-      Number(baseMatch.groups?.year || '1970'),
-      Number(baseMatch.groups?.month || '1') - 1,
-      Number(baseMatch.groups?.date || '1')
-    )
 
-    const result: string[] = []
     for (const targetValue of valueB) {
-      const targetMatch = (targetValue || '').toString().match(datePattern)
-      if (targetMatch === null) {
-        throw new TypeError(`${(targetValue || '').toString()}は有効な日付文字列ではありません.`)
+      if (formatErrorFlag) {
+        // 基準日が不正な場合は全て-1を返す
+        result.push('-1')
+        continue
       }
 
-      const targetDate = new Date(
-        Number(targetMatch.groups?.year || '1970'),
-        Number(targetMatch.groups?.month || '1') - 1,
-        Number(targetMatch.groups?.date || '1')
-      )
+      let difference = -1
 
-      // 計算処理
-      let difference = 0
-      const roundup = operator.includes(',roundup')
-      switch (operator) {
-        case 'years':
-        case 'years,roundup':
-          difference = targetDate.getFullYear() - baseDate.getFullYear() +
-            (roundup && (targetDate.getTime() > baseDate.getTime()) ? 1 : 0)
-          break
-        case 'months':
-        case 'months,roundup':
-          difference = (targetDate.getFullYear() - baseDate.getFullYear()) * 12 +
-            (targetDate.getMonth() - baseDate.getMonth()) +
-            (roundup && (targetDate.getTime() > baseDate.getTime()) ? 1 : 0)
-          break
-        case 'weeks':
-        case 'weeks,roundup':
-        case 'days':
-          difference = (targetDate.getTime() - baseDate.getTime()) / (86400000) | 1
-          if (operator !== 'days') {
-            difference = difference / 7 | 1 + (roundup && difference % 7 !== 0 ? 1 : 0)
-          }
-          break
-        default:
-          throw new Error(`無効なオペレータ ${operator} です.`)
+      try {
+        const targetMatch = (targetValue || '').toString().match(datePattern)
+        if (targetMatch === null) {
+          throw new TypeError(`比較対象 ${(targetValue || '').toString()} は有効な日付文字列ではありません.`)
+        }
+
+        const targetDate = new Date(
+          Number(targetMatch.groups?.year || '1970'),
+          Number(targetMatch.groups?.month || '1') - 1,
+          Number(targetMatch.groups?.date || '1')
+        )
+
+        // 計算処理
+        const roundup = operator.includes(',roundup')
+        switch (operator) {
+          case 'years':
+          case 'years,roundup':
+            difference = targetDate.getFullYear() - baseDate.getFullYear() +
+              (roundup && (targetDate.getTime() > baseDate.getTime()) ? 1 : 0)
+            break
+          case 'months':
+          case 'months,roundup':
+            difference = (targetDate.getFullYear() - baseDate.getFullYear()) * 12 +
+              (targetDate.getMonth() - baseDate.getMonth()) +
+              (roundup && (targetDate.getTime() > baseDate.getTime()) ? 1 : 0)
+            break
+          case 'weeks':
+          case 'weeks,roundup':
+          case 'days':
+            difference = (targetDate.getTime() - baseDate.getTime()) / (86400000) | 1
+            if (operator !== 'days') {
+              difference = difference / 7 | 1 + (roundup && difference % 7 !== 0 ? 1 : 0)
+            }
+            break
+          default:
+            throw new Error(`無効なオペレータ ${operator} です.`)
+        }
+
+      } catch (e: any) {
+        if (this.compiling) {
+          throw e as Error
+        }
+        console.error((e as Error).message)
       }
       result.push(difference.toString())
     }
-
     return this.commandVariables(result, variableName)
   }
 
