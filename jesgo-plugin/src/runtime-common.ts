@@ -102,7 +102,7 @@ export function saveCSV (data:unknown[], offset = 0, filename = 'JESGO出力デ�
  * SPAN #plugin-statusline1 #plugin-statusline2 #plugin-statusline3
  */
 export async function handler (data: setterPluginArgument[], scriptGetter: () => Promise<unknown>, dialogHTMLsource: string, getterAPIcall?: (arg: getterPluginArgument) => string): Promise<updateDocument[]|undefined> {
-  console.info(`JESGO support tool runtime ${runtimeCredit}`)
+  console.info(`JESGO support tool plugin common interface ${runtimeCredit}`)
 
   // データ無し
   const dataLength = data.length
