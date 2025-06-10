@@ -3,7 +3,7 @@ import { dialogHTML } from './embedded-runtime-single-ui'
 import { handler, verbose } from './runtime-common'
 import { scriptCheckUA as checkRule } from './support-scripts/scriptsForCheckRaretumors'
 
-const version = '1.2.2'
+const version = '1.2.3'
 
 export async function init ():Promise<scriptInfo> {
   return {
