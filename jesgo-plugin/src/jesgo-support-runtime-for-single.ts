@@ -6,7 +6,7 @@ const version = '1.1.2'
 const filename = 'jesgo-support-runtime-for-single.ts'
 export async function init ():Promise<scriptInfo> {
   return {
-    plugin_name: 'JESGO-supportランタイム(個別)検証用',
+    plugin_name: 'JESGO-supportランタイム(個別)',
     plugin_version: `${version.split('.')[0]}.${Number(version.split('.')[1]).toString()}${Number(version.split('.')[2]).toString().padStart(2,'0')}`,
     all_patient: false,
     attach_patient_info: true,
