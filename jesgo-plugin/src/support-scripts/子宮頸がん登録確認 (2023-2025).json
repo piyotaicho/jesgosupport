@@ -2659,7 +2659,7 @@
             ],
             [
               "/^手術（試験開腹術のみ）,(薬物療法|放射線療法)(?!.*手術（試験開腹術以外）).*$/",
-              "手術未施行"
+              "手術未施行例"
             ],
             [
               "/^(薬物療法|放射線療法).*?手術（試験開腹術以外）.*$/",
@@ -2671,7 +2671,7 @@
             ],
             [
               "/^(薬物療法|放射線療法).*?(?!.*手術（.*?）).*$/",
-              "手術未施行"
+              "手術未施行例"
             ],
             [
               "/^手術（試験開腹術のみ）(?!.*?(薬物療法|放射線療法|手術（試験開腹術以外）)).*$/",
@@ -2744,7 +2744,7 @@
         {
           "type": "Store",
           "arguments": [
-            "【要修正】治療詳細で「手術未施行」の治療経過が登録されています。治療施行状況と一致しません。",
+            "【要修正】治療詳細で「手術未施行例」の治療経過が登録されています。治療施行状況と一致しません。",
             "$error",
             "whitespace"
           ],
@@ -2917,7 +2917,7 @@
         {
           "type": "Variables",
           "arguments": [
-            "体外照射,体外照射＋腔内照射,同時化学放射線治療（体外照射）,同時化学放射線治療（体外照射＋腔内照射）,核医学治療",
+            "体外照射,同時化学放射線治療（体外照射）,核医学治療",
             "$8",
             "value"
           ],
@@ -3117,9 +3117,70 @@
             ],
             [
               "測定不能",
-              ""
+              "0"
             ]
           ]
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "IA1期,IA2期,IA期（亜分類不明）",
+            "$2",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$FIGO",
+            "$2",
+            "intersect",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$2",
+            "$2",
+            "count"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$1",
+            "value",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 10,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$2",
+            "value",
+            "1",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$1",
+            "value",
+            "1",
+            "eq"
+          ],
+          "trueBehavior": 8,
+          "falseBehavior": 7
         },
         {
           "type": "Operators",
@@ -3138,10 +3199,10 @@
             "$1",
             "value",
             "2",
-            "le"
+            "eq"
           ],
-          "trueBehavior": 10,
-          "falseBehavior": 9
+          "trueBehavior": 6,
+          "falseBehavior": 5
         },
         {
           "type": "Operators",
@@ -3162,8 +3223,8 @@
             "3",
             "eq"
           ],
-          "trueBehavior": 8,
-          "falseBehavior": 7
+          "trueBehavior": 4,
+          "falseBehavior": 3
         },
         {
           "type": "Operators",
@@ -3174,7 +3235,7 @@
             "eq"
           ],
           "trueBehavior": 1,
-          "falseBehavior": 2
+          "falseBehavior": 3
         },
         {
           "type": "Operators",
@@ -3184,8 +3245,28 @@
             "4",
             "ge"
           ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】診断所見：FIGO進行期と腫瘍最大径の所見が合致しません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$1",
+            "value",
+            "0",
+            "eq"
+          ],
           "trueBehavior": 6,
-          "falseBehavior": 5
+          "falseBehavior": 1
         },
         {
           "type": "Operators",
@@ -4533,12 +4614,31 @@
           ]
         },
         {
-          "type": "Operators",
+          "type": "Sets",
           "arguments": [
             "$5",
-            "value",
             "L",
-            "eq"
+            "intersect",
+            "$6"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$6",
+            "$6",
+            "count"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$6",
+            "value",
+            "1",
+            "ge"
           ],
           "trueBehavior": 1,
           "falseBehavior": 3
@@ -4564,12 +4664,31 @@
           "trueBehavior": 1
         },
         {
-          "type": "Operators",
+          "type": "Sets",
           "arguments": [
             "$5",
-            "value",
             "M",
-            "eq"
+            "intersect",
+            "$7"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$7",
+            "$7",
+            "count"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$7",
+            "value",
+            "1",
+            "ge"
           ],
           "trueBehavior": 1,
           "falseBehavior": 3
@@ -4589,6 +4708,1060 @@
           "type": "Store",
           "arguments": [
             "【要確認】cMで遠隔転移部位M1-9が選択されていますが、リンパ節以外の遠隔転移が「なし」となっています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-CC_2021_2025_logicalcheck_pTNM_treatment",
+      "description": "GO-CC_2021_2025_endometrial_cancer：Logical_check_between_pTNM_and_treatment",
+      "source": [
+        {
+          "path": "$.[0].病期診断.pTNM.N.RP"
+        },
+        {
+          "path": "$.[0].病期診断.pTNM.N.RPX"
+        },
+        {
+          "path": "$.[0].病期診断.pTNM.N.RA"
+        },
+        {
+          "path": "$.[0].病期診断.pTNM.N.RAX"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "初回手術施行例",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "骨盤リンパ節を摘出しなかった（病理学的検索が行われなかった）",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "RP3：骨盤リンパ節を摘出し、病理学的に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "RP4：骨盤リンパ節を摘出し、転移を認める",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】pN分類において、「骨盤リンパ節の病理検索を行わなかった」にも関わらず、RPで病理学的な検索を実施した事項（RP3またはRP4）が選択されています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "骨盤リンパ節を摘出しなかった（病理学的検索が行われなかった）",
+            "eq"
+          ],
+          "trueBehavior": 4,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "RP1：骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "RP2：骨盤リンパ節の病理学的検索が行われなかったが、明らかな腫大を認める",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】pN分類において、「骨盤リンパ節の生検または郭清を行った」にも関わらず、RPで病理学的な検索を実施しなかった事項（RP1またはRP2）が選択されています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "傍大動脈リンパ節を摘出しなかった（病理学的検索が行われなかった）",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "RA3：傍大動脈リンパ節を摘出し、病理学的に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "RA4：傍大動脈リンパ節を摘出し、転移を認める",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】pN分類において、「傍大動脈リンパ節の病理検索を行わなかった」にも関わらず、RAで病理学的な検索を実施した事項（RA3またはRA4）が選択されています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "傍大動脈リンパ節を摘出しなかった（病理学的検索が行われなかった）",
+            "eq"
+          ],
+          "trueBehavior": 4,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "RA1：傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "RA2：傍大動脈リンパ節の病理学的検索が行われなかったが、明らかな腫大を認める",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】pN分類において、「傍大動脈リンパ節の生検または郭清を行った」にも関わらず、RAで病理学的な検索を実施しなかった事項（RA1またはRA2）が選択されています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$手術経過",
+            "$.[*].治療.[*].治療詳細",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$1"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort",
+          "lookup": [     
+            [
+              "骨盤リンパ節選択的郭清（生検）",
+              "骨盤リンパ節生検"
+            ],
+            [
+              "骨盤リンパ節系統的郭清",
+              "骨盤リンパ節郭清"
+            ],
+            [
+              "骨盤リンパ節センチネルリンパ節生検",
+              "骨盤リンパ節センチネル"
+            ],
+            [
+              "傍大動脈リンパ節選択的郭清（生検）",
+              "傍大動脈リンパ節生検"
+            ],
+            [
+              "傍大動脈リンパ節系統的郭清",
+              "傍大動脈リンパ節郭清"
+            ],
+            [
+              "傍大動脈リンパ節センチネルリンパ節生検",
+              "傍大動脈リンパ節センチネル"
+            ],
+            [
+              "腹腔鏡下センチネルリンパ節生検",
+              "骨盤リンパ節センチネル＋傍大動脈リンパ節センチネル"
+            ],
+            [
+              "腹腔鏡下骨盤内リンパ節郭清",
+              "骨盤リンパ節生検＋骨盤リンパ節郭清"
+            ],
+            [
+              "腹腔鏡下傍大動脈リンパ節郭清",
+              "傍大動脈リンパ節生検＋傍大動脈リンパ節郭清"
+            ],
+            [
+              "ロボット支援下センチネルリンパ節生検",
+              "骨盤リンパ節センチネル＋傍大動脈リンパ節センチネル"
+            ],
+            [
+              "ロボット支援下骨盤内リンパ節郭清",
+              "骨盤リンパ節生検＋骨盤リンパ節郭清"
+            ],
+            [
+              "ロボット支援下傍大動脈リンパ節郭清",
+              "傍大動脈リンパ節生検＋傍大動脈リンパ節郭清"
+            ],
+            [
+              "/^(.*)$/",
+              ""
+            ]
+          ]
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "骨盤リンパ節を摘出しなかった（病理学的検索が行われなかった）",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "骨盤リンパ節センチネル,骨盤リンパ節生検,骨盤リンパ節郭清,骨盤リンパ節生検＋骨盤リンパ節郭清",
+            "$1",
+            "intersect",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$2",
+            "$2",
+            "count"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$2",
+            "value",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】pN分類において、「骨盤リンパ節の病理検索を行わなかった」にも関わらず、手術術式において骨盤リンパ節生検または郭清が選択されています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "骨盤リンパ節の選択的郭清（生検）を行った",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "骨盤リンパ節生検,骨盤リンパ節生検＋骨盤リンパ節郭清",
+            "$1",
+            "intersect",
+            "$3"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$3",
+            "$3",
+            "count"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$3",
+            "value",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】pN分類において、「骨盤リンパ節の選択的郭清（生検）を行った」にも関わらず、手術術式において骨盤リンパ節の選択的郭清（生検）が選択されていません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "骨盤リンパ節の系統的郭清を行った",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "骨盤リンパ節郭清,骨盤リンパ節生検＋骨盤リンパ節郭清",
+            "$1",
+            "intersect",
+            "$4"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$4",
+            "$4",
+            "count"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$4",
+            "value",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】pN分類において、「骨盤リンパ節の系統的郭清を行った」にも関わらず、手術術式において骨盤リンパ節の系統的郭清が選択されていません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "センチネルリンパ節生検を行った",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "骨盤リンパ節センチネル,骨盤リンパ節センチネル＋傍大動脈リンパ節センチネル",
+            "$1",
+            "intersect",
+            "$5"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$5",
+            "$5",
+            "count"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$5",
+            "value",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】pN分類において、骨盤リンパ節の「センチネルリンパ節生検を行った」にも関わらず、手術術式において骨盤リンパ節のセンチネルリンパ節生検が選択されていません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "傍大動脈リンパ節を摘出しなかった（病理学的検索が行われなかった）",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "傍大動脈リンパ節センチネル,傍大動脈リンパ節生検,傍大動脈リンパ節郭清,傍大動脈リンパ節生検＋傍大動脈リンパ節郭清",
+            "$1",
+            "intersect",
+            "$6"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$6",
+            "$6",
+            "count"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$6",
+            "value",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】pN分類において、「傍大動脈リンパ節を摘出しなかった」にも関わらず、手術術式において傍大動脈リンパ節生検または郭清が選択されています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "傍大動脈リンパ節の選択的郭清（生検）を行った",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },        
+        {
+          "type": "Sets",
+          "arguments": [
+            "傍大動脈リンパ節生検,傍大動脈リンパ節生検＋傍大動脈リンパ節郭清",
+            "$1",
+            "intersect",
+            "$7"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$7",
+            "$7",
+            "count"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$7",
+            "value",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】pN分類において、「傍大動脈リンパ節の選択的郭清（生検）を行った」にも関わらず、手術術式において傍大動脈リンパ節の選択的郭清（生検）が選択されていません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "傍大動脈リンパ節の系統的郭清を行った",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "傍大動脈リンパ節郭清,傍大動脈リンパ節生検＋傍大動脈リンパ節郭清",
+            "$1",
+            "intersect",
+            "$8"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$8",
+            "$8",
+            "count"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$8",
+            "value",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】pN分類において、「傍大動脈リンパ節の系統的郭清を行った」にも関わらず、手術術式において傍大動脈リンパ節の系統的郭清が選択されていません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "センチネルリンパ節生検を行った",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "傍大動脈リンパ節センチネル,骨盤リンパ節センチネル＋傍大動脈リンパ節センチネル",
+            "$1",
+            "intersect",
+            "$9"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$9",
+            "$9",
+            "count"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$9",
+            "value",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】pN分類において、傍大動脈リンパ節の「センチネルリンパ節生検を行った」にも関わらず、手術術式において傍大動脈リンパ節のセンチネルリンパ節生検が選択されていません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-CC_2021_2025_logicalcheck_pTNM_finding",
+      "description": "GO-CC_2021_2025_cervical_cancer：Logical_check_between_pTNM_and_findings",
+      "source": [
+        {
+          "path": "$.[0].病期診断.pTNM.N.RPX"
+        },
+        {
+          "path": "$.[0].診断所見.骨盤リンパ節転移.所見"
+        },
+        {
+          "path": "$.[0].診断所見.骨盤リンパ節転移.診断方法"
+        },
+        {
+          "path": "$.[0].病期診断.pTNM.N.RAX"
+        },
+        {
+          "path": "$.[0].診断所見.傍大動脈リンパ節転移.所見"
+        },
+        {
+          "path": "$.[0].診断所見.傍大動脈リンパ節転移.診断方法"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象年",
+            "value",
+            "2025",
+            "le"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "初回手術施行例",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@5",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@6",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "RP4：骨盤リンパ節を摘出し、転移を認める",
+            "eq"
+          ],
+          "trueBehavior": 4,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "あり",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 6
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "病理診断",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】pN分類において、RPで「RP4：骨盤リンパ節を摘出し、転移を認める」以外が選択されていますが、診断所見で骨盤リンパ節転移が「病理診断であり」となっています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 4
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@2",
+            "value",
+            "あり",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "病理診断",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】pN分類において、RPで「RP4：骨盤リンパ節を摘出し、転移を認める」が選択されていますが、診断所見で骨盤リンパ節転移が「病理診断であり」となっていません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "RP3：骨盤リンパ節を摘出し、病理学的に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "value",
+            "RP4：骨盤リンパ節を摘出し、転移を認める",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "病理診断",
+            "eq"
+          ],
+          "trueBehavior": 4,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】pN分類において、RPで病理学的な検索を実施した事項（RP3またはRP4）が選択されていますが、診断所見で骨盤リンパ節転移の診断方法で「病理診断」となっていません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@3",
+            "value",
+            "病理診断",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】pN分類において、RPで病理学的な検索を実施しなかった事項（RP1またはRP2）が選択されていますが、診断所見で骨盤リンパ節転移の診断方法で「病理診断」が選択されています。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "RA4：傍大動脈リンパ節を摘出し、転移を認める",
+            "eq"
+          ],
+          "trueBehavior": 4,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@5",
+            "value",
+            "あり",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 6
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@6",
+            "value",
+            "病理診断",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 5
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】pN分類において、RAで「RA4：傍大動脈リンパ節を摘出し、転移を認める」以外が選択されていますが、診断所見で傍大動脈リンパ節転移が「病理診断であり」となっています",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 4
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@5",
+            "value",
+            "あり",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@6",
+            "value",
+            "病理診断",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】pN分類において、RAで「RA4：傍大動脈リンパ節を摘出し、転移を認める」が選択されていますが、診断所見で傍大動脈リンパ節転移が「病理診断であり」となっていません",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "RA3：傍大動脈リンパ節を摘出し、病理学的に転移を認めない",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@4",
+            "value",
+            "RA4：傍大動脈リンパ節を摘出し、転移を認める",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@6",
+            "value",
+            "病理診断",
+            "eq"
+          ],
+          "trueBehavior": 4,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】pN分類において、RAで病理学的な検索を実施した事項（RA3またはRA4）が選択されていますが、診断所見で傍大動脈リンパ節転移の診断方法で「病理診断」となっていません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 3
+        },
+                {
+          "type": "Operators",
+          "arguments": [
+            "@6",
+            "value",
+            "病理診断",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】pN分類において、RAで病理学的な検索を実施しなかった事項（RA1またはRA2）が選択されていますが、診断所見で傍大動脈リンパ節転移の診断方法で「病理診断」が選択されています。",
             "$error",
             "whitespace"
           ],
