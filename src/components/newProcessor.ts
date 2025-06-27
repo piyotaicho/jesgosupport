@@ -1,7 +1,7 @@
 import { pulledDocument, processorOutput, JsonObject, LogicRuleSet, LogicBlock, BlockType, SourceBlock } from './types'
 import { parseJesgo, verbose } from './utilities'
 
-export const processorVersion = '1.1.1'
+export const processorVersion = '1.1.2'
 
 interface instructionResult {
   success: boolean
@@ -994,20 +994,20 @@ export class Processor {
           case 'years':
           case 'years,roundup':
             difference = targetDate.getFullYear() - baseDate.getFullYear() +
-              (roundup && (targetDate.getTime() > baseDate.getTime()) ? 1 : 0)
+              ((roundup && targetDate.getTime() > baseDate.getTime()) ? 1 : 0)
             break
           case 'months':
           case 'months,roundup':
             difference = (targetDate.getFullYear() - baseDate.getFullYear()) * 12 +
               (targetDate.getMonth() - baseDate.getMonth()) +
-              (roundup && (targetDate.getTime() > baseDate.getTime()) ? 1 : 0)
+              ((roundup && targetDate.getTime() > baseDate.getTime()) ? 1 : 0)
             break
           case 'weeks':
           case 'weeks,roundup':
           case 'days':
             difference = (targetDate.getTime() - baseDate.getTime()) / (86400000) | 1
             if (operator !== 'days') {
-              difference = difference / 7 | 1 + (roundup && difference % 7 !== 0 ? 1 : 0)
+              difference = difference / 7 | 1 + ((roundup && difference % 7) !== 0 ? 1 : 0)
             }
             break
           default:
