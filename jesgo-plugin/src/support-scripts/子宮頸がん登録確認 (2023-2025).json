@@ -98,7 +98,7 @@
           "arguments": [
             "$date_of_birth",
             "$初回治療開始日",
-            "years",
+            "age",
             "$年齢"
           ],
           "trueBehavior": 1,
