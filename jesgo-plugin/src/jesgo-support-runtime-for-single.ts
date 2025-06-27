@@ -2,7 +2,7 @@ import { mainOutput, scriptInfo, getterPluginArgument, updateDocument, setterPlu
 import { dialogHTML } from './jesgo-support-runtime-single-ui'
 import { handler, verbose, loadJSONfile, runtimeCredit } from './runtime-common'
 
-const version = '1.1.2'
+const version = '1.1.3'
 const filename = 'jesgo-support-runtime-for-single.ts'
 export async function init ():Promise<scriptInfo> {
   return {
