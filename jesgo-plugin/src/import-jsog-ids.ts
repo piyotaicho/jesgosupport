@@ -5,7 +5,7 @@ import { papaParse } from './fileHandlers'
 export async function init ():Promise<scriptInfo> {
   return {
     plugin_name: '腫瘍登録番号のインポート',
-    plugin_version: '0.1',
+    plugin_version: '0.2',
     all_patient: true,
     attach_patient_info: false,
     show_upload_dialog: true,
@@ -16,6 +16,7 @@ export async function init ():Promise<scriptInfo> {
 }
 
 type csvRow = string[]
+const idMatchRegex = /^(?<type>CC|EM|OV|TD|UA|US|VAC|VUC)\d{4}-\d+$/i
 
 /**
  * プラグイン呼び出し
@@ -25,36 +26,47 @@ type csvRow = string[]
  */
 export async function main (uploadedData: string, apicall: (request: updateDocument[]) => string): Promise<mainOutput> {
   try {
+    // JESGOのアップロードダイアログで取得されたデータ取得
     if (uploadedData && uploadedData !== '') {
       console.log(uploadedData)
+      // CSVデータをパース(uminデータがヘッダーが2行に渡る仕様なのでヘッダはパースしない)
       const csvData = papaParse.parse(uploadedData, { header: false }).data as csvRow[]
-      console.dir(csvData)
       if (csvData.length < 2) {
+        // 最低でもヘッダの2行がある
         throw new TypeError('ファイルの様式が腫瘍登録書き出しファイルとは異なります.')
       }
-      const indexId = csvData[1].includes('患者No.') ? csvData[1].indexOf('患者No.') : csvData[1].indexOf('患者 No.')
-      const indexHash = csvData[1].indexOf('ハッシュ値1')
+      // ヘッダの2行目から患者No.とハッシュ値1のインデックスを取得
+      // 登録番号は患者No.または患者 No.のどちらかの揺らぎあるので柔軟に対応
+      const indexOfId = csvData[1].findIndex(header => (header === '患者No.' || header === '患者 No.'))
+      const indexOfHash = csvData[1].indexOf('ハッシュ値1')
 
-      if (indexId === -1 || indexHash === -1) {
+      if (indexOfId === -1 || indexOfHash === -1) {
         throw new TypeError('ファイルの様式が腫瘍登録書き出しファイルとは異なります.')
       }
 
+      // ヘッダを削除
       csvData.splice(0, 2)
+
+      // ハッシュ値と登録番号の組み合わせをリクエストに変換
       const requests:updateDocument[] = []
       for (const record of csvData) {
-        const hash = record[indexHash]
-        const id = record[indexId]
-        if (hash && hash !== '') {
+        const hash = record[indexOfHash]
+        const id = record[indexOfId]
+        if (id !== '' && hash !== '') {
           const request = makeRequest(hash, id)
           if (request) {
             requests.push(request)
           }
         }
       }
+      await showModalMessageBox(`${requests.length}件の登録番号を処理します.`)
+
+      // リクエストを実行
       await apicall(requests)
     }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e:any) {
+    console.error(e)
     await showModalMessageBox(e?.message || 'エラーが発生しました.')
   }
   return undefined
@@ -67,7 +79,7 @@ export async function main (uploadedData: string, apicall: (request: updateDocum
  */
 function makeRequest (hash: string, idString: string): updateDocument|undefined {
   if (idString) {
-    const matchResult = idString.match(/^(?<type>CC|EM|OV)\d{4}-\d+$/i)
+    const matchResult = idString.match(idMatchRegex)
     if (matchResult !== null) {
       const tumorType = matchResult?.groups?.type || ''
       console.log(`${hash} = /schema/${tumorType}/root <- ${idString}`)
@@ -79,7 +91,6 @@ function makeRequest (hash: string, idString: string): updateDocument|undefined 
             '/腫瘍登録番号': idString
           }
         }
-        console.dir(request)
         return request
       } else {
         throw new Error(`${tumorType}の認識標識には対応しておりません.`)
