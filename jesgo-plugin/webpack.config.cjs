@@ -18,6 +18,8 @@ module.exports = {
     // 単純書き出しプラグイン
     'jesgo-exporter': './jesgo-plugin/src/jesgo-exporter.ts',
     'jesgo-single-exporter': './jesgo-plugin/src/jesgo-exporter-single.ts',
+    // 腫瘍登録番号の取込みプラグイン
+    'import-go-ids': './jesgo-plugin/src/import-jsog-ids.ts',
     // joed書き出しプラグイン
     'export-to-joed': './jesgo-plugin/src/export-to-joed.ts'
   },
