@@ -28,9 +28,9 @@ export async function main (uploadedData: string, apicall: (request: updateDocum
   try {
     // JESGOのアップロードダイアログで取得されたデータ取得
     if (uploadedData && uploadedData !== '') {
-      console.log(uploadedData)
       // CSVデータをパース(uminデータがヘッダーが2行に渡る仕様なのでヘッダはパースしない)
-      const csvData = papaParse.parse(uploadedData, { header: false }).data as csvRow[]
+      // newlineは\nで明示的に指示しないと分離されない(backendの問題？)
+      const csvData = papaParse.parse(uploadedData, { header: false, newline: '\n' }).data as csvRow[]
       if (csvData.length < 2) {
         // 最低でもヘッダの2行がある
         throw new TypeError('ファイルの様式が腫瘍登録書き出しファイルとは異なります.')
@@ -57,6 +57,8 @@ export async function main (uploadedData: string, apicall: (request: updateDocum
           if (request) {
             requests.push(request)
           }
+        } else {
+          console.warn(`登録番号(${id})またはハッシュ値(${hash})が空です`)
         }
       }
       await showModalMessageBox(`${requests.length}件の登録番号を処理します.`)
@@ -82,7 +84,7 @@ function makeRequest (hash: string, idString: string): updateDocument|undefined 
     const matchResult = idString.match(idMatchRegex)
     if (matchResult !== null) {
       const tumorType = matchResult?.groups?.type || ''
-      console.log(`${hash} = /schema/${tumorType}/root <- ${idString}`)
+      console.info(`割り当て ${idString} -> ${hash} ${tumorType}`)
       if (tumorType !== '') {
         const request = {
           hash,
