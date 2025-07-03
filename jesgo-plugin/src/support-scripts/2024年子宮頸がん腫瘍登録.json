@@ -2535,6 +2535,95 @@
             "$要確認項目"
           ],
           "trueBehavior": 1
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$手術経過",
+            "$.[*].治療.[*].治療詳細",
+            "$3"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$3",
+            "$4",
+            "count"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "子宮頸部円錐切除術（本術式のみで治療終了した場合）",
+            "$7",
+            "value"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$7",
+            "$3",
+            "intersect",
+            "$8"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$8",
+            "$8",
+            "count"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$4",
+            "value",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$8",
+            "value",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": "Abort",
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$8",
+            "value",
+            "$4",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "手術療法では円錐切除しか施行しなかった症例のみ、子宮頸部円錐切除術を選択して下さい。",
+            "$要確認項目",
+            "add",
+            "$要確認項目"
+          ],
+          "trueBehavior": 1
         }
       ]
     },
@@ -2601,7 +2690,7 @@
           "lookup": [
             [
               "顕微鏡的病変",
-              "1"
+              "0"
             ],
             [
               "～2㎝",
@@ -2609,82 +2698,32 @@
             ],
             [
               "～4㎝",
-              "3"
-            ],
-            [
-              "～6㎝",
               "4"
             ],
             [
+              "～6㎝",
+              "6"
+            ],
+            [
               "6㎝をこえる",
-              "5"
+              "7"
             ],
             [
               "測定不能",
-              "0"
+              "99"
             ]
           ]
         },
         {
-          "type": "Variables",
-          "arguments": [
-            "IA1期,IA2期,IA期（亜分類不明）",
-            "$2",
-            "value"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "$FIGO",
-            "$2",
-            "intersect",
-            "$2"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Variables",
-          "arguments": [
-            "$2",
-            "$2",
-            "count"
-          ],
-          "trueBehavior": 1
-        },
-        {
           "type": "Operators",
           "arguments": [
             "$1",
             "value",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 10,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$2",
-            "value",
-            "1",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 2
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$1",
-            "value",
-            "1",
+            "99",
             "eq"
           ],
           "trueBehavior": 8,
-          "falseBehavior": 7
+          "falseBehavior": 1
         },
         {
           "type": "Operators",
@@ -2703,7 +2742,7 @@
             "$1",
             "value",
             "2",
-            "eq"
+            "le"
           ],
           "trueBehavior": 6,
           "falseBehavior": 5
@@ -2724,8 +2763,8 @@
           "arguments": [
             "$1",
             "value",
-            "3",
-            "eq"
+            "4",
+            "le"
           ],
           "trueBehavior": 4,
           "falseBehavior": 3
@@ -2747,7 +2786,7 @@
             "$1",
             "value",
             "4",
-            "ge"
+            "gt"
           ],
           "trueBehavior": 2,
           "falseBehavior": 1
@@ -2767,7 +2806,7 @@
           "arguments": [
             "$1",
             "value",
-            "0",
+            "99",
             "eq"
           ],
           "trueBehavior": 6,
@@ -2789,7 +2828,7 @@
           "arguments": [
             "$1",
             "value",
-            "3",
+            "4",
             "le"
           ],
           "trueBehavior": 4,
@@ -2812,7 +2851,7 @@
             "$1",
             "value",
             "4",
-            "ge"
+            "gt"
           ],
           "trueBehavior": 2,
           "falseBehavior": 1
@@ -9367,7 +9406,7 @@
           "lookup": [
             [
               "顕微鏡的病変",
-              "1"
+              "0"
             ],
             [
               "～2㎝",
@@ -9375,26 +9414,106 @@
             ],
             [
               "～4㎝",
-              "3"
-            ],
-            [
-              "～6㎝",
               "4"
             ],
             [
+              "～6㎝",
+              "6"
+            ],
+            [
               "6㎝をこえる",
-              "5"
+              "7"
             ],
             [
               "測定不能",
-              "5"
+              "99"
             ]
           ]
         },
         {
-          "type": "Store",
+          "type": "Operators",
           "arguments": [
             "$1",
+            "value",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "1",
+            "L",
+            "first"
+          ],
+          "trueBehavior": 8
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$1",
+            "value",
+            "2",
+            "le"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "2",
+            "L",
+            "first"
+          ],
+          "trueBehavior": 6
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$1",
+            "value",
+            "4",
+            "le"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "3",
+            "L",
+            "first"
+          ],
+          "trueBehavior": 4
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$1",
+            "value",
+            "6",
+            "le"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "4",
+            "L",
+            "first"
+          ],
+          "trueBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "5",
             "L",
             "first"
           ],
@@ -10086,7 +10205,7 @@
           "falseBehavior": "Abort",
           "lookup": [
             [
-              "視診・触診",
+              "視触診",
               "1"
             ],
             [
@@ -10628,6 +10747,10 @@
               "T1"
             ],
             [
+              "子宮頸部円錐切除術（本術式のみで治療終了した場合）",
+              "T1"
+            ],
+            [
               "骨盤リンパ節系統的郭清",
               "T2"
             ],
@@ -10821,6 +10944,10 @@
               "T1"
             ],
             [
+              "子宮頸部円錐切除術（本術式のみで治療終了した場合）",
+              "T1"
+            ],
+            [
               "骨盤リンパ節系統的郭清",
               "T2"
             ],
@@ -10995,6 +11122,10 @@
             ],
             [
               "腹腔鏡下子宮頸部摘出術",
+              "T1"
+            ],
+            [
+              "子宮頸部円錐切除術（本術式のみで治療終了した場合）",
               "T1"
             ],
             [
@@ -11207,6 +11338,10 @@
               "T1"
             ],
             [
+              "子宮頸部円錐切除術（本術式のみで治療終了した場合）",
+              "T1"
+            ],
+            [
               "骨盤リンパ節系統的郭清",
               "T2"
             ],
@@ -11400,6 +11535,10 @@
               "T1"
             ],
             [
+              "子宮頸部円錐切除術（本術式のみで治療終了した場合）",
+              "T1"
+            ],
+            [
               "骨盤リンパ節系統的郭清",
               "T2"
             ],
@@ -11590,6 +11729,10 @@
             ],
             [
               "ロボット支援下子宮頸部摘出術",
+              "T1"
+            ],
+            [
+              "子宮頸部円錐切除術（本術式のみで治療終了した場合）",
               "T1"
             ],
             [
