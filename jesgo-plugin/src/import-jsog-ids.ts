@@ -5,7 +5,7 @@ import { papaParse } from './fileHandlers'
 export async function init ():Promise<scriptInfo> {
   return {
     plugin_name: '腫瘍登録番号のインポート',
-    plugin_version: '0.2',
+    plugin_version: '0.201',
     all_patient: true,
     attach_patient_info: false,
     show_upload_dialog: true,
@@ -16,7 +16,7 @@ export async function init ():Promise<scriptInfo> {
 }
 
 type csvRow = string[]
-const idMatchRegex = /^(?<type>CC|EM|OV|TD|UA|US|VAC|VUC)\d{4}-\d+$/i
+const idMatchRegex = /^(?<type>CC|EM|OV)\d{4}-\d+$/i // /^(?<type>CC|EM|OV|TD|UA|US|VAC|VUC)\d{4}-\d+$/i
 
 /**
  * プラグイン呼び出し
