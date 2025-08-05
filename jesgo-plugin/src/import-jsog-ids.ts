@@ -5,18 +5,19 @@ import { papaParse } from './fileHandlers'
 export async function init ():Promise<scriptInfo> {
   return {
     plugin_name: '腫瘍登録番号のインポート',
-    plugin_version: '0.201',
+    plugin_version: '1.000',
     all_patient: true,
     attach_patient_info: false,
     show_upload_dialog: true,
     update_db: true,
     target_schema_id_string: '/schema/*/root',
-    explain: '日産婦腫瘍登録からダウンロードデータから腫瘍登録番号をインポートします.'
+    explain: '日産婦腫瘍登録のダウンロードデータから腫瘍登録番号をインポートします.'
   }
 }
 
 type csvRow = string[]
-const idMatchRegex = /^(?<type>CC|EM|OV)\d{4}-\d+$/i // /^(?<type>CC|EM|OV|TD|UA|US|VAC|VUC)\d{4}-\d+$/i
+const idMatchRegex = /^(?<type>CC|EM|OV)\d{4}-\d+$/i 
+// 基本3がん種以外のプレフィックが不明～今後テーブルでの対応が必要そう /^(?<type>CC|EM|OV|TD|UA|US|VAC|VUC)\d{4}-\d+$/i
 
 /**
  * プラグイン呼び出し
