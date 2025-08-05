@@ -3,7 +3,7 @@ import { dialogHTML } from './embedded-runtime-single-ui'
 import { handler, verbose } from './runtime-common'
 import { scriptCheckVAC as checkRule } from './support-scripts/scriptsForCheckRaretumors'
 
-const version = '1.2.4'
+const version = '1.2.5'
 
 export async function init ():Promise<scriptInfo> {
   return {
