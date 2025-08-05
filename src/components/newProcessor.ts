@@ -1,7 +1,7 @@
 import { pulledDocument, processorOutput, JsonObject, LogicRuleSet, LogicBlock, BlockType, SourceBlock } from './types'
 import { parseJesgo, verbose } from './utilities'
 
-export const processorVersion = '1.1.1'
+export const processorVersion = '1.1.2'
 
 interface instructionResult {
   success: boolean
@@ -23,7 +23,7 @@ type commandValueTypes = 'value' | 'length' | 'count' | 'number'
 type commandOperatorExpressions = 'eq' | '=' | 'gt' | '>' | 'ge' | '>=' | 'lt' | '<' | 'le' | '<=' | 'in' | 'incl' | 're' | 'regexp'
 type commandSetsOperators = 'add' | 'union' | 'intersect' | 'difference' | 'xor'
 type commandSortDirections = 'asc' | 'ascend' | 'desc' | 'descend'
-type commandPeriodOperators = 'years' | 'years,roundup' | 'months' | 'months,roundup' | 'weeks' | 'weeks,roundup' | 'days'
+type commandPeriodOperators = 'years' | 'years,roundup' | 'months' | 'months,roundup' | 'weeks' | 'weeks,roundup' | 'days' | 'age' | 'age,roundup'
 type commandStoreFieldSeparators = 'array' | 'first' | 'whitespace' | 'colon' | 'comma' | 'semicolon'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -458,7 +458,7 @@ export class Processor {
                   valueBstr = JSON.stringify(parseStringToStringArray(params[1]))
                 }
 
-                if (params[2] && !['years', 'years,roundup', 'months', 'months,roundup', 'weeks', 'weeks,roundup', 'days'].includes(params[2])) {
+                if (params[2] && !['age', 'age,roundup', 'years', 'years,roundup', 'months', 'months,roundup', 'weeks', 'weeks,roundup', 'days'].includes(params[2])) {
                   throw new SyntaxError(`${params[2]} は不正な指示です.`)
                 }
 
@@ -945,7 +945,7 @@ export class Processor {
     let formatErrorFlag = false
 
     // 日付フォーマットのパターンマッチ
-    const datePattern = /(?<year>\d{4})[-/](?<month>0?[1-9]|1[0-2])[-/](?<date>0?[1-9]|[12][0-9]|3[01])/
+    const datePattern = /(?<year>\d{4})[-/](?<month>1[0-2]|0?[1-9])[-/](?<date>[12][0-9]|3[01]|0?[1-9])/
 
     let baseDate: Date = new Date(1970, 0, 1) // 基準日を初期化
     try {
@@ -991,24 +991,64 @@ export class Processor {
         // 計算処理
         const roundup = operator.includes(',roundup')
         switch (operator) {
+          case 'age': // 満年齢
+          case 'age,roundup': // 数え年
+            // 年齢計算
+            difference = targetDate.getFullYear() - baseDate.getFullYear()
+            if (roundup) {
+              // 数え年なので単純に年計算に+1となる
+              difference += 1
+            } else {
+              // 満年齢の丸め処理
+              // 年齢計算は誕生日を過ぎているかどうかで決定
+              // 誕生日を過ぎていればその年齢、過ぎていなければ前の年齢
+              difference += (
+                targetDate.getMonth() > baseDate.getMonth() ||
+                (targetDate.getMonth() === baseDate.getMonth() && targetDate.getDate() >= baseDate.getDate())
+              ) ? 0 : -1
+            }
+
+            if (difference < 0) {
+              // 年齢がマイナスになった場合は0を返す
+              difference = 0
+            }
+            break
           case 'years':
           case 'years,roundup':
-            difference = targetDate.getFullYear() - baseDate.getFullYear() +
-              (roundup && (targetDate.getTime() > baseDate.getTime()) ? 1 : 0)
+            difference = targetDate.getFullYear() - baseDate.getFullYear()
+            if (roundup) {
+              // 年の丸め処理
+              difference += (
+                targetDate.getMonth() > baseDate.getMonth() ||
+                (targetDate.getMonth() === baseDate.getMonth() && targetDate.getDate() >= baseDate.getDate())
+              )
+                ? 1 : 0
+            }
             break
           case 'months':
           case 'months,roundup':
             difference = (targetDate.getFullYear() - baseDate.getFullYear()) * 12 +
-              (targetDate.getMonth() - baseDate.getMonth()) +
-              (roundup && (targetDate.getTime() > baseDate.getTime()) ? 1 : 0)
+              (targetDate.getMonth() - baseDate.getMonth())
+            if (roundup) {
+              // 月の丸め処理
+              difference += (
+                targetDate.getDate() >= baseDate.getDate() ||
+                (targetDate.getDate() === baseDate.getDate() && targetDate.getTime() > baseDate.getTime())
+              )
+                ? 1 : 0
+            }
             break
           case 'weeks':
           case 'weeks,roundup':
-          case 'days':
-            difference = (targetDate.getTime() - baseDate.getTime()) / (86400000) | 1
-            if (operator !== 'days') {
-              difference = difference / 7 | 1 + (roundup && difference % 7 !== 0 ? 1 : 0)
+            if (roundup) {
+              // 週の丸め処理
+              difference = Math.ceil((targetDate.getTime() - baseDate.getTime()) / (604800000))
+            } else {
+              difference = Math.floor((targetDate.getTime() - baseDate.getTime()) / (604800000))
             }
+            break
+          case 'days':
+            difference = Math.floor((targetDate.getTime() - baseDate.getTime()) / 86400000)
             break
           default:
             throw new Error(`無効なオペレータ ${operator} です.`)

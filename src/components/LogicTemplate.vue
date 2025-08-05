@@ -206,6 +206,8 @@
           <el-row>
             <el-col :span="7">
               <el-select v-model="argument3rd" placeholder="条件を選択">
+                <el-option label="満年齢" value="age" />
+                <el-option label="数え年" value="age,roundup" />
                 <el-option label="年(切り捨て)" value="years" />
                 <el-option label="年(切り上げ)" value="years,roundup" />
                 <el-option label="月(切り捨て)" value="months" />
