@@ -59,6 +59,46 @@
           "type": "Operators",
           "arguments": [
             "$腫瘍登録対象",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "婦人科腫瘍登録対象症例ではい／いいえを選択して下さい。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "【要修正事項】1件：【修正事項詳細】",
+            "$要修正項目",
+            "add",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$1",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象",
             "value",
             "はい",
             "eq"

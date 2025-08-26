@@ -64,6 +64,46 @@
           "type": "Operators",
           "arguments": [
             "$腫瘍登録対象",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "婦人科腫瘍登録対象症例ではい／いいえを選択して下さい。",
+            "$要修正項目",
+            "add",
+            "$要修正項目"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "【要修正事項】1件：【修正事項詳細】",
+            "$要修正項目",
+            "add",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "$1",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象",
             "value",
             "はい",
             "eq"
@@ -2722,7 +2762,7 @@
             "99",
             "eq"
           ],
-          "trueBehavior": 8,
+          "trueBehavior": 9,
           "falseBehavior": 1
         },
         {
@@ -2744,8 +2784,8 @@
             "2",
             "le"
           ],
-          "trueBehavior": 6,
-          "falseBehavior": 5
+          "trueBehavior": 7,
+          "falseBehavior": 6
         },
         {
           "type": "Operators",
@@ -2756,7 +2796,18 @@
             "eq"
           ],
           "trueBehavior": 1,
-          "falseBehavior": 2
+          "falseBehavior": 3
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$1",
+            "value",
+            "2",
+            "gt"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 4
         },
         {
           "type": "Operators",
