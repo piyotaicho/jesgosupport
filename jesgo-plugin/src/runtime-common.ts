@@ -7,7 +7,7 @@ import { LogicRuleSet, configObject, fileRuleSetV1 } from '../../src/components/
 import { queryDocument, userDownload } from '../../src/components/utilities'
 import { JSONPath } from 'jsonpath-plus'
 
-export const runtimeVersion = '1.1.1'
+export const runtimeVersion = '1.1.2'
 export const runtimeCredit = `Version ${runtimeVersion}(${processorVersion}) Copyright &copy; 2023-2025 by P4mohnet`
 
 /**
@@ -73,6 +73,16 @@ export function saveCSV (data:unknown[], offset = 0, filename = 'JESGO出力デ�
       offsettedData.push([])
     }
     offsettedData.push(...data)
+
+    // offsetが設定されていたらJESGOバージョン文字列の有無を確認して1行目に追加する
+    if (offset > 0) {
+      if (window && (window as any)['__JESGO_VERSION__'] && typeof (window as any)['__JESGO_VERSION__'] === 'string') {
+        const jesgoVersion = (window as any)['__JESGO_VERSION__'] as string
+        (offsettedData[0] as any[]).unshift(`JESGO Version: ${jesgoVersion}`, `Support runtime version: ${runtimeVersion}`)
+      } else {
+        (offsettedData[0] as any[]).unshift('Exported from JESGO', `Support runtime version: ${runtimeVersion}`)
+      }
+    }
 
     userDownload(
       papaUnparse(
@@ -194,7 +204,7 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
     // プロセッサの構築 (プラグインではログを行わない)
     const processor = new Processor(rulesetConfig?.documentVariables || [], true)
     try {
-      await processor.compile(rulesetScript)  
+      await processor.compile(rulesetScript)
     } catch (e) {
       // ダイアログ表示をエラー中断に変更
       statusline1.innerText = ''
