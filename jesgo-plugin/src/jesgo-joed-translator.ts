@@ -34,6 +34,11 @@ export interface formatJOEDAE {
   Course: string[]
 }
 
+type JOEDapproachCategoriy = '腹腔鏡'|'ロボット'|'子宮鏡'
+export type formatJOEDapproach = {
+  [K in JOEDapproachCategoriy]?: string[]
+}
+
 export interface formatJOED {
   Name?: string
   PatientId: string
@@ -42,11 +47,13 @@ export interface formatJOED {
   TypeOfProcedure: string
   ProcedureTime: string
   Diagnoses: formatJOEDdiagnosis[]
+  Approach?: formatJOEDapproach
   Procedures: formatJOEDprocedure[]
   PresentAE: boolean
   AEs?: formatJOEDAE[]
   Imported?: boolean
   Notification?: string
+  Note?: string
 }
 
 // JESGOの手術情報をJOED5にマッピング
@@ -65,8 +72,8 @@ interface translationTable {
   [propName: string]: translationObject
 }
 
-// JESGOからJOEDへの術式変換ルール
-const procedureTable: translationTable = {
+// JESGOからJOEDへの術式変換ルール(-2024)
+const procedureTable2024: translationTable = {
   // 腹腔鏡手術
   // 子宮摘出
   '腹腔鏡下単純子宮全摘出術(筋膜内)': { Text: '子宮全摘出術(TLH,LH)', Chain: ['腹腔鏡'] },
@@ -82,7 +89,7 @@ const procedureTable: translationTable = {
   // 付属器摘出
   腹腔鏡下右付属器摘出術: {
     Text: '腹腔鏡下付属器摘出術', Chain: ['腹腔鏡悪性'], Description: ['[大網切除・生検]なし'],
-    preexisthandler: (preexistedvalue: string[]) => preexistedvalue[0].includes('あり') ? [...preexistedvalue] : ['[大網切除・生検]なし']    
+    preexisthandler: (preexistedvalue: string[]) => preexistedvalue[0].includes('あり') ? [...preexistedvalue] : ['[大網切除・生検]なし']
    },
   腹腔鏡下左付属器摘出術: {
     Text: '腹腔鏡下付属器摘出術', Chain: ['腹腔鏡悪性'], Description: ['[大網切除・生検]なし'],
@@ -90,7 +97,7 @@ const procedureTable: translationTable = {
    },
   腹腔鏡下両付属器摘出術: {
     Text: '腹腔鏡下付属器摘出術', Chain: ['腹腔鏡悪性'], Description: ['[大網切除・生検]なし'],
-    preexisthandler: (preexistedvalue: string[]) => preexistedvalue[0].includes('あり') ? [...preexistedvalue] : ['[大網切除・生検]なし']    
+    preexisthandler: (preexistedvalue: string[]) => preexistedvalue[0].includes('あり') ? [...preexistedvalue] : ['[大網切除・生検]なし']
   },
   // 骨盤内臓全摘(2024年保険収載),
   腹腔鏡下骨盤内臓全摘術: { Text: '腹腔鏡下骨盤内臓全摘術', Chain: ['腹腔鏡悪性'] },
@@ -228,8 +235,155 @@ const procedureTable: translationTable = {
   ロボット支援下骨盤内臓全摘: { Text: 'ロボット支援下骨盤内臓全摘', Chain: ['ロボット悪性'] },
   ロボット支援下に術後合併症の修復術: { Text: '術後合併症の修復術', Chain: ['ロボット悪性'] }
 }
-// JESGOの置換対象術式のアレイ = procedureTableのkey
-const procedureTitleToExtract = Object.keys(procedureTable)
+
+// JESGOからJOEDへの術式変換ルール(2025)
+const procedureTable2025: translationTable = {
+  // 腹腔鏡手術
+  // 子宮摘出
+  '腹腔鏡下単純子宮全摘出術(筋膜内)': { Text: '子宮全摘出術(TLH,LH)', Chain: ['腹腔鏡'] },
+  '腹腔鏡下単純子宮全摘出術(筋膜外)': { Text: '腹腔鏡下単純子宮全摘出術', Chain: ['腹腔鏡悪性'] },
+  腹腔鏡下準広汎子宮全摘出術: { Text: '腹腔鏡下準広汎子宮全摘出術', Chain: ['腹腔鏡悪性'] },
+  腹腔鏡下広汎子宮全摘出術: { Text: '腹腔鏡下広汎子宮全摘出術', Chain: ['腹腔鏡悪性'] },
+  腹腔鏡下子宮頸部摘出術: { Text: '腹腔鏡下子宮頸部摘出術', Chain: ['腹腔鏡悪性'] },
+  婦人科以外の悪性疾患による子宮全摘出術: {
+    Text: '他の悪性疾患の予防的切除術',
+    Chain: ['腹腔鏡悪性'],
+    Description: ['予防的子宮全摘出術']
+  },
+  // 付属器摘出
+  腹腔鏡下右付属器摘出術: { Text: '腹腔鏡下付属器摘出術', Chain: ['腹腔鏡悪性'] },
+  腹腔鏡下左付属器摘出術: { Text: '腹腔鏡下付属器摘出術', Chain: ['腹腔鏡悪性'] },
+  腹腔鏡下両付属器摘出術: { Text: '腹腔鏡下付属器摘出術', Chain: ['腹腔鏡悪性'] },
+  // 骨盤内臓全摘
+  腹腔鏡下骨盤内臓全摘術: { Text: '腹腔鏡下骨盤内臓全摘術', Chain: ['腹腔鏡悪性'] },
+  // eslint-disable-next-line quote-props
+  '腹腔鏡下病変生検・審査腹腔鏡': {
+    Text: '腹腔鏡下病変生検・審査腹腔鏡',
+    Chain: ['腹腔鏡悪性'],
+    Description: ['[生検]あり']
+  },
+  // 廃止のため自由入力に変更
+  '治療のために開腹手術へ移行(合併症を除く)': { Text: '治療のために開腹手術へ移行(合併症を除く)', UserTyped: true, Chain: ['腹腔鏡悪性'] },
+  リスク低減のための内性器摘出術: {
+    Text: 'リスク低減のための内性器摘出術',
+    Chain: ['腹腔鏡悪性'],
+    Description: ['予防的卵管摘出術', '予防的卵巣摘出術']
+  },
+  妊孕性温存のための付属器摘出術: { Text: '妊孕性温存のための付属器摘出術', Chain: ['腹腔鏡悪性'] },
+  他の悪性疾患の予防的切除術: {
+    Text: '他の悪性疾患の予防的切除術',
+    Chain: ['腹腔鏡悪性'],
+    Description: ['予防的卵管摘出術', '予防的卵巣摘出術']
+  },
+  転移性卵巣癌による付属器摘出術: { Text: '転移性卵巣癌による付属器摘出術', Chain: ['腹腔鏡悪性'] },
+  // リンパ節摘出
+  腹腔鏡下センチネルリンパ節生検: {
+    Text: '腹腔鏡下リンパ節生検・郭清',
+    Chain: ['腹腔鏡悪性'],
+    Description: ['なし(センチネル生検あり)'],
+    preexisthandler: (preexistedvalue: string[]) => [preexistedvalue[0]|| 'なし(センチネル生検あり)']
+  },
+  腹腔鏡下骨盤内リンパ節郭清: {
+    Text: '腹腔鏡下リンパ節生検・郭清',
+    Chain: ['腹腔鏡悪性'],
+    Description: ['PLN'],
+    preexisthandler: (preexistedvalue: string[]) => {
+      switch (preexistedvalue[0]) {
+        case 'PAN':
+          return ['PLN+PAN']
+        case 'PLN+PAN':
+          return [...preexistedvalue]
+        default:
+          return ['PLN']
+      }
+    }
+  },
+  腹腔鏡下傍大動脈リンパ節郭清: {
+    Text: '腹腔鏡下リンパ節生検・郭清',
+    Chain: ['腹腔鏡悪性'],
+    Description: ['PAN'],
+    preexisthandler: (preexistedvalue: string[]) => {
+      switch (preexistedvalue[0]) {
+        case 'PLN':
+        case 'PLN+PAN':
+          return ['PLN+PAN']
+        default:
+          return ['PAN']
+      }
+    }
+  },
+  // 大網摘出
+  腹腔鏡下に大網生検: {
+    Text: '腹腔鏡下大網生検・切除術',
+    Chain: ['腹腔鏡悪性'],
+    Description: ['生検・部分切除']
+  },
+  腹腔鏡下に大網部分切除: {
+    Text: '腹腔鏡下大網生検・切除術',
+    Chain: ['腹腔鏡悪性'],
+    Description: ['生検・部分切除'],
+    preexisthandler: (_: string[]) => ['生検・部分切除']
+  },
+  腹腔鏡下に大網亜全摘: {
+    Text: '腹腔鏡下大網生検・切除術',
+    Chain: ['腹腔鏡悪性'],
+    Description: ['亜全摘'],
+    preexisthandler: (_: string[]) => ['亜全摘']
+  },
+  腹腔鏡下に再発病巣の摘出術: { Text: '再発病巣の摘出術', Chain: ['腹腔鏡悪性'] },
+  腹腔鏡下に他の診療科との合同手術: { Text: '他の診療科との合同手術', Chain: ['腹腔鏡悪性'] },
+  腹腔鏡下に術後合併症の修復術: {
+    Text: '術後合併症の修復術', Chain: ['腹腔鏡悪性']
+  },
+
+  // ロボット
+
+  // 子宮摘出
+  ロボット支援下単純子宮全摘出術: { Text: 'ロボット支援下単純子宮全摘出術', Chain: ['ロボット悪性'] },
+  ロボット支援下準広汎子宮全摘出術: { Text: 'ロボット支援下準広汎子宮全摘出術', Chain: ['ロボット悪性'] },
+  ロボット支援下広汎子宮全摘出術: { Text: 'ロボット支援下広汎子宮全摘出術', Chain: ['ロボット悪性'] },
+  ロボット支援下子宮頸部摘出術: { Text: 'ロボット支援下子宮頸部摘出術', Chain: ['ロボット悪性'] },
+  婦人科以外の悪性疾患によるロボット支援下子宮全摘出術: { Text: '婦人科以外の悪性疾患によるロボット支援下子宮全摘出術', Chain: ['ロボット悪性'] },
+  // リンパ節摘出
+  ロボット支援下センチネルリンパ節生検: {
+    Text: 'ロボット支援下リンパ節生検・郭清',
+    Chain: ['ロボット悪性'],
+    Description: ['なし(センチネル生検あり)'],
+    preexisthandler: (preexistedvalue: string[]) => [preexistedvalue[0] || 'なし(センチネル生検あり)']
+  },
+  ロボット支援下骨盤内リンパ節郭清: {
+    Text: 'ロボット支援下リンパ節生検・郭清',
+    Chain: ['ロボット悪性'],
+    Description: ['PLN'],
+    preexisthandler: (preexistedvalue: string[]) => {
+      switch (preexistedvalue[0]) {
+        case 'PAN':
+          return ['PLN+PAN']
+        case 'PLN+PAN':
+          return [...preexistedvalue]
+        default:
+          return ['PLN']
+      }
+    }
+  },
+  ロボット支援下傍大動脈リンパ節郭清: {
+    Text: 'ロボット支援下リンパ節生検・郭清',
+    Chain: ['ロボット悪性'],
+    Description: ['PAN'],
+    preexisthandler: (preexistedvalue: string[]) => {
+      switch (preexistedvalue[0]) {
+        case 'PLN':
+        case 'PLN+PAN':
+          return ['PLN+PAN']
+        default:
+          return ['PAN']
+      }
+    }
+  },
+  // 2024年保険収載
+  ロボット支援下骨盤内臓全摘: { Text: 'ロボット支援下骨盤内臓全摘', Chain: ['ロボット悪性'] },
+  ロボット支援下に術後合併症の修復術: { Text: '術後合併症の修復術', Chain: ['ロボット悪性'] }
+}
 
 /**
  * JESGO患者台帳からJOED5形式のデータを作成する
@@ -275,7 +429,7 @@ export function convertDaichoToJOED (
       } else if (item === 'DATE') {
         anonymize.date = true
       }
-    }  
+    }
   }
 
   // 初回治療開始日のキャッシュ
@@ -357,7 +511,7 @@ export function convertDaichoToJOED (
 
   // 手術療法セクションの解析
   for (const operation of operationSection) {
-    // 1手術に1JOED5レコードが対応
+    // 1手術に1JOED5レコードが対応(JESGOからは必須レコードだけが抽出可能)
     const JOEDrecord:formatJOED = {
       PatientId: patientId.toString(),
       DateOfProcedure: '',
@@ -387,16 +541,18 @@ export function convertDaichoToJOED (
       dateOfOperation = `${dateOfOperation.substring(0, 4)}-01-01`
     }
 
+    // 項目割り当て:DateOfProcedure
+    JOEDrecord.DateOfProcedure = dateOfOperation
+
     // 抽出年次に一致しなければ次へ
+    const operationYear = dateOfOperation.substring(0, 4)
     if (filterYear !== 'ALL') {
-      const operationYear = dateOfOperation.substring(0, 4)
       if (operationYear !== filterYear) {
         continue
       }
     }
 
-    JOEDrecord.DateOfProcedure = dateOfOperation
-
+    // 項目割り当て:Age
     // 年齢は患者の生年月日と手術日から計算（手術日の匿名化が有効な場合は出力しない）
     if (patientDOB && !anonymize.date) {
       const age = dateCalc(patientDOB, JOEDrecord.DateOfProcedure)
@@ -405,13 +561,14 @@ export function convertDaichoToJOED (
       }
     }
 
+    // 項目割り当て:ProcedureTime
     // 手術時間を抽出と変換
     if (operation.手術時間) {
       JOEDrecord.ProcedureTime = encodeProcedureTime(Number(operation.手術時間))
     }
 
     // 手術術式から鏡視下手術を抽出
- 
+
     // 主もしくは併施手術として確定しているものを格納
     const operationRecords:translationObject[] = []
     // 併施手術として確定しているものを格納
@@ -434,9 +591,17 @@ export function convertDaichoToJOED (
         .replace('：', ':') // 全角コロンを半角に変換
       )
 
+    // 参照辞書を設定
+    let procedureTable:translationTable
+    if (operationYear <= '2024') {
+      procedureTable = procedureTable2024
+    } else {
+      procedureTable = procedureTable2025
+    }
+
     for (let procedureTitle of procedureTitles) {
-      // 手術項目リストとの検証
-      if (procedureTitleToExtract.includes(procedureTitle)) {
+      // 手術項目リストに術式が存在する場合変換作業を行う
+      if (procedureTable[procedureTitle] !== undefined) {
         operationRecords.push(procedureTable[procedureTitle])
 
         // ロボットフラグの設定
@@ -453,7 +618,7 @@ export function convertDaichoToJOED (
             operationRecords.push(procedureTable['腹腔鏡下骨盤内臓全摘術'])
           }
         } else {
-          // 開腹手術へ移行した場合などの分は自由入力の併施手術として対応
+          // リストに無い手術の分は自由入力の併施手術として対応
           otherOperationRecords.push({
             Text: procedureTitle,
             UserTyped: true
@@ -504,7 +669,7 @@ export function convertDaichoToJOED (
                 operationRecords[filteredItemIndexes[index]]?.Description &&
                 (operationRecords[filteredItemIndexes[index]].Description as string[]).length > 0
               ) {
-                newDescription = [...operationRecords[filteredItemIndexes[index]].Description as string[]]  
+                newDescription = [...operationRecords[filteredItemIndexes[index]].Description as string[]]
               }
 
               if (index === 0) {
@@ -560,7 +725,7 @@ export function convertDaichoToJOED (
     }
 
     // 併施手術を併合してレコードに設定
-    procedures.push(...otherOperationRecords) 
+    procedures.push(...otherOperationRecords)
     JOEDrecord.Procedures = procedures
 
     // 合併症の抽出

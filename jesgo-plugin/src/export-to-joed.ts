@@ -10,7 +10,7 @@ import { convertDaichoToJOED, formatJOED } from './jesgo-joed-translator'
 import { createElementFromHtml, showModalDialog } from './modal-dialog'
 import { dialogHTMLstrings } from './export-to-joed-ui'
 
-const version = '1.1.1'
+const version = '1.2.0'
 const credit = 'Copyright 2023-2025 by P4mohnet'
 const script_info: scriptInfo = {
   plugin_name: 'JOED5インポートデータの作成',
@@ -82,7 +82,7 @@ async function handler (docData: pulledDocument[]) {
 
     // プログレスバー用カウンタ
     let count = 0
-  
+
     // 1症例レコードずつparseしてJOED5用に変換
     for (const caseEntry of docData) {
       // ロックアップ回避
@@ -198,7 +198,7 @@ async function handler (docData: pulledDocument[]) {
 
     // ダイアログの年次 select / option を追加
     const currentYear: number = new Date().getFullYear()
-  
+
     for (let year = currentYear; year > 2019; year--) {
       const option = document.createElement('option')
       option.text = `${year}年`
