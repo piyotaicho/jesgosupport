@@ -21,13 +21,13 @@ export const dialogHTML = `
           <select id="plugin-selection-mode" class="form-control">
               <option value="loadscript" selected>スクリプトファイルを指定して実行</option>
               <hr style="padding-top: 0.5rem; padding-bottom: 0.5rem;"/>
-            <optgroup label="2024年症例腫瘍登録用CSV出力">
+            <optgroup label="2025年症例腫瘍登録用CSV出力">
                 <option value="CC">子宮頸がん</option>
                 <option value="EM">子宮体がん</option>
                 <option value="OV">卵巣がん</option>
               </optgroup>
               <hr style="padding-top: 0.5rem; padding-bottom: 0.5rem;"/>
-              <optgroup label="2023-2025年一括チェック">
+              <optgroup label="2023-2026年一括チェック">
                 <option value="CCcheck">子宮頸がん</option>
                 <option value="EMcheck">子宮体がん</option>
                 <option value="OVcheck">卵巣がん</option>
@@ -37,10 +37,10 @@ export const dialogHTML = `
                 <option value="VACcheck">外陰がん</option>
                 <option value="VUCcheck">腟がん</option>
               </optgroup>
-          </select>        
+          </select>
       </div>
       <div style="margin-left: 0.8rem; margin-right: 0.8rem;">
-          <button id="plugin-process-script" class="btn btn-primary">実行</button>        
+          <button id="plugin-process-script" class="btn btn-primary">実行</button>
       </div>
   </div>
   <div id="plugin-processing" style="display: flex; flex-direction: column; justify-content: center;">
@@ -53,7 +53,7 @@ export const dialogHTML = `
       <div style="width: 90%; text-align: center; margin-bottom: 0.6rem;">
           <div class="progress">
               <div class="progress-bar" role="progressbar" id="plugin-progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="0">処理中</div>
-          </div>    
+          </div>
       </div>
       <div style="width: 90%; text-align: center; margin-bottom: 0.6rem;">
           <button id="plugin-download" class="btn btn-primary" disabled>CSVファイルをダウンロード</button>

@@ -3,7 +3,7 @@ import { dialogHTML } from './embedded-runtime-single-ui'
 import { handler, verbose } from './runtime-common'
 import { scriptCheckUS as checkRule } from './support-scripts/scriptsForCheckRaretumors'
 
-const version = '1.2.7'
+const version = '1.3.0'
 
 export async function init ():Promise<scriptInfo> {
   return {
@@ -14,7 +14,7 @@ export async function init ():Promise<scriptInfo> {
     show_upload_dialog: false,
     update_db: true,
     target_schema_id_string: '',
-    explain: '症例毎に子宮肉腫登録のロジカルチェックを行います.(2023年～2024年登録対応)'
+    explain: '症例毎に子宮肉腫登録のロジカルチェックを行います.(2023年～2026年登録対応)'
   }
 }
 

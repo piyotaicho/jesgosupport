@@ -3,7 +3,7 @@ import { dialogHTML } from './embedded-runtime-single-ui'
 import { handler, verbose } from './runtime-common'
 import { scriptCheckOV as checkRule } from './support-scripts/scriptsForCheck'
 
-const version = '1.3.5'
+const version = '1.4.0'
 
 export async function init ():Promise<scriptInfo> {
   return {
@@ -14,7 +14,7 @@ export async function init ():Promise<scriptInfo> {
     show_upload_dialog: false,
     update_db: true,
     target_schema_id_string: '',
-    explain: '症例毎に卵巣がん登録のロジカルチェックを行います.(2023年～2025年登録対応)'
+    explain: '症例毎に卵巣がん登録のロジカルチェックを行います.(2023年～2026年登録対応)'
   }
 }
 

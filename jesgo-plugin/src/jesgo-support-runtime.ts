@@ -2,9 +2,13 @@ import { mainOutput, scriptInfo, getterPluginArgument, updateDocument, setterPlu
 import { dialogHTML } from './jesgo-support-runtime-ui'
 import { handler, verbose, loadJSONfile, runtimeCredit } from './runtime-common'
 // スクリプトプリセット
-import { scriptCC, scriptEM, scriptOV, scriptCheckCC, scriptCheckEM, scriptCheckOV, scriptCheckUS, scriptCheckUA, scriptCheckTD, scriptCheckVAC, scriptCheckVUC } from './support-scripts/scripts-v1'
+import {
+  scriptCC, scriptEM, scriptOV,
+  scriptCheckCC, scriptCheckEM, scriptCheckOV,
+  scriptCheckUS, scriptCheckUA, scriptCheckTD,
+  scriptCheckVAC, scriptCheckVUC } from './support-scripts/scripts-v1'
 
-const version = '1.2.5'
+const version = '1.3.0'
 const filename = 'jesgo-support-runtime.ts'
 export async function init ():Promise<scriptInfo> {
   return {

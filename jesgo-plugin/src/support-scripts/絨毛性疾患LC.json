@@ -233,8 +233,8 @@
       ]
     },
     {
-      "title": "GO-RT_TD_2024_2025_check_basic_info",
-      "description": "GO-RT_TD_2024_2025_trophoblastic_disease: FIGOスコア",
+      "title": "GO-RT_TD_2024_2026_check_basic_info",
+      "description": "GO-RT_TD_2024_2026_trophoblastic_disease: FIGOスコア",
       "source": [
         {
           "path": "$.[0].病期診断.FIGOスコア.年齢"
@@ -267,7 +267,7 @@
           "arguments": [
             "$腫瘍登録対象年",
             "value",
-            "2025",
+            "2026",
             "le"
           ],
           "trueBehavior": 1,
@@ -436,8 +436,8 @@
       ]
     },
     {
-      "title": "GO-RT_TD_2024_2025_check_pTNM",
-      "description": "GO-RT_TD_2024_2025_trophoblastic_disease: 絨毛癌診断スコア",
+      "title": "GO-RT_TD_2024_2026_check_pTNM",
+      "description": "GO-RT_TD_2024_2026_trophoblastic_disease: 絨毛癌診断スコア",
       "source": [
         {
           "path": "$.[0].病期診断.絨毛癌診断スコア.先行妊娠"
@@ -473,7 +473,7 @@
           "arguments": [
             "$腫瘍登録対象年",
             "value",
-            "2025",
+            "2026",
             "le"
           ],
           "trueBehavior": 1,

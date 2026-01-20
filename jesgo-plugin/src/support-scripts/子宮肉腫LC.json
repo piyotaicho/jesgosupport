@@ -253,8 +253,8 @@
       ]
     },
     {
-      "title": "GO-RT_US_2024_2025_check_basic_info",
-      "description": "GO-RT_US_2024_2025_uterine_sarcoma: cTNM",
+      "title": "GO-RT_US_2024_2026_check_basic_info",
+      "description": "GO-RT_US_2024_2026_uterine_sarcoma: cTNM",
       "source": [
         {
           "path": "$.[0].病期診断.cTNM.T"
@@ -272,7 +272,7 @@
           "arguments": [
             "$腫瘍登録対象年",
             "value",
-            "2025",
+            "2026",
             "le"
           ],
           "trueBehavior": 1,
@@ -363,8 +363,8 @@
       ]
     },
     {
-      "title": "GO-RT_US_2024_2025_check_pTNM",
-      "description": "GO-RT_US_2024_2025_uterine_sarcoma: pTNM",
+      "title": "GO-RT_US_2024_2026_check_pTNM",
+      "description": "GO-RT_US_2024_2026_uterine_sarcoma: pTNM",
       "source": [
         {
           "path": "$.[0].病期診断.pTNM.T"
@@ -382,7 +382,7 @@
           "arguments": [
             "$腫瘍登録対象年",
             "value",
-            "2025",
+            "2026",
             "le"
           ],
           "trueBehavior": 1,
@@ -462,8 +462,8 @@
       ]
     },
     {
-      "title": "GO-RT_US_2024_2025_check_ypTNM",
-      "description": "GO-RT_US_2024_2025_uterine_sarcoma: ypTNM",
+      "title": "GO-RT_US_2024_2026_check_ypTNM",
+      "description": "GO-RT_US_2024_2026_uterine_sarcoma: ypTNM",
       "source": [
         {
           "path": "$.[0].病期診断.ypTNM.T"
@@ -481,7 +481,7 @@
           "arguments": [
             "$腫瘍登録対象年",
             "value",
-            "2025",
+            "2026",
             "le"
           ],
           "trueBehavior": 1,
@@ -561,8 +561,8 @@
       ]
     },
     {
-      "title": "GO-RT_US_2024_2025_check_histology",
-      "description": "GO-RT_US_2024_2025_uterine_sarcoma: Histology",
+      "title": "GO-RT_US_2024_2026_check_histology",
+      "description": "GO-RT_US_2024_2026_uterine_sarcoma: Histology",
       "source": [
         {
           "path": "$.[0].組織診断.組織型"
@@ -574,7 +574,7 @@
           "arguments": [
             "$腫瘍登録対象年",
             "value",
-            "2025",
+            "2026",
             "le"
           ],
           "trueBehavior": 1,
@@ -603,8 +603,8 @@
       ]
     },
     {
-      "title": "GO-RT_US_2024_2025_check_treatment_info",
-      "description": "GO-RT_US_2024_2025_uterine_sarcoma:Treatment",
+      "title": "GO-RT_US_2024_2026_check_treatment_info",
+      "description": "GO-RT_US_2024_2026_uterine_sarcoma:Treatment",
       "source": [
         {
           "path": "$.[0].初回治療.手術療法.[*].手術日"
@@ -640,7 +640,7 @@
           "arguments": [
             "$腫瘍登録対象年",
             "value",
-            "2025",
+            "2026",
             "le"
           ],
           "trueBehavior": 1,
