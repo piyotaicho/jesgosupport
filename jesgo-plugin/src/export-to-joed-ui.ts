@@ -8,7 +8,8 @@ export const dialogHTMLstrings = `
             />
         </div>
         <div>
-            <span style="font-size: 0.8rem;">$$VERSION$$</span>
+            <span style="font-size: 0.8rem;">$$VERSION$$</span><br/>
+            <span style="font-size: 0.7rem;">2025年版マスタ対応</span>
         </div>
         <div>
             <span style="font-size: 0.8rem;">$$CREDIT$$</span>
@@ -18,7 +19,7 @@ export const dialogHTMLstrings = `
         <div>
             <label for="plugin-selection" class="form-label">
                 出力する年次を選択してください:
-            </label>   
+            </label>
             <select id="plugin-selection" class="form-select form-select-sm">
                 <option value="ALL" selected>全て</option>
             </select>

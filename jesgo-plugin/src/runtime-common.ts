@@ -7,8 +7,8 @@ import { LogicRuleSet, configObject, fileRuleSetV1 } from '../../src/components/
 import { queryDocument, userDownload } from '../../src/components/utilities'
 import { JSONPath } from 'jsonpath-plus'
 
-export const runtimeVersion = '1.1.2'
-export const runtimeCredit = `Version ${runtimeVersion}(${processorVersion}) Copyright &copy; 2023-2025 by P4mohnet`
+export const runtimeVersion = '1.1.3'
+export const runtimeCredit = `Version ${runtimeVersion}(${processorVersion}) Copyright &copy; 2023-2026 by P4mohnet`
 
 /**
  * メッセージログとデータダンプを表示
