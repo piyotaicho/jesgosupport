@@ -19,7 +19,7 @@
       "$薬物療法経過",
       "$放射線療法経過",
       "$初回治療経過",
-      "$手術リスト",
+      "$治療リスト",
       "$初回治療経過出力用",
       "$要修正項目",
       "$要確認項目"
@@ -3531,8 +3531,8 @@
         {
           "type": "Variables",
           "arguments": [
-            "腟上部切断術,単純子宮全摘出術（筋膜内）,単純子宮全摘出術（筋膜外）,拡大子宮全摘術,準広汎子宮全摘出術,広汎子宮全摘出術,広汎子宮全摘出術（神経温存術式）,腟式単純子宮全摘出術（筋膜内）,腟式準広汎子宮全摘出術（筋膜外）,腟式広汎子宮全摘出術,腹腔鏡下単純子宮全摘出術（筋膜内）,腹腔鏡下単純子宮全摘出術（筋膜外）,腹腔鏡下準広汎子宮全摘出術,腹腔鏡下広汎子宮全摘出術,ロボット支援下単純子宮全摘出術,ロボット支援下準広汎子宮全摘出術,ロボット支援下広汎子宮全摘出術,骨盤リンパ節系統的郭清,腹腔鏡下骨盤内リンパ節郭清,ロボット支援下骨盤内リンパ節郭清,傍大動脈リンパ節系統的郭清,腹腔鏡下傍大動脈リンパ節郭清,ロボット支援下傍大動脈リンパ節郭清",
-            "$手術リスト"
+            "腟上部切断術,単純子宮全摘出術（筋膜内）,単純子宮全摘出術（筋膜外）,拡大子宮全摘術,準広汎子宮全摘出術,準広汎子宮頸部摘出術,広汎子宮全摘出術,広汎子宮全摘出術（神経温存術式）,広汎子宮頸部摘出術,骨盤除臓術,子宮頸部円錐切除術（本術式のみで治療終了した場合）,腟式単純子宮全摘出術（筋膜内）,腟式準広汎子宮全摘出術（筋膜外）,腟式広汎子宮全摘出術,腟式広汎子宮頸部摘出術,腹腔鏡下単純子宮全摘出術（筋膜内）,腹腔鏡下単純子宮全摘出術（筋膜外）,腹腔鏡下準広汎子宮全摘出術,腹腔鏡下広汎子宮全摘出術,腹腔鏡下子宮頸部摘出術,ロボット支援下単純子宮全摘出術,ロボット支援下準広汎子宮全摘出術,ロボット支援下広汎子宮全摘出術,ロボット支援下子宮頸部摘出術,骨盤リンパ節センチネルリンパ節生検,骨盤リンパ節選択的郭清（生検）,骨盤リンパ節系統的郭清,腹腔鏡下センチネルリンパ節生検,腹腔鏡下骨盤内リンパ節郭清,ロボット支援下センチネルリンパ節生検,ロボット支援下骨盤内リンパ節郭清,傍大動脈リンパ節センチネルリンパ節生検,傍大動脈リンパ節選択的郭清（生検）,傍大動脈リンパ節系統的郭清,腹腔鏡下傍大動脈リンパ節郭清,ロボット支援下傍大動脈リンパ節郭清,化学療法,分子標的治療,免疫チェックポイント阻害剤,化学療法＋分子標的治療,化学療法＋免疫チェックポイント阻害剤,分子標的治療＋免疫チェックポイント阻害剤,化学療法＋分子標的治療＋免疫チェックポイント阻害剤,ホルモン治療,その他の治療,腔内照射,体外照射,同時化学放射線治療（腔内照射）,同時化学放射線治療（体外照射）,核医学治療",
+            "$治療リスト"
           ],
           "trueBehavior": 1
         },
@@ -3540,86 +3540,34 @@
           "type": "Query",
           "arguments": [
             "$初回治療経過",
-            "$.[*]",
-            "$1"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Translation",
-          "arguments": [
-            "$1"
-          ],
-          "lookup": [
-            [
-              "/^\\{.*?\"区分\":\"薬物療法\".*?\"治療\":\\[(.*?)\\]\\}$/",
-              "{\"区分\":\"薬物療法\",\"治療\":[$1]}"
-            ],
-            [
-              "/^\\{.*?\"区分\":\"放射線療法\".*?\"治療\":\\[(.*?)\\]\\}$/",
-              "{\"区分\":\"放射線療法\",\"治療\":[$1]}"
-            ],
-            [
-              "/^\\{.*?\"区分\":\"手術（.*?）\".*?\"治療\":\\[(.*?)\\]\\}$/",
-              "{\"区分\":\"手術\",\"治療\":[{\"治療詳細\":\"手術療法\"},$1]}"
-            ]
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Query",
-          "arguments": [
-            "$1",
             "$.[0].治療.[*].治療詳細",
-            "$2"
+            "$1"
           ],
           "trueBehavior": 1
         },
         {
           "type": "Sets",
           "arguments": [
-            "$2",
-            "手術療法",
+            "$治療リスト",
+            "$1",
             "intersect",
-            "$3"
+            "$1"
           ],
           "trueBehavior": 1
         },
         {
-          "type": "Operators",
+          "type": "Variables",
           "arguments": [
-            "$3",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "$手術リスト",
-            "$2",
-            "intersect",
-            "$2"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
+            "$1",
             "$初回治療経過出力用",
-            "$2",
-            "add",
-            "$初回治療経過出力用"
+            "value"
           ],
           "trueBehavior": 1
         },
         {
           "type": "Query",
           "arguments": [
-            "$1",
+            "$初回治療経過",
             "$.[1].治療.[*].治療詳細",
             "$2"
           ],
@@ -3628,28 +3576,7 @@
         {
           "type": "Sets",
           "arguments": [
-            "$2",
-            "手術療法",
-            "intersect",
-            "$3"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$3",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "$手術リスト",
+            "$治療リスト",
             "$2",
             "intersect",
             "$2"
@@ -3669,40 +3596,19 @@
         {
           "type": "Query",
           "arguments": [
-            "$1",
+            "$初回治療経過",
             "$.[2].治療.[*].治療詳細",
-            "$2"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "$2",
-            "手術療法",
-            "intersect",
             "$3"
           ],
           "trueBehavior": 1
         },
         {
-          "type": "Operators",
-          "arguments": [
-            "$3",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
-        },
-        {
           "type": "Sets",
           "arguments": [
-            "$手術リスト",
-            "$2",
+            "$治療リスト",
+            "$3",
             "intersect",
-            "$2"
+            "$3"
           ],
           "trueBehavior": 1
         },
@@ -3710,7 +3616,7 @@
           "type": "Sets",
           "arguments": [
             "$初回治療経過出力用",
-            "$2",
+            "$3",
             "add",
             "$初回治療経過出力用"
           ],
@@ -3719,40 +3625,19 @@
         {
           "type": "Query",
           "arguments": [
-            "$1",
+            "$初回治療経過",
             "$.[3].治療.[*].治療詳細",
-            "$2"
+            "$4"
           ],
           "trueBehavior": 1
         },
         {
           "type": "Sets",
           "arguments": [
-            "$2",
-            "手術療法",
+            "$治療リスト",
+            "$4",
             "intersect",
-            "$3"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$3",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "$手術リスト",
-            "$2",
-            "intersect",
-            "$2"
+            "$4"
           ],
           "trueBehavior": 1
         },
@@ -3760,7 +3645,7 @@
           "type": "Sets",
           "arguments": [
             "$初回治療経過出力用",
-            "$2",
+            "$4",
             "add",
             "$初回治療経過出力用"
           ],
@@ -3769,40 +3654,19 @@
         {
           "type": "Query",
           "arguments": [
-            "$1",
+            "$初回治療経過",
             "$.[4].治療.[*].治療詳細",
-            "$2"
+            "$4"
           ],
           "trueBehavior": 1
         },
         {
           "type": "Sets",
           "arguments": [
-            "$2",
-            "手術療法",
+            "$治療リスト",
+            "$4",
             "intersect",
-            "$3"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$3",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "$手術リスト",
-            "$2",
-            "intersect",
-            "$2"
+            "$4"
           ],
           "trueBehavior": 1
         },
@@ -3810,7 +3674,7 @@
           "type": "Sets",
           "arguments": [
             "$初回治療経過出力用",
-            "$2",
+            "$4",
             "add",
             "$初回治療経過出力用"
           ],
@@ -3819,40 +3683,48 @@
         {
           "type": "Query",
           "arguments": [
-            "$1",
+            "$初回治療経過",
+            "$.[4].治療.[*].治療詳細",
+            "$5"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$治療リスト",
+            "$5",
+            "intersect",
+            "$5"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "$初回治療経過出力用",
+            "$5",
+            "add",
+            "$初回治療経過出力用"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$初回治療経過",
             "$.[5].治療.[*].治療詳細",
-            "$2"
+            "$6"
           ],
           "trueBehavior": 1
         },
         {
           "type": "Sets",
           "arguments": [
-            "$2",
-            "手術療法",
+            "$治療リスト",
+            "$6",
             "intersect",
-            "$3"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$3",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "$手術リスト",
-            "$2",
-            "intersect",
-            "$2"
+            "$6"
           ],
           "trueBehavior": 1
         },
@@ -3860,49 +3732,28 @@
           "type": "Sets",
           "arguments": [
             "$初回治療経過出力用",
-            "$2",
+            "$6",
             "add",
             "$初回治療経過出力用"
           ],
           "trueBehavior": 1
-        },
+        },        
         {
           "type": "Query",
           "arguments": [
-            "$1",
+            "$初回治療経過",
             "$.[6].治療.[*].治療詳細",
-            "$2"
+            "$7"
           ],
           "trueBehavior": 1
         },
         {
           "type": "Sets",
           "arguments": [
-            "$2",
-            "手術療法",
+            "$治療リスト",
+            "$7",
             "intersect",
-            "$3"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$3",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "$手術リスト",
-            "$2",
-            "intersect",
-            "$2"
+            "$7"
           ],
           "trueBehavior": 1
         },
@@ -3910,49 +3761,28 @@
           "type": "Sets",
           "arguments": [
             "$初回治療経過出力用",
-            "$2",
+            "$7",
             "add",
             "$初回治療経過出力用"
           ],
           "trueBehavior": 1
-        },
+        },        
         {
           "type": "Query",
           "arguments": [
-            "$1",
+            "$初回治療経過",
             "$.[7].治療.[*].治療詳細",
-            "$2"
+            "$8"
           ],
           "trueBehavior": 1
         },
         {
           "type": "Sets",
           "arguments": [
-            "$2",
-            "手術療法",
+            "$治療リスト",
+            "$8",
             "intersect",
-            "$3"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$3",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "$手術リスト",
-            "$2",
-            "intersect",
-            "$2"
+            "$8"
           ],
           "trueBehavior": 1
         },
@@ -3960,57 +3790,7 @@
           "type": "Sets",
           "arguments": [
             "$初回治療経過出力用",
-            "$2",
-            "add",
-            "$初回治療経過出力用"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Query",
-          "arguments": [
-            "$1",
-            "$.[8].治療.[*].治療詳細",
-            "$2"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "$2",
-            "手術療法",
-            "intersect",
-            "$3"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$3",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "$手術リスト",
-            "$2",
-            "intersect",
-            "$2"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "$初回治療経過出力用",
-            "$2",
+            "$8",
             "add",
             "$初回治療経過出力用"
           ],
@@ -4122,7 +3902,7 @@
             ],
             [
               "骨盤除臓術",
-              ""
+              "T1"
             ],
             [
               "再発病巣の摘出術",
@@ -6922,11 +6702,7 @@
     {
       "title": "GO-EM_2025_export_errors",
       "description": "GO-EM_2025_endometrial_cancer：export_errors",
-      "source": [
-        {
-          "path": ""
-        }
-      ],
+      "source": [],
       "procedure": [
         {
           "type": "Operators",
@@ -7045,14 +6821,7 @@
             "whitespace"
           ],
           "trueBehavior": 1
-        }
-      ]
-    },
-    {
-      "title": "GO-EM_2025_export_basic_info",
-      "description": "GO-EM_2025_endometrial_cancer：basic_information",
-      "source": [],
-      "procedure": [
+        },
         {
           "type": "Operators",
           "arguments": [
@@ -7062,8 +6831,15 @@
             "eq"
           ],
           "trueBehavior": 1,
-          "falseBehavior":"Abort"
-        },
+          "falseBehavior": "Exit"
+        }
+      ]
+    },
+    {
+      "title": "GO-EM_2025_export_basic_info",
+      "description": "GO-EM_2025_endometrial_cancer：basic_information",
+      "source": [],
+      "procedure": [
         {
           "type": "Store",
           "arguments": [
@@ -7282,17 +7058,6 @@
         }
       ],
       "procedure": [
-        {
-          "type": "Operators",
-          "arguments": [
-            "$要修正項目",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior":"Abort"
-        },
         {
           "type": "Operators",
           "arguments": [
@@ -7638,17 +7403,6 @@
         }
       ],
       "procedure": [
-        {
-          "type": "Operators",
-          "arguments": [
-            "$要修正項目",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior":"Abort"
-        },
         {
           "type": "Operators",
           "arguments": [
@@ -8305,17 +8059,6 @@
         {
           "type": "Operators",
           "arguments": [
-            "$要修正項目",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior":"Abort"
-        },
-        {
-          "type": "Operators",
-          "arguments": [
             "$治療施行状況",
             "value",
             "術前治療後に手術施行",
@@ -8626,17 +8369,6 @@
       ],
       "procedure": [
         {
-          "type": "Operators",
-          "arguments": [
-            "$要修正項目",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior":"Abort"
-        },
-        {
           "type": "Variables",
           "arguments": [
             "@1",
@@ -8810,17 +8542,6 @@
         }
       ],
       "procedure": [
-        {
-          "type": "Operators",
-          "arguments": [
-            "$要修正項目",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior":"Abort"
-        },
         {
           "type": "Variables",
           "arguments": [
@@ -9171,17 +8892,6 @@
       "source": [],
       "procedure": [
         {
-          "type": "Operators",
-          "arguments": [
-            "$要修正項目",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior":"Abort"
-        },
-        {
           "type": "Store",
           "arguments": [
             "$初回治療経過出力用",
@@ -9197,17 +8907,6 @@
       "description": "GO-EM_2024_endometrial_cancer：Treatment",
       "source": [],
       "procedure": [
-        {
-          "type": "Operators",
-          "arguments": [
-            "$要修正項目",
-            "count",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior":"Abort"
-        },
         {
           "type": "Operators",
           "arguments": [
