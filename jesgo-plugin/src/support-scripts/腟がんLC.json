@@ -19,7 +19,7 @@
     "csvOffset": 6,
     "csvUnicode": false,
     "errorPointer": "/jesgo:error",
-    "errorTargetSchemaId": "/schema/VAC/root"
+    "errorTargetSchemaId": "/schema/VA/root"
   },
   "rules": [
     {
