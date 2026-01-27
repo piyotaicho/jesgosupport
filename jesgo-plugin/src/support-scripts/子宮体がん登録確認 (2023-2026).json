@@ -21,6 +21,7 @@
       "$初回治療経過",
       "$治療リスト",
       "$初回治療経過出力用",
+      "$術式選択",
       "$要修正項目",
       "$要確認項目"
     ],
@@ -261,6 +262,39 @@
       ]
     },
     {
+      "title": "GO-EM_target_check",
+      "description": "GO-EM_2025_endometrial_cancer：target_year_check",
+      "source": [
+        {
+          "path": "$.[0].腫瘍登録番号"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象年",
+            "value",
+            "2026",
+            "le"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Exit"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Exit"
+        }
+      ]
+    },
+    {
       "title": "GO-EM_2021_2026_check_cTNM",
       "description": "GO-EM_2021_2026_endometrial_cancer：cTNM",
       "source": [
@@ -284,17 +318,6 @@
         }
       ],
       "procedure": [
-        {
-          "type": "Operators",
-          "arguments": [
-            "$腫瘍登録対象年",
-            "value",
-            "2026",
-            "le"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
         {
           "type": "Operators",
           "arguments": [
@@ -736,17 +759,6 @@
         {
           "type": "Operators",
           "arguments": [
-            "$腫瘍登録対象年",
-            "value",
-            "2026",
-            "le"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
-        {
-          "type": "Operators",
-          "arguments": [
             "$治療施行状況",
             "value",
             "初回手術施行例",
@@ -1077,17 +1089,6 @@
         {
           "type": "Operators",
           "arguments": [
-            "$腫瘍登録対象年",
-            "value",
-            "2026",
-            "le"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
-        {
-          "type": "Operators",
-          "arguments": [
             "$治療施行状況",
             "value",
             "術前治療後に手術施行",
@@ -1215,17 +1216,6 @@
         }
       ],
       "procedure": [
-        {
-          "type": "Operators",
-          "arguments": [
-            "$腫瘍登録対象年",
-            "value",
-            "2026",
-            "le"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
         {
           "type": "Operators",
           "arguments": [
@@ -1652,17 +1642,6 @@
         {
           "type": "Operators",
           "arguments": [
-            "$腫瘍登録対象年",
-            "value",
-            "2026",
-            "le"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
-        {
-          "type": "Operators",
-          "arguments": [
             "@1",
             "count",
             "0",
@@ -1929,7 +1908,7 @@
           "trueBehavior": 1,
           "lookup": [
             [
-              "/^\\{(.*?)\"実施手術\":\\{\"実施手術\":(\\[(?:\\{.*?\"術式\":\"[^\"]+\".*?\\}(?:,\\{.*?\"術式\":\"[^\"]+\".*?\\})*)\\]),\"jesgo.*?\\}.*?\\}$/",
+              "/^\\{(.*?)\"実施手術\":\\{\"実施手術\":(\\[(?:\\{.*?\\}(?:,\\{.*?\\})*)?\\]).*\\}\\}$/",
               "{$1\"治療\":$2}"
             ]
           ]
@@ -1942,7 +1921,7 @@
           "trueBehavior": 1,
           "lookup": [
             [
-              "/\\{\"術式\":\"([^\"]*)\"(?:,[^{}]*(?:\\{[^{}]*\\})?)*\\}/g",
+              "/\\{[^{}]*\"術式\":\"([^\"]*)\"[^{}]*\\}/g",
               "{\"治療詳細\":\"$1\"}"
             ]
           ]
@@ -1968,8 +1947,16 @@
           "trueBehavior": 1,
           "lookup": [
             [
-              "/(.*?),\"実施手術\":\\{\"jesgo:document_id\":\\d+,\"jesgo:schema_id\":\"[^\"]+\"\\}(.*?)/g",
-              "$1,\"治療\":[{\"治療詳細\":\"登録なし（手術）\"}]$2"
+              "/(.*?){[^{}]*\"治療詳細\":\"\"[^{}]*\\}(.*?)/g",
+              "$1{\"治療詳細\":\"登録なし（手術）\"}$2"
+            ],
+            [
+              "/(.*?)\"治療\":\\[\\](.*?)/g",
+              "$1\"治療\":[{\"治療詳細\":\"登録なし（手術）\"}]$2"
+            ],
+            [
+              "/(.*?)\"実施手術\":\\{(?!.*\"治療詳細\":\"[^\"]+\").*?\\}(.*?)/g",
+              "$1\"治療\":[{\"治療詳細\":\"登録なし（手術）\"}]$2"
             ]
           ]
         },
@@ -2387,12 +2374,12 @@
           "type": "Operators",
           "arguments": [
             "$6",
-            "value",
-            "手術（登録なし）",
+            "count",
+            "0",
             "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 2
+          "trueBehavior": 2,
+          "falseBehavior": 1
         },
         {
           "type": "Store",
@@ -2417,12 +2404,12 @@
           "type": "Operators",
           "arguments": [
             "$7",
-            "value",
-            "薬物療法（登録なし）",
+            "count",
+            "0",
             "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 2
+          "trueBehavior": 2,
+          "falseBehavior": 1
         },
         {
           "type": "Store",
@@ -2447,12 +2434,12 @@
           "type": "Operators",
           "arguments": [
             "$8",
-            "value",
-            "放射線療法（登録なし）",
+            "count",
+            "0",
             "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 2
+          "trueBehavior": 2,
+          "falseBehavior": 1
         },
         {
           "type": "Store",
@@ -2470,17 +2457,6 @@
       "description": "GO-EM_2021_2026_endometrial_cancer：treatment_details",
       "source": [],
       "procedure": [
-        {
-          "type": "Operators",
-          "arguments": [
-            "$腫瘍登録対象年",
-            "value",
-            "2026",
-            "le"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
         {
           "type": "Query",
           "arguments": [
@@ -2501,15 +2477,6 @@
           "trueBehavior": 1
         },
         {
-          "type": "Variables",
-          "arguments": [
-            "$2",
-            "$2",
-            "count"
-          ],
-          "trueBehavior": 1
-        },
-        {
           "type": "Operators",
           "arguments": [
             "$1",
@@ -2524,7 +2491,7 @@
           "type": "Operators",
           "arguments": [
             "$2",
-            "value",
+            "count",
             "0",
             "eq"
           ],
@@ -2728,19 +2695,10 @@
           "trueBehavior": 1
         },
         {
-          "type": "Variables",
-          "arguments": [
-            "I期（亜分類不明）,IA期,IB期,II期",
-            "$7",
-            "value"
-          ],
-          "trueBehavior": 1
-        },
-        {
           "type": "Sets",
           "arguments": [
             "$FIGO",
-            "$7",
+            "I期（亜分類不明）,IA期,IB期,II期",
             "intersect",
             "$7"
           ],
@@ -2788,19 +2746,10 @@
           "trueBehavior": 1
         },
         {
-          "type": "Variables",
-          "arguments": [
-            "I期（亜分類不明）,IA期",
-            "$7",
-            "value"
-          ],
-          "trueBehavior": 1
-        },
-        {
           "type": "Sets",
           "arguments": [
             "$FIGO",
-            "$7",
+            "I期（亜分類不明）,IA期",
             "intersect",
             "$7"
           ],
@@ -2820,7 +2769,7 @@
           "type": "Operators",
           "arguments": [
             "$7",
-            "value",
+            "count",
             "0",
             "eq"
           ],
@@ -2910,8 +2859,8 @@
       ]
     },
     {
-      "title": "GO-EM_2024_2025_check_treatment_plans",
-      "description": "GO-EM_2024_2025_endometrial_cancer：Treatment_plans",
+      "title": "GO-EM_2024_2026_check_treatment_plans",
+      "description": "GO-EM_2024_2026_endometrial_cancer：Treatment_plans",
       "source": [],
       "procedure": [
         {
@@ -2928,17 +2877,6 @@
         {
           "type": "Operators",
           "arguments": [
-            "$腫瘍登録対象年",
-            "value",
-            "2025",
-            "le"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
-        {
-          "type": "Operators",
-          "arguments": [
             "$治療施行状況",
             "value",
             "初回手術施行例",
@@ -2959,39 +2897,81 @@
           "falseBehavior": "Abort"
         },
         {
-          "type": "Query",
-          "arguments": [
-            "$手術経過",
-            "$.[*].治療開始日",
-            "$1"
-          ],
-          "trueBehavior": 1
-        },
-        {
           "type": "Variables",
           "arguments": [
+            "$手術経過",
             "$1",
-            "$1",
-            "count"
+            "value"
           ],
           "trueBehavior": 1
         },
         {
-          "type": "Operators",
+          "type": "Translation",
           "arguments": [
-            "$1",
-            "value",
-            "0",
-            "eq"
+            "$1"
           ],
-          "trueBehavior": "Abort",
-          "falseBehavior": 1
+          "trueBehavior": 1,
+          "lookup": [
+            [
+              "/^\\{\"区分\":\"手術（原発巣除去あり）\".*?\"様式\":\"(二期的手術|二回目手術|その他)\".*?\\}$/",
+              "要修正（原発巣除去手術に対し一期的手術の登録なし）"
+            ],
+            [
+              "/^\\{\"区分\":\"手術（原発巣除去あり）\".*?\"様式\":\"(一期的手術|一回目手術)\".*?\"予定手術内容\":\"開腹術\".*?\\}$/",
+              "一回目（開腹術）"
+            ],
+            [
+              "/^\\{\"区分\":\"手術（原発巣除去あり）\".*?\"様式\":\"(一期的手術|一回目手術)\".*?\"予定手術内容\":\"腹腔鏡手術\".*?\\}$/",
+              "一回目（腹腔鏡手術）"
+            ],
+            [
+              "/^\\{\"区分\":\"手術（原発巣除去あり）\".*?\"様式\":\"(一期的手術|一回目手術)\".*?\"予定手術内容\":\"ロボット手術\".*?\\}$/",
+              "一回目（ロボット手術）"
+            ],
+            [
+              "/^\\{\"区分\":\"手術（原発巣除去あり）\".*?\"様式\":\"(一期的手術|一回目手術)\".*?\"予定手術内容\":\"該当せず\".*?\\}$/",
+              "要修正（原発巣除去手術に対し一期的手術の登録なし）"
+            ],
+            [
+              "/^\\{\"区分\":\"手術（原発巣除去.*?）\".*?\"様式\":\"(一期的手術|一回目手術)\".*?\"予定手術内容\":\"(開腹術|腹腔鏡手術|ロボット手術|該当せず)\".*?\\}$/",
+              "要修正（原発巣除去手術に対し一期的手術の登録なし）"
+            ],
+            [
+              "/^\\{\"区分\":\"手術（原発巣除去.*?）\".*?\"様式\":\"(二期的手術|二回目手術)\".*?\"予定手術内容\":\"開腹術\".*?\\}$/",
+              "二回目（開腹術）"
+            ],
+            [
+              "/^\\{\"区分\":\"手術（原発巣除去.*?）\".*?\"様式\":\"(二期的手術|二回目手術)\".*?\"予定手術内容\":\"腹腔鏡手術\".*?\\}$/",
+              "二回目（腹腔鏡手術）"
+            ],
+            [
+              "/^\\{\"区分\":\"手術（原発巣除去.*?）\".*?\"様式\":\"(二期的手術|二回目手術)\".*?\"予定手術内容\":\"ロボット手術\".*?\\}$/",
+              "二回目（ロボット手術）"
+            ],
+            [
+              "/^\\{\"区分\":\"手術（原発巣除去.*?）\".*?\"様式\":\"(二期的手術|二回目手術)\".*?\"予定手術内容\":\"該当せず\".*?\\}$/",
+              "二回目（該当せず）"
+            ],
+            [
+              "/^\\{\"区分\":\"手術（原発巣除去.*?）\".*?\"様式\":\"(一期的手術|一回目手術|二期的手術|二回目手術|その他)\".*?\"予定手術内容\":\"\".*?\\}$/",
+              "要修正（様式・予定手術内容登録なし）"
+            ],
+            [
+              "/^\\{\"区分\":\"手術（原発巣除去.*?）\".*?\"様式\":\"\".*?\"予定手術内容\":\"(開腹術|腹腔鏡手術|ロボット手術)\".*?\\}$/",
+              "要修正（様式・予定手術内容登録なし）"
+            ],
+            [
+              "/^\\{\"区分\":\"手術（.*?）\".*?\\}$/",
+              ""
+            ]
+          ]
         },
         {
-          "type": "Query",
+          "type": "Sets",
           "arguments": [
-            "$手術経過",
-            "$.[*].術式の選択.様式",
+            "$1",
+            "要修正（様式・予定手術内容登録なし）",
+            "intersect",
             "$2"
           ],
           "trueBehavior": 1
@@ -3001,272 +2981,27 @@
           "arguments": [
             "$2",
             "count",
-            "$1",
-            "eq"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Store",
-          "arguments": [
-            "【要修正】全ての手術に対し「術式の選択」で、「様式」を入力して下さい。",
-            "$error",
-            "whitespace"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Query",
-          "arguments": [
-            "$手術経過",
-            "$.[*].術式の選択.予定手術内容",
-            "$3"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$3",
-            "count",
-            "$1",
-            "eq"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Store",
-          "arguments": [
-            "【要修正】全ての手術療法に対し「術式の選択」で、「予定手術内容」を入力して下さい。",
-            "$error",
-            "whitespace"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "$2",
-            "一期的手術",
-            "intersect",
-            "$4"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Variables",
-          "arguments": [
-            "$4",
-            "$4",
-            "count"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "$2",
-            "二期的手術",
-            "intersect",
-            "$5"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Variables",
-          "arguments": [
-            "$5",
-            "$5",
-            "count"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$5",
-            "value",
-            "1",
-            "ge"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 3
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$4",
-            "value",
-            "1",
-            "ge"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Store",
-          "arguments": [
-            "【要修正】「術式の選択」において様式で「二期的手術」が選択されていますが、「一期的手術」が選択されていません。",
-            "$error",
-            "whitespace"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "$2",
-            "その他",
-            "intersect",
-            "$6"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Variables",
-          "arguments": [
-            "$6",
-            "$6",
-            "count"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$6",
-            "value",
-            "$1",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": 2
-        },
-        {
-          "type": "Store",
-          "arguments": [
-            "【要確認】「術式の選択」において「様式」が全て「その他」で登録されていますがよろしいですか？",
-            "$error",
-            "whitespace"
-          ],
-          "trueBehavior": 1
-        }
-      ]
-    },
-        {
-      "title": "GO-EM_2026_2026_check_treatment_plans",
-      "description": "GO-EM_2026_2026_endometrial_cancer：Treatment_plans",
-      "source": [],
-      "procedure": [
-        {
-          "type": "Operators",
-          "arguments": [
-            "$腫瘍登録対象年",
-            "value",
-            "2026",
-            "ge"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$腫瘍登録対象年",
-            "value",
-            "2026",
-            "le"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$治療施行状況",
-            "value",
-            "初回手術施行例",
-            "eq"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$治療施行状況",
-            "value",
-            "術前治療後に手術施行",
-            "eq"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
-        {
-          "type": "Query",
-          "arguments": [
-            "$手術経過",
-            "$.[*].治療開始日",
-            "$1"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Variables",
-          "arguments": [
-            "$1",
-            "$1",
-            "count"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$1",
-            "value",
             "0",
             "eq"
           ],
-          "trueBehavior": "Abort",
-          "falseBehavior": 1
-        },
-        {
-          "type": "Query",
-          "arguments": [
-            "$手術経過",
-            "$.[*].術式の選択.様式",
-            "$2"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$2",
-            "count",
-            "$1",
-            "eq"
-          ],
           "trueBehavior": 2,
           "falseBehavior": 1
         },
         {
           "type": "Store",
           "arguments": [
-            "【要修正】全ての手術に対し「術式の選択」で、「様式」を入力して下さい。",
+            "【要修正】術式の選択において、「様式」または「予定手術内容」に未入力の項目があります。",
             "$error",
             "whitespace"
           ],
           "trueBehavior": 1
         },
         {
-          "type": "Query",
+          "type": "Sets",
           "arguments": [
-            "$手術経過",
-            "$.[*].術式の選択.予定手術内容",
+            "$1",
+            "要修正（原発巣除去手術に対し一期的手術の登録なし）",
+            "intersect",
             "$3"
           ],
           "trueBehavior": 1
@@ -3276,7 +3011,7 @@
           "arguments": [
             "$3",
             "count",
-            "$1",
+            "0",
             "eq"
           ],
           "trueBehavior": 2,
@@ -3285,76 +3020,37 @@
         {
           "type": "Store",
           "arguments": [
-            "【要修正】全ての手術療法に対し「術式の選択」で、「予定手術内容」を入力して下さい。",
+            "【要修正】原発巣除去を行った手術について、術式の選択において「一回目（一期的）手術」の選択と、術式(「開腹術」「腹腔鏡手術」「ロボット手術」のいずれか)の選択を行ってください。※原発巣除去前に実施された生検等は「一回目（一期的）手術」として登録しないで下さい。",
             "$error",
             "whitespace"
           ],
-          "trueBehavior": 1
+          "trueBehavior": "Abort"
         },
         {
           "type": "Sets",
           "arguments": [
-            "$2",
-            "一回目手術",
+            "$1",
+            "二回目（開腹術）,二回目（腹腔鏡手術）,二回目（ロボット手術）",
             "intersect",
             "$4"
           ],
           "trueBehavior": 1
         },
         {
-          "type": "Variables",
-          "arguments": [
-            "$4",
-            "$4",
-            "count"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Sets",
-          "arguments": [
-            "$2",
-            "二回目手術",
-            "intersect",
-            "$5"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Variables",
-          "arguments": [
-            "$5",
-            "$5",
-            "count"
-          ],
-          "trueBehavior": 1
-        },
-        {
           "type": "Operators",
           "arguments": [
-            "$5",
-            "value",
+            "$4",
+            "count",
             "1",
-            "ge"
+            "gt"
           ],
           "trueBehavior": 1,
-          "falseBehavior": 3
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$4",
-            "value",
-            "1",
-            "ge"
-          ],
-          "trueBehavior": 2,
-          "falseBehavior": 1
+          "falseBehavior": 2
         },
         {
           "type": "Store",
           "arguments": [
-            "【要修正】「術式の選択」において様式で「二回目手術」が選択されていますが、「一回目手術」が選択されていません。",
+            "【要修正】術式の選択において、様式で「二回目（二期的）手術」が２カ所以上に入力されています。",
             "$error",
             "whitespace"
           ],
@@ -3363,28 +3059,49 @@
         {
           "type": "Sets",
           "arguments": [
-            "$2",
-            "その他",
+            "$1",
+            "一回目（開腹術）,一回目（腹腔鏡手術）,一回目（ロボット手術）,二回目（開腹術）,二回目（腹腔鏡手術）,二回目（ロボット手術）",
             "intersect",
-            "$6"
+            "$術式選択"
           ],
           "trueBehavior": 1
         },
         {
-          "type": "Variables",
+          "type": "Store",
           "arguments": [
-            "$6",
-            "$6",
-            "count"
+            "$術式選択",
+            "$5",
+            "comma"
           ],
           "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$5"
+          ],
+          "trueBehavior": 1,
+          "lookup": [
+            [
+              "/^一回目（.*）$/",
+              "OK"
+            ],
+            [
+              "/^一回目（.*）,二回目（.*）$/",
+              "OK"
+            ],
+            [
+              "/.*/",
+              "NG"
+            ]
+          ]
         },
         {
           "type": "Operators",
           "arguments": [
-            "$6",
+            "$5",
             "value",
-            "$1",
+            "NG",
             "eq"
           ],
           "trueBehavior": 1,
@@ -3393,7 +3110,7 @@
         {
           "type": "Store",
           "arguments": [
-            "【要確認】「術式の選択」において「様式」が全て「その他」で登録されていますがよろしいですか？",
+            "【要修正】術式の選択において、「二回目（二期的）手術」は、「一回目（一期的）手術」よりも後の順番で登録してください。",
             "$error",
             "whitespace"
           ],
@@ -3406,17 +3123,6 @@
       "description": "GO-EM_2021_2026_endometrial_cancer：Extract_treatment_pattern",
       "source": [],
       "procedure": [
-        {
-          "type": "Operators",
-          "arguments": [
-            "$腫瘍登録対象年",
-            "value",
-            "2026",
-            "le"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
         {
           "type": "Variables",
           "arguments": [
@@ -4329,17 +4035,6 @@
         {
           "type": "Operators",
           "arguments": [
-            "$腫瘍登録対象年",
-            "value",
-            "2026",
-            "le"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
-        {
-          "type": "Operators",
-          "arguments": [
             "@1",
             "count",
             "0",
@@ -4430,17 +4125,6 @@
         }
       ],
       "procedure": [
-        {
-          "type": "Operators",
-          "arguments": [
-            "$腫瘍登録対象年",
-            "value",
-            "2026",
-            "le"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
         {
           "type": "Operators",
           "arguments": [
@@ -4961,17 +4645,6 @@
         }
       ],
       "procedure": [
-        {
-          "type": "Operators",
-          "arguments": [
-            "$腫瘍登録対象年",
-            "value",
-            "2026",
-            "le"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
         {
           "type": "Operators",
           "arguments": [
@@ -5501,17 +5174,6 @@
         }
       ],
       "procedure": [
-        {
-          "type": "Operators",
-          "arguments": [
-            "$腫瘍登録対象年",
-            "value",
-            "2026",
-            "le"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
         {
           "type": "Operators",
           "arguments": [
@@ -6126,17 +5788,6 @@
             "value",
             "2024",
             "ge"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$腫瘍登録対象年",
-            "value",
-            "2026",
-            "le"
           ],
           "trueBehavior": 1,
           "falseBehavior": "Abort"

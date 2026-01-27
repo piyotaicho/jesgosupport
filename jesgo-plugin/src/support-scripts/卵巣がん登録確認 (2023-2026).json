@@ -24,7 +24,9 @@
       "$骨盤リンパ節郭清",
       "$傍大動脈リンパ節郭清",
       "$要修正項目",
-      "$要確認項目"
+      "$要確認項目",
+      "$手術完遂度",
+      "$予定術式"
     ],
     "csvOffset": 6,
     "csvUnicode": false,
@@ -263,6 +265,39 @@
       ]
     },
     {
+      "title": "GO-OV_target_check",
+      "description": "GO-OV_2026_ovarian_cancer：target_year_check",
+      "source": [
+        {
+          "path": "$.[0].腫瘍登録番号"
+        }
+      ],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象年",
+            "value",
+            "2026",
+            "le"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Exit"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@1",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Exit"
+        }
+      ]
+    },
+    {
       "title": "GO-OV_2021_2023_check_basic_info",
       "description": "GO-OV_2021_2023_ovarian_cancer：Diagnosis_FIGO",
       "source": [
@@ -480,17 +515,6 @@
         {
           "type": "Operators",
           "arguments": [
-            "$腫瘍登録対象年",
-            "value",
-            "2026",
-            "le"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
-        {
-          "type": "Operators",
-          "arguments": [
             "@1",
             "count",
             "0",
@@ -683,17 +707,6 @@
         {
           "type": "Operators",
           "arguments": [
-            "$腫瘍登録対象年",
-            "value",
-            "2026",
-            "le"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
-        {
-          "type": "Operators",
-          "arguments": [
             "$治療施行状況",
             "count",
             "0",
@@ -847,17 +860,6 @@
         {
           "type": "Operators",
           "arguments": [
-            "$腫瘍登録対象年",
-            "value",
-            "2026",
-            "le"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
-        {
-          "type": "Operators",
-          "arguments": [
             "$治療施行状況",
             "value",
             "初回手術施行例",
@@ -997,17 +999,6 @@
         {
           "type": "Operators",
           "arguments": [
-            "$腫瘍登録対象年",
-            "value",
-            "2026",
-            "le"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
-        {
-          "type": "Operators",
-          "arguments": [
             "$治療施行状況",
             "value",
             "術前治療後に手術施行",
@@ -1087,17 +1078,6 @@
         }
       ],
       "procedure": [
-        {
-          "type": "Operators",
-          "arguments": [
-            "$腫瘍登録対象年",
-            "value",
-            "2026",
-            "le"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
         {
           "type": "Operators",
           "arguments": [
@@ -1229,17 +1209,6 @@
             "value",
             "2024",
             "ge"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$腫瘍登録対象年",
-            "value",
-            "2026",
-            "le"
           ],
           "trueBehavior": 1,
           "falseBehavior": "Abort"
@@ -1386,22 +1355,6 @@
       ],
       "procedure": [
         {
-          "type": "Variables",
-          "arguments": [
-            "骨盤リンパ節センチネルリンパ節生検,骨盤リンパ節選択的郭清（生検）,骨盤リンパ節系統的郭清,腹腔鏡下センチネルリンパ節生検,腹腔鏡下骨盤内リンパ節郭清,ロボット支援下センチネルリンパ節生検,ロボット支援下骨盤内リンパ節郭清",
-            "$骨盤リンパ節郭清"
-          ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Variables",
-          "arguments": [
-            "傍大動脈リンパ節センチネルリンパ節生検,傍大動脈リンパ節選択的郭清（生検）,傍大動脈リンパ節系統的郭清,腹腔鏡下傍大動脈リンパ節郭清,ロボット支援下傍大動脈リンパ節郭清",
-            "$傍大動脈リンパ節郭清"
-          ],
-          "trueBehavior": 1
-        },
-        {
           "type": "Query",
           "arguments": [
             "@1",
@@ -1418,7 +1371,7 @@
             "0",
             "eq"
           ],
-          "trueBehavior": 9,
+          "trueBehavior": 11,
           "falseBehavior": 1
         },
         {
@@ -1451,7 +1404,7 @@
           "trueBehavior": 1,
           "lookup": [
             [
-              "/^\\{(.*?)\"実施手術\":\\{\"実施手術\":(\\[(?:\\{.*?\"術式\":\"[^\"]+\".*?\\}(?:,\\{.*?\"術式\":\"[^\"]+\".*?\\})*)\\]),\"jesgo.*?\\}.*?\\}$/",
+              "/^\\{(.*?)\"実施手術\":\\{\"実施手術\":(\\[(?:\\{.*?\\}(?:,\\{.*?\\})*)?\\]).*\\}\\}$/",
               "{$1\"治療\":$2}"
             ]
           ]
@@ -1464,7 +1417,7 @@
           "trueBehavior": 1,
           "lookup": [
             [
-              "/\\{\"術式\":\"([^\"]*)\"(?:,[^{}]*(?:\\{[^{}]*\\})?)*\\}/g",
+              "/\\{[^{}]*\"術式\":\"([^\"]*)\"[^{}]*\\}/g",
               "{\"治療詳細\":\"$1\"}"
             ]
           ]
@@ -1490,8 +1443,16 @@
           "trueBehavior": 1,
           "lookup": [
             [
-              "/(.*?),\"実施手術\":\\{\"jesgo:document_id\":\\d+,\"jesgo:schema_id\":\"[^\"]+\"\\}(.*?)/g",
-              "$1,\"治療\":[{\"治療詳細\":\"登録なし（手術）\"}]$2"
+              "/(.*?){[^{}]*\"治療詳細\":\"\"[^{}]*\\}(.*?)/g",
+              "$1{\"治療詳細\":\"登録なし（手術）\"}$2"
+            ],
+            [
+              "/(.*?)\"治療\":\\[\\](.*?)/g",
+              "$1\"治療\":[{\"治療詳細\":\"登録なし（手術）\"}]$2"
+            ],
+            [
+              "/(.*?)\"実施手術\":\\{(?!.*\"治療詳細\":\"[^\"]+\").*?\\}(.*?)/g",
+              "$1\"治療\":[{\"治療詳細\":\"登録なし（手術）\"}]$2"
             ]
           ]
         },
@@ -1957,12 +1918,12 @@
           "type": "Operators",
           "arguments": [
             "$6",
-            "value",
-            "手術（登録なし）",
+            "count",
+            "0",
             "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 2
+          "trueBehavior": 2,
+          "falseBehavior": 1
         },
         {
           "type": "Store",
@@ -1987,12 +1948,12 @@
           "type": "Operators",
           "arguments": [
             "$7",
-            "value",
-            "薬物療法（登録なし）",
+            "count",
+            "0",
             "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 2
+          "trueBehavior": 2,
+          "falseBehavior": 1
         },
         {
           "type": "Store",
@@ -2017,12 +1978,12 @@
           "type": "Operators",
           "arguments": [
             "$8",
-            "value",
-            "放射線療法（登録なし）",
+            "count",
+            "0",
             "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 2
+          "trueBehavior": 2,
+          "falseBehavior": 1
         },
         {
           "type": "Store",
@@ -2047,12 +2008,12 @@
           "type": "Operators",
           "arguments": [
             "$9",
-            "value",
-            "薬物療法（分子標的治療登録なし）",
+            "count",
+            "0",
             "eq"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": 2
+          "trueBehavior": 2,
+          "falseBehavior": 1
         },
         {
           "type": "Store",
@@ -2073,17 +2034,6 @@
         }
       ],
       "procedure": [
-        {
-          "type": "Operators",
-          "arguments": [
-            "$腫瘍登録対象年",
-            "value",
-            "2026",
-            "le"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
         {
           "type": "Query",
           "arguments": [
@@ -2645,10 +2595,7 @@
     {
       "title": "GO-OV_2021_2025_check_surgical_details",
       "description": "GO-OV_2021_2025_ovarian_cancer：surgical_details",
-      "source": [
-        {
-        }
-      ],
+      "source": [],
       "procedure": [
         {
           "type": "Operators",
@@ -2684,49 +2631,55 @@
           "falseBehavior": "Abort"
         },
         {
-          "type": "Query",
+          "type": "Variables",
           "arguments": [
             "$手術経過",
-            "$.[*].治療開始日",
             "$1"
           ],
           "trueBehavior": 1
         },
         {
-          "type": "Variables",
+          "type": "Translation",
           "arguments": [
-            "$1",
-            "$1",
-            "count"
+            "$1"
           ],
-          "trueBehavior": 1
-        },
-        {
-          "type": "Operators",
-          "arguments": [
-            "$1",
-            "value",
-            "0",
-            "eq"
-          ],
-          "trueBehavior": "Abort",
-          "falseBehavior": 1
+          "trueBehavior": 1,
+          "lookup": [
+            [
+              "/^(\\{.*?\"区分\":\"手術（(?!登録なし).*?）\".*?\"手術完遂度\":\")(\".*?\\})$/",
+              "$1要修正（登録なし）$2"
+            ],
+            [
+              "/^(\\{.*?\"区分\":\"手術（(?:試験開腹術のみ|審査腹腔鏡のみ|試験開腹術・審査腹腔鏡のみ)）\".*?\"手術完遂度\":\")(?!不完全摘出)[^\"]*(\".*?\\})$/",
+              "$1要修正（不完全摘出）$2"
+            ]
+          ]
         },
         {
           "type": "Query",
           "arguments": [
-            "$手術経過",
+            "$1",
             "$.[*].手術完遂度",
             "$2"
           ],
           "trueBehavior": 1
         },
         {
+          "type": "Sets",
+          "arguments": [
+            "要修正（登録なし）",
+            "$2",
+            "intersect",
+            "$3"
+          ],
+          "trueBehavior": 1
+        },
+        {
           "type": "Operators",
           "arguments": [
-            "$2",
+            "$3",
             "count",
-            "$1",
+            "0",
             "eq"
           ],
           "trueBehavior": 2,
@@ -2735,9 +2688,366 @@
         {
           "type": "Store",
           "arguments": [
-            "【要修正】全ての手術に対して手術完遂度を入力して下さい。",
+            "【要修正】手術完遂度が登録されていない手術があります。全ての手術に対して手術完遂度を入力して下さい。",
             "$error",
             "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "要修正（不完全摘出）",
+            "$2",
+            "intersect",
+            "$4"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$4",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】試験開腹術／審査腹腔鏡にも関わらず、手術完遂度において「不完全摘出」が選択されていません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$2",
+            "$手術完遂度"
+          ],
+          "trueBehavior": 1
+        }
+      ]
+    },
+    {
+      "title": "GO-OV_2026_2026_check_surgical_details",
+      "description": "GO-OV_2026_2026_ovarian_cancer：surgical_details",
+      "source": [],
+      "procedure": [
+        {
+          "type": "Operators",
+          "arguments": [
+            "$腫瘍登録対象年",
+            "value",
+            "2026",
+            "ge"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "初回手術施行例",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$治療施行状況",
+            "value",
+            "術前治療後に手術施行",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": "Abort"
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$手術経過",
+            "$1"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$1"
+          ],
+          "trueBehavior": 1,
+          "lookup": [
+            [
+              "/^(\\{.*?\"区分\":\"手術（(?!登録なし).*?）\".*?\"手術完遂度\":\")\"(\".*?\\})$/",
+              "$1要修正（登録なし）$2"
+            ],
+            [
+              "/^(\\{.*?\"区分\":\"手術（(?:試験開腹術のみ|審査腹腔鏡のみ|試験開腹術・審査腹腔鏡のみ)）\".*?\"手術完遂度\":\")(?!不完全摘出（ほとんどが残存）)[^\"]*(\".*?\\})$/",
+              "$1要修正（不完全摘出）$2"
+            ]
+          ]
+        },
+        {
+          "type": "Translation",
+          "arguments": [
+            "$1"
+          ],
+          "trueBehavior": 1,
+          "lookup": [
+            [
+              "/^(\\{.*?\"区分\":\"手術（(?:試験開腹術・審査腹腔鏡以外|試験開腹術・審査腹腔鏡含む他術式)）\".*?\"術式の選択\":\\{.*?\"予定手術内容\":\"(開腹術|腹腔鏡手術|ロボット手術)\".*?\\}.*?)(\\}$)/",
+              "$1,\"予定術式登録\":\"試験開腹術・審査腹腔鏡以外（$2）\"$3"
+            ],
+            [
+              "/^(\\{.*?\"区分\":\"手術（(?:試験開腹術・審査腹腔鏡以外|試験開腹術・審査腹腔鏡含む他術式)）\".*?\"術式の選択\":\\{.*?\"予定手術内容\":\"(?:該当せず|)\".*?\\}.*?)(\\}$)/",
+              "$1,\"予定術式登録\":\"試験開腹術・審査腹腔鏡以外（予定術式未登録）\"$2"
+            ],
+            [
+              "/^(\\{.*?\"区分\":\"手術（試験開腹術・審査腹腔鏡のみ）\".*?\"術式の選択\":\\{.*?\"予定手術内容\":\"(開腹術|腹腔鏡手術|ロボット手術)\".*?\\}.*?)(\\}$)/",
+              "$1,\"予定術式登録\":\"試験開腹術・審査腹腔鏡（$2）\"$3"
+            ],
+            [
+              "/^(\\{.*?\"区分\":\"手術（試験開腹術・審査腹腔鏡のみ）\".*?\"術式の選択\":\\{.*?\"予定手術内容\":\"(?:該当せず|)\".*?\\}.*?)(\\}$)/",
+              "$1,\"予定術式登録\":\"試験開腹術・審査腹腔鏡（予定術式未登録）\"$2"
+            ],
+            [
+              "/^(\\{.*?\"区分\":\"手術（登録なし）\".*?\"術式の選択\":\\{.*?\\}.*?)(\\}$)/",
+              "$1,\"予定術式登録\":\"\"$2"
+            ]
+          ]
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$1",
+            "$.[*].手術完遂度",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "要修正（登録なし）",
+            "$2",
+            "intersect",
+            "$3"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$3",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】手術完遂度が登録されていない手術があります。全ての手術に対して手術完遂度を入力して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "要修正（不完全摘出）",
+            "$2",
+            "intersect",
+            "$4"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$4",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 2,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】術式において試験開腹術/審査腹腔鏡を選択した場合は、手術完遂度において「不完全摘出（ほとんどが残存）」を選択して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$2",
+            "$手術完遂度"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$1",
+            "$.[*].区分",
+            "$2"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Query",
+          "arguments": [
+            "$1",
+            "$.[*].予定術式登録",
+            "$3"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "手術（試験開腹術・審査腹腔鏡以外）, 手術（試験開腹術・審査腹腔鏡含む他術式）",
+            "$2",
+            "intersect",
+            "$4"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$4",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 6,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "試験開腹術・審査腹腔鏡以外（開腹術）,試験開腹術・審査腹腔鏡以外（腹腔鏡手術）,試験開腹術・審査腹腔鏡以外（ロボット手術）",
+            "$3",
+            "intersect",
+            "$5"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$5",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】試験開腹術・審査腹腔鏡以外の手術療法に対して、「術式の選択」の「予定手術内容」が登録されていません。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": "Abort"
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$5",
+            "count",
+            "1",
+            "eq"
+          ],
+          "trueBehavior": 7,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要確認】試験開腹術・審査腹腔鏡以外の手術療法に対して、複数の「術式の選択」の「予定手術内容」が登録されています。手術日が早い方が腫瘍登録で登録されますがよろしいですか。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": 6
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "手術（試験開腹術・審査腹腔鏡）",
+            "$2",
+            "intersect",
+            "$6"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$6",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 5,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Sets",
+          "arguments": [
+            "試験開腹術・審査腹腔鏡（開腹術）,試験開腹術・審査腹腔鏡（腹腔鏡手術）,試験開腹術・審査腹腔鏡（ロボット手術）",
+            "$3",
+            "intersect",
+            "$5"
+          ],
+          "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "$5",
+            "count",
+            "0",
+            "eq"
+          ],
+          "trueBehavior": 1,
+          "falseBehavior": 2
+        },
+        {
+          "type": "Store",
+          "arguments": [
+            "【要修正】手術療法に対し、「術式の選択」の「予定手術内容」を登録して下さい。",
+            "$error",
+            "whitespace"
+          ],
+          "trueBehavior": "Abort"
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "$5",
+            "$予定術式"
           ],
           "trueBehavior": 1
         }
@@ -2748,17 +3058,6 @@
       "description": "GO-OV_2021_2026_ovarian_cancer：Extract_treatment_pattern",
       "source": [],
       "procedure": [
-        {
-          "type": "Operators",
-          "arguments": [
-            "$腫瘍登録対象年",
-            "value",
-            "2026",
-            "le"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
         {
           "type": "Variables",
           "arguments": [
@@ -3513,12 +3812,11 @@
           "falseBehavior": 2
         },
         {
-          "type": "Sets",
+          "type": "Store",
           "arguments": [
-            "初回手術施行例または術前治療後に手術施行症例ですが、腫瘍登録に登録可能な術式が登録されていないため術式の書き出しが正常に行われていません。術式を修正するか一括登録用の書き出し後に追記下さい。",
-            "$要確認項目",
-            "add",
-            "$要確認項目"
+            "【要確認】初回手術施行例または術前治療後に手術施行症例ですが、腫瘍登録に登録可能な術式が登録されていないため術式の書き出しが正常に行われていません。術式を修正するか一括登録用の書き出し後に追記下さい。",
+            "$error",
+            "whitespace"
           ],
           "trueBehavior": 1
         }
@@ -3548,17 +3846,6 @@
         }
         ],
       "procedure": [
-        {
-          "type": "Operators",
-          "arguments": [
-            "$腫瘍登録対象年",
-            "value",
-            "2026",
-            "le"
-          ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
-        },
         {
           "type": "Operators",
           "arguments": [
@@ -4778,15 +5065,20 @@
         ],
       "procedure": [
         {
-          "type": "Operators",
+          "type": "Variables",
           "arguments": [
-            "$腫瘍登録対象年",
-            "value",
-            "2026",
-            "le"
+            "骨盤リンパ節センチネルリンパ節生検,骨盤リンパ節選択的郭清（生検）,骨盤リンパ節系統的郭清,腹腔鏡下センチネルリンパ節生検,腹腔鏡下骨盤内リンパ節郭清,ロボット支援下センチネルリンパ節生検,ロボット支援下骨盤内リンパ節郭清",
+            "$骨盤リンパ節郭清"
           ],
-          "trueBehavior": 1,
-          "falseBehavior": "Abort"
+          "trueBehavior": 1
+        },
+        {
+          "type": "Variables",
+          "arguments": [
+            "傍大動脈リンパ節センチネルリンパ節生検,傍大動脈リンパ節選択的郭清（生検）,傍大動脈リンパ節系統的郭清,腹腔鏡下傍大動脈リンパ節郭清,ロボット支援下傍大動脈リンパ節郭清",
+            "$傍大動脈リンパ節郭清"
+          ],
+          "trueBehavior": 1
         },
         {
           "type": "Query",
