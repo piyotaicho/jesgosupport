@@ -5,7 +5,7 @@ import { papaParse } from './fileHandlers'
 export async function init ():Promise<scriptInfo> {
   return {
     plugin_name: '腫瘍登録番号のインポート',
-    plugin_version: '1.000',
+    plugin_version: '2.000',
     all_patient: true,
     attach_patient_info: false,
     show_upload_dialog: true,
@@ -16,8 +16,8 @@ export async function init ():Promise<scriptInfo> {
 }
 
 type csvRow = string[]
-const idMatchRegex = /^(?<type>CC|EM|OV)\d{4}-\d+$/i 
-// 基本3がん種以外のプレフィックが不明～今後テーブルでの対応が必要そう /^(?<type>CC|EM|OV|TD|UA|US|VAC|VUC)\d{4}-\d+$/i
+// 2026年に希少がんスキーマの略称がprefixと同一となった
+const idMatchRegex = /^(?<type>CC|EM|OV|TD|UAS|US|VA|VU)\d{4}-\d+$/i
 
 /**
  * プラグイン呼び出し
@@ -70,7 +70,7 @@ export async function main (uploadedData: string, apicall: (request: updateDocum
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e:any) {
     console.error(e)
-    await showModalMessageBox(e?.message || 'エラーが発生しました.')
+    await showModalMessageBox(e.message ?? 'エラーが発生しました.')
   }
   return undefined
 }
