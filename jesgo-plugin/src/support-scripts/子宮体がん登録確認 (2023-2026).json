@@ -3054,7 +3054,7 @@
             "$error",
             "whitespace"
           ],
-          "trueBehavior": 1
+          "trueBehavior": "Abort"
         },
         {
           "type": "Sets",
@@ -3091,8 +3091,12 @@
               "OK"
             ],
             [
-              "/.*/",
+              "/^二回目（.*）,一回目（.*）$/",
               "NG"
+            ],
+            [
+              "/.*/",
+              ""
             ]
           ]
         },
