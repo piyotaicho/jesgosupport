@@ -1662,10 +1662,10 @@
           "path": "$.[0].組織診断.分子遺伝学的プロファイル.POLE変異.POLE変異検査方法"
         },
         {
-          "path": "$.[0].組織診断.分子遺伝学的プロファイル.MMR/MSI検査.MMR/MSI検査方法"
+          "path": "$.[0].組織診断.分子遺伝学的プロファイル.MMR/MSI検査.MMR/MSI検査結果"
         },
         {
-          "path": "$.[0].組織診断.分子遺伝学的プロファイル.MMR/MSI検査.MMR/MSI検査結果"
+          "path": "$.[0].組織診断.分子遺伝学的プロファイル.MMR/MSI検査.MMR/MSI検査方法"
         },
         {
           "path": "$.[0].組織診断.分子遺伝学的プロファイル.p53.p53"
@@ -1795,6 +1795,17 @@
         {
           "type": "Operators",
           "arguments": [
+            "@4",
+            "value",
+            "不明",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
             "@5",
             "count",
             "0",
@@ -1837,6 +1848,17 @@
         {
           "type": "Operators",
           "arguments": [
+            "@6",
+            "value",
+            "不明",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
             "@7",
             "count",
             "0",
@@ -1875,6 +1897,17 @@
             "$要修正項目"
           ],
           "trueBehavior": 1
+        },
+        {
+          "type": "Operators",
+          "arguments": [
+            "@8",
+            "value",
+            "不明",
+            "eq"
+          ],
+          "trueBehavior": 3,
+          "falseBehavior": 1
         },
         {
           "type": "Operators",
