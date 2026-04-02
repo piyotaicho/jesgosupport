@@ -15,17 +15,18 @@ interface codeBuffer {
 }
 
 // 後方互換を保持してスクリプトコマンドを短縮
-// type BlockType = 'Operators'|'Variables'|'Query'|'Translation'|'Sort'|'Period'|'Sets'|'Store'
-type v1BlockType = 'oper' | 'var' | 'query' | 'tr' | 'sort' | 'period' | 'set' | 'put'
+// type BlockType = 'Operators'|'Variables'|'Query'|'Translation'|'Sort'|'Period'|'Sets'|'Store'|'Update'
+type v1BlockType = 'oper' | 'var' | 'query' | 'tr' | 'sort' | 'period' | 'set' | 'put' // v1にはUpdateはない
 export type newBlockType = v1BlockType | BlockType
 
+const documentVariableNames = [ '$hash', '$his_id', '$name', '$date_of_birth', '$error' ]
 type commandValueTypes = 'value' | 'length' | 'count' | 'number'
 type commandOperatorExpressions = 'eq' | '=' | 'gt' | '>' | 'ge' | '>=' | 'lt' | '<' | 'le' | '<=' | 'in' | 'incl' | 're' | 'regexp'
 type commandSetsOperators = 'add' | 'union' | 'intersect' | 'difference' | 'xor'
 type commandSortDirections = 'asc' | 'ascend' | 'desc' | 'descend'
 type commandPeriodOperators = 'years' | 'years,roundup' | 'months' | 'months,roundup' | 'weeks' | 'weeks,roundup' | 'days' | 'age' | 'age,roundup'
 type commandStoreFieldSeparators = 'array' | 'first' | 'whitespace' | 'colon' | 'comma' | 'semicolon'
-
+type commandUpdateOperators = 'set' | 'add'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type instructionFunction = (processor: Processor) => instructionResult
 
@@ -83,10 +84,6 @@ const storeProxyHandler: ProxyHandler<VariableStore> = {
   defineProperty: (target: VariableStore, property: string, descriptor?: PropertyDescriptor) => {
     if (property in target) {
       throw new TypeError(`変数"${property}"は既に定義されています.`)
-    }
-
-    if (property === '$error') {
-      throw new TypeError('変数名"$error"は予約語のため使用できません.')
     }
 
     const propertyHeader = property.charAt(0)
@@ -165,7 +162,7 @@ export class Processor {
     // コードバッファ ルールごとに各ステップをstring[]に格納
     // コードは function( processorであるこのオブジェクト自身 ) で、返り値は instructionResult
     this.transpiledRuleset = []
-  
+
     // レジスタ変数とシステム変数の定義と初期化
     this.initVariables()
 
@@ -208,16 +205,16 @@ export class Processor {
 
   /**
    * レジスタ変数とドキュメント変数 $~ を初期化
-   * @param hash 
-   * @param his_id 
-   * @param name 
-   * @param date_of_birth 
+   * @param hash
+   * @param his_id
+   * @param name
+   * @param date_of_birth
    */
   private initVariables (hash = '', his_id = '', name = '', date_of_birth = '') {
     // $で始まる変数を初期化する
     for (const variableName of Object.keys(this.variables)) {
       if (variableName.charAt(0) === '$') {
-        if ([ '$hash', '$his_id', '$name', '$date_of_birth' ].includes(variableName)) {
+        if (documentVariableNames.includes(variableName)) {
           // ドキュメント変数は一旦削除する
           delete this.variables[variableName]
         } else {
@@ -247,6 +244,10 @@ export class Processor {
         $date_of_birth: {
           value: [date_of_birth || ''],
           writable: false
+        },
+        $error: {
+          value: [],
+          writable: true
         }
       })
     } catch {}
@@ -259,7 +260,7 @@ export class Processor {
   public async compile (ruleset: LogicRuleSet[]) {
     verbose('** COMPILER **', false, this.disableLogging)
     this.compiling = true
-  
+
     // コードバッファを初期化
     this.transpiledRuleset = []
 
@@ -964,7 +965,7 @@ export class Processor {
         throw e as Error
       }
       console.error(e.message)
-      formatErrorFlag = true      
+      formatErrorFlag = true
     }
 
     for (const targetValue of valueB) {
@@ -1085,7 +1086,7 @@ export class Processor {
           num *= 26
           num += col.toUpperCase().charCodeAt(pos) - 64
         }
-        return num - 1  
+        return num - 1
       } else {
         if (num > 0) {
           return num - 1
@@ -1129,7 +1130,7 @@ export class Processor {
     // 値をflattenし、オブジェクトはJSON文字列化する
     const colValues = values.flat(99).map(item => item.toString() !== '[object Object]' ? item.toString() : JSON.stringify(item))
     switch (mode) {
-      case 'array': 
+      case 'array':
         break
       case 'whitespace':
         colValues.splice(0, 0, colValues.join(' '))

@@ -11,7 +11,7 @@ export type SourceBlock = {
   subpath?: string
 }
 
-export type BlockType = 'Operators'|'Variables'|'Query'|'Translation'|'Sort'|'Period'|'Sets'|'Store'
+export type BlockType = 'Operators'|'Variables'|'Query'|'Translation'|'Sort'|'Period'|'Sets'|'Store'|'Update'
 export const BlockColorByType = {
   Operators: '#59c059',
   Variables: '#ff8c1a',
