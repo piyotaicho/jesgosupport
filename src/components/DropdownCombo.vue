@@ -12,7 +12,7 @@
       </template>
 
       <template #append>
-        <el-select v-model="value" placeholder=" "
+        <el-select v-model="value" placeholder=""
           :disabled="props.disabled"
           :size="props.size"
           :effect="props.effect"
@@ -81,15 +81,6 @@ div.dropdown-combo-input .el-select {
 div.dropdown-combo-input .el-select .el-input__wrapper {
   max-width: 14px;
   padding-left: 11px;
-}
-
-div.dropdown-combo-input .el-input-group__append {
-  padding-left: 16.5px;
-  padding-right: 16px;
-}
-
-div.dropdown-combo-input .el-input-group__append .el-select__wrapper {
-  padding: 4px 6px;
 }
 
 div.dropdown-combo-input > .el-input__inner {
