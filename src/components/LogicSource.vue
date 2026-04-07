@@ -14,11 +14,14 @@
           <el-col :span="4" style="margin-top: 0.35rem;">パス:</el-col>
           <el-col :span="15">
             <DropdownCombo v-model.lazy.trim="sourcePath" clearable placeholder="JSONpathを入力もしくは予約語を選択">
-              <el-option value="$hash" label="ハッシュ値"/>
+              <template v-for="reservedVariableName in ReservedVariableNameLabel">
+                <el-option :value="reservedVariableName" :label="ReservedVariableNameLabel[reservedVariableName as ReservedVariableNames]" />
+              </template>
+              <!-- <el-option value="$hash" label="ハッシュ値"/>
               <el-option value="$his_id" label="カルテ番号"/>
               <el-option value="$name" label="患者名"/>
               <el-option value="$date_of_birth" label="生年月日"/>
-              <el-option value="$highlight" label="強調表示のパスを引用" />
+              <el-option value="$highlight" label="強調表示のパスを引用" /> -->
             </DropdownCombo>
           </el-col>
           <el-col :span="4" :offset="1">
@@ -53,18 +56,13 @@
 import { h, WritableComputedRef, computed } from 'vue'
 import { Aim, View } from '@element-plus/icons-vue'
 import { useStore } from './store'
-import { SourceBlock } from './types'
+import { SourceBlock, ReservedVariableNameLabel, type ReservedVariableNames } from './types'
 import { ElMessageBox } from 'element-plus'
 import DropdownCombo from './DropdownCombo.vue'
 
 const store = useStore()
 
-const reservedWords = [
-  '$hash',
-  '$his_id',
-  '$name',
-  '$date_of_birth'
-]
+const reservedWords = Object.keys(ReservedVariableNameLabel).filter(key => key !== '$highlight')
 
 const props = defineProps<{
   index: number,

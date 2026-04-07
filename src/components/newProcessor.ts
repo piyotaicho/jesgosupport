@@ -1,4 +1,4 @@
-import { pulledDocument, processorOutput, JsonObject, LogicRuleSet, LogicBlock, BlockType, SourceBlock } from './types'
+import { pulledDocument, processorOutput, JsonObject, LogicRuleSet, LogicBlock, BlockTypes, SourceBlock } from './types'
 import { parseJesgo, verbose } from './utilities'
 
 export const processorVersion = '1.1.2'
@@ -15,9 +15,9 @@ interface codeBuffer {
 }
 
 // 後方互換を保持してスクリプトコマンドを短縮
-// type BlockType = 'Operators'|'Variables'|'Query'|'Translation'|'Sort'|'Period'|'Sets'|'Store'|'Update'
-type v1BlockType = 'oper' | 'var' | 'query' | 'tr' | 'sort' | 'period' | 'set' | 'put' // v1にはUpdateはない
-export type newBlockType = v1BlockType | BlockType
+// type BlockTypes = 'Operators'|'Variables'|'Query'|'Translation'|'Sort'|'Period'|'Sets'|'Store'|'Update'
+type v1BlockTypes = 'oper' | 'var' | 'query' | 'tr' | 'sort' | 'period' | 'set' | 'put' // v1にはUpdateはない
+export type newBlockTypes = v1BlockTypes | BlockTypes
 
 const documentVariableNames = [ '$hash', '$his_id', '$name', '$date_of_birth', '$error' ]
 type commandValueTypes = 'value' | 'length' | 'count' | 'number'
@@ -313,7 +313,7 @@ export class Processor {
 
           try {
             // パラメータの抽出 引数は参照では無く値をコピー
-            const command = procedure.type as newBlockType
+            const command = procedure.type as newBlockTypes
             const params: string[] = []
 
             for (const item of procedure.arguments) {

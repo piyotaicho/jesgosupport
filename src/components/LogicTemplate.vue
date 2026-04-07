@@ -78,7 +78,7 @@
           <LogicTemplateFinishSelection
             v-model="falseBehavior"
             allowExit
-            v-if="isFalseBehavior"
+            v-if="enableFalseBehaviorSetting"
             >上記が成立しない場合</LogicTemplateFinishSelection
           >
         </template>
@@ -169,7 +169,7 @@
           <LogicTemplateFinishSelection
             v-model="falseBehavior"
             allowExit
-            v-if="isFalseBehavior"
+            v-if="enableFalseBehaviorSetting"
             >処理が失敗した場合</LogicTemplateFinishSelection
           >
         </template>
@@ -400,7 +400,7 @@
           <LogicTemplateFinishSelection
             v-model="falseBehavior"
             allowExit
-            v-if="isFalseBehavior"
+            v-if="enableFalseBehaviorSetting"
             >置換が行われなかった場合</LogicTemplateFinishSelection
           >
         </template>
@@ -456,7 +456,7 @@
 
 <script setup lang="ts">
 import { computed, WritableComputedRef, ComputedRef } from 'vue'
-import { LogicBlock, failableBlockTypes, BlockColorByType } from './types'
+import { LogicBlock, LogicBlockWithFailureConfition, BlockColorByType } from './types'
 import { ArrowUpBold, ArrowDownBold, CloseBold } from '@element-plus/icons-vue'
 import { CascaderOption, ElMessageBox } from 'element-plus'
 import EditableCascader from './EditableCascader.vue'
@@ -518,9 +518,9 @@ const translationTable: ComputedRef<string[][]> = computed(() => {
   }
 })
 
-const isFalseBehavior = computed(() => {
+const enableFalseBehaviorSetting = computed(() => {
   if (props.block) {
-    if (failableBlockTypes.includes(props.block.type)) {
+    if (LogicBlockWithFailureConfition.includes(props.block.type)) {
       return true
     }
   }
