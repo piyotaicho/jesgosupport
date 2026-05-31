@@ -425,7 +425,7 @@
               <EditableCascader
                 v-model.trim="argument2nd"
                 placeholder="CSVの桁を入力"
-                :options="[...writeableVariables, { label: 'エラー出力', value: '$error' }]"
+                :options="outputVariables"
               />
             </el-col>
             <el-col :span="4" style="margin-top: 0.25rem; margin-left: 0.4rem"
@@ -489,6 +489,23 @@ const writeableVariables: ComputedRef<CascaderOption[]> = computed(() =>
     (slot) => slot.value !== 'constants' && slot.value !== 'sources'
   )
 )
+
+const outputVariables: ComputedRef<CascaderOption[]> = computed(() => {
+  const writeables = props.variables
+    .filter(
+      (slot) => slot.value !== 'constants' && slot.value !== 'sources'
+    )
+    .map((slot) => {
+      slot.children = (slot.children || []).filter((child) => child.value !== '$error')
+      return slot
+    })
+    .filter((slot) => (slot.children || []).length > 0)
+  writeables.push({
+    label: 'エラー出力',
+    value: '$error'
+  })
+  return writeables
+})
 
 const argument1st: WritableComputedRef<string> = computed({
   get: () => props.block.arguments[0] || '',

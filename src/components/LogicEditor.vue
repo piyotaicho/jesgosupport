@@ -115,7 +115,24 @@ const variables:ComputedRef<CascaderOption[]> = computed(() => {
               label: item,
               value: item
             }
-          })
+          }),
+          {
+            label: 'エラー出力',
+            value: '$error'
+          }
+        ]
+      }
+    )
+  } else {
+    options.push(
+      {
+        label: 'ドキュメント変数',
+        value: 'variables',
+        children: [
+          {
+            label: 'エラー出力',
+            value: '$error'
+          }
         ]
       }
     )

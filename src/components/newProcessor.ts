@@ -269,7 +269,8 @@ export class Processor {
     this.initVariables()
 
     // ルールセットを逐次処理
-    for (let index = 0; index < ruleset.length; index++) {
+    let index = 0
+    for (index = 0; index < ruleset.length; index++) {
       const currentRule = ruleset[index]
       const currentRuleTitle = currentRule.title
 
@@ -331,6 +332,7 @@ export class Processor {
             const successBehavior: string = procedure.trueBehavior.toString() || '+1'
             const failureBehavior: string = (procedure?.falseBehavior || 'Abort').toString()
 
+            // 以下のコード生成部分ではvalue(|A|B)strを生成する前にcheckstrに変数を代入して存在確認をする
             let checkstr: string[], valuestr: string, valueAstr: string, valueBstr: string, codeStr: string[] = []
 
             switch (command) {
@@ -475,9 +477,8 @@ export class Processor {
                 }
 
                 if (params[1].charAt(0) === '$' || params[1].charAt(0) === '@') {
-                  if (params[1] !== '$error') {
-                    this.variables[params[1]] = []
-                  }
+                  // writeableチェック
+                  this.variables[params[1]] = []
                 }
 
                 if (params[2] && !['array', 'first', 'whitespace', 'colon', 'comma', 'semicolon'].includes(params[2])) {
@@ -511,6 +512,20 @@ export class Processor {
         verbose(`# Skipped empty ruleset '${currentRuleTitle}'`, false, this.disableLogging)
       }
     }
+
+    // 最後にエラーバッファをエラー出力に割り当てるシステム固有ルールセットを追加する
+    if (index > 0) {
+      this.transpiledRuleset.push(
+        {
+          title: '__EXPORT_ERRORS__',
+          code: [
+            '{ processor.storeErrors(); return { success: true, behavior: \'+1\' } }'
+          ],
+          source: []
+        }
+      )
+    }
+
     this.compiling = false
   }
 
@@ -1156,8 +1171,9 @@ export class Processor {
     // 値を対象に保存する
     if (target.charAt(0) === '$') {
       if (target === '$error') {
-        // エラーオブジェクト
-        this.errorMessages.push(...colValues)
+        // エラーバッファには追加する
+        // this.errorMessages.push(...colValues)
+        this.variables['$error'].push(...colValues)
       } else {
         // 変数
         this.variables[target] = [...colValues]
@@ -1169,6 +1185,15 @@ export class Processor {
       }
     }
     return true
+  }
+
+  /**
+   * エラーメッセージをエラーバッファから出力バッファに移す
+  */
+  private storeErrors = ():void => {
+    if (this.variables['$error'].length > 0) {
+      this.errorMessages.push(...this.variables['$error'])
+    }
   }
 }
 
