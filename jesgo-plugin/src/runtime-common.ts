@@ -210,7 +210,7 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
       statusline1.innerText = ''
       statusline2.innerText = 'スクリプトエラーのため処理を中止しました.'
       downloadButton.disabled = true
-
+      downloadButton.innerText = 'CSVファイルの出力はありません'
       // コンソールにエラーを出力しておく
       console.error(e)
     }
@@ -315,18 +315,23 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
 
     // ステータスの更新とダウンロードの有効化
     if (progressbar) {
-      progressbar.style.width = '変換終了'
+      progressbar.style.width = '100%'
     }
     if (statusline1 && statusline2) {
-      statusline1.innerText = `${csvBuffer.length}症例のデータを抽出処理しました.`
+      statusline1.innerText = '処理が完了しました.'
       statusline2.innerText = ''
     }
 
     await new Promise<void>(resolve => setTimeout(() => {
       // CSVのデータがあればダウンロード関係をenable
       if (csvBuffer.length > 0) {
-        statusline2.innerText = 'CSVファイルをダウンロードできます.'
+        statusline2.innerText = `${csvBuffer.length}症例をCSVとして出力できます.`
         downloadButton.disabled = false
+        downloadButton.innerText = 'CSVファイルをダウンロードできます'
+      } else {
+        statusline2.innerText = 'CSVに書き出す症例はありません.'
+        downloadButton.disabled = true
+        downloadButton.innerText = 'CSVファイルはダウンロードできません'
       }
       // エラーがあれば閉じるでエラーが出る旨を表示
       if (errorBuffer.length > 0) {
