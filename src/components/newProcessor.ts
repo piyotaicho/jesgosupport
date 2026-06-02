@@ -1,7 +1,7 @@
 import { pulledDocument, processorOutput, JsonObject, LogicRuleSet, LogicBlock, BlockTypes, SourceBlock } from './types'
 import { parseJesgo, verbose } from './utilities'
 
-export const processorVersion = '1.1.2'
+export const processorVersion = '1.1.3'
 
 interface instructionResult {
   success: boolean
