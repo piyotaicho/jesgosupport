@@ -13,23 +13,16 @@ const emits = defineEmits<{
   (e: 'update:modelValue', newvalue: string): void
 }>()
 
-const typedValue = ref('')
-
-onMounted(() => {
-  // 通常文字列の入力を検知
-  if (props.modelValue !== '' && props.modelValue.charAt(0) !== '@' && props.modelValue.charAt(0) !== '$') {
-    typedValue.value = props.modelValue
-  } else {
-    typedValue.value = ''
-  }
-})
+const isVariable = (string: string) => {
+  return string.charAt(0) === '@' || string.charAt(0) === '$'
+}
 
 const options:ComputedRef<CascaderOption[]> = computed(() => {
-  if (typedValue.value !== '') {
+  if (!isVariable(props.modelValue) && props.modelValue !== '') {
     return [
       {
-        label: typedValue.value,
-        value: typedValue.value
+        label: props.modelValue,
+        value: props.modelValue
       },
       ...props.options
     ]
@@ -40,17 +33,10 @@ const options:ComputedRef<CascaderOption[]> = computed(() => {
 
 const value = computed({
   get: () => props.modelValue,
-  set: (newvalue: string) => {
-    if (newvalue === '' || newvalue !== typedValue.value) {
-      typedValue.value = ''
-    }
-    emits('update:modelValue', newvalue)
-  }
+  set: (newvalue: string) => emits('update:modelValue', newvalue)
 })
 
 async function beforeFilter (typedstring: string) {
-  typedValue.value = typedstring
-  await nextTick()
   value.value = typedstring
   await nextTick()
   return false
@@ -69,5 +55,6 @@ async function beforeFilter (typedstring: string) {
     :value-on-clear="''"
     :debounce="150"
     style="width: 100%;"
-    />
+  >
+  </el-cascader>
 </template>
