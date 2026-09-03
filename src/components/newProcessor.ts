@@ -53,7 +53,11 @@ const storeProxyHandler: ProxyHandler<VariableStore> = {
 
   get: (target: VariableStore, property: string) => {
     if (!(property in target)) {
-      throw new TypeError(`変数"${property}"は未定義です.`)
+      if (property === 'undefined' || property === '') {
+        throw new TypeError(`変数名の指定がありません.`)
+      } else {
+        throw new TypeError(`変数"${property}"は未定義です.`)
+      }
     }
     return (target[property] || [])
   },
@@ -61,7 +65,11 @@ const storeProxyHandler: ProxyHandler<VariableStore> = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   set: (target: VariableStore, property: string, value: any[]) => {
     if (!(property in target)) {
-      throw new TypeError(`変数"${property}"は未定義です.`)
+      if (property === 'undefined' || property === '') {
+        throw new TypeError(`変数名の指定がありません.`)
+      } else {
+        throw new TypeError(`変数"${property}"は未定義です.`)
+      }
     }
     const descriptor = Object.getOwnPropertyDescriptor(target, property)
     if (!(descriptor?.writable || false)) {
@@ -120,7 +128,11 @@ const storeProxyHandler: ProxyHandler<VariableStore> = {
 
   deleteProperty: (target: VariableStore, property: string) => {
     if (!(property in target)) {
-      throw new TypeError(`変数"${property}"は未定義です.`)
+      if (property === 'undefined' || property === '') {
+        throw new TypeError(`変数名の指定がありません.`)
+      } else {
+        throw new TypeError(`変数"${property}"は未定義です.`)
+      }
     }
     delete target[property]
     return true
