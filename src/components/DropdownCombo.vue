@@ -74,23 +74,38 @@ const value:WritableComputedRef<string> = computed({
 </script>
 
 <style>
-div.dropdown-combo-input .el-select {
-  width: 2rem;
-}
-
-div.dropdown-combo-input .el-select .el-input__wrapper {
+/* div.dropdown-combo-input .el-select .el-input__wrapper {
   max-width: 14px;
   padding-left: 11px;
-}
+} */
 
+/* ドロップダウンボタン領域のサイズ */
 div.dropdown-combo-input .el-input-group__append {
   padding-left: 16.5px;
   padding-right: 16px;
 }
 
-div.dropdown-combo-input .el-input-group__append .el-select__wrapper {
-  padding: 4px 6px;
+/* el-selectの大きさと位置を調整 */
+div.dropdown-combo-input .el-select--default {
+  max-width: 32.5px;
+  width: 32.5px;
+  margin: 0 -16px;
 }
+
+div.dropdown-combo-input .el-select__wrapper {
+  padding: 4px 0px;
+}
+
+/* el-selectの選択済み内容を非表示にする */
+div.dropdown-combo-input .el-select__selection {
+  display: none;
+}
+
+/* el-selectionのボタン位置を調整する */
+div.dropdown-combo-input .el-select__suffix {
+  padding-left: 8px;
+}
+
 
 div.dropdown-combo-input > .el-input__inner {
   text-overflow: ellipsis;

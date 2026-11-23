@@ -13,7 +13,7 @@
         <el-row :gutter="0">
           <el-col :span="4" style="margin-top: 0.35rem;">パス:</el-col>
           <el-col :span="15">
-            <DropdownCombo v-model.lazy.trim="sourcePath" clearable placeholder="JSONpathを入力もしくは予約語を選択">
+            <DropdownCombo v-model.lazy.trim="sourcePath" clearable placeholder="JSONpathを入力・予約語を選択">
               <el-option value="$hash" label="ハッシュ値"/>
               <el-option value="$his_id" label="カルテ番号"/>
               <el-option value="$name" label="患者名"/>
