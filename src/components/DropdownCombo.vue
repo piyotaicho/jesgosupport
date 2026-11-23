@@ -12,7 +12,7 @@
       </template>
 
       <template #append>
-        <el-select v-model="value" placeholder=" "
+        <el-select v-model="value" placeholder=""
           :disabled="props.disabled"
           :size="props.size"
           :effect="props.effect"

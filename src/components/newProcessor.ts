@@ -1,7 +1,7 @@
-import { pulledDocument, processorOutput, JsonObject, LogicRuleSet, LogicBlock, BlockType, SourceBlock } from './types'
+import { pulledDocument, processorOutput, JsonObject, LogicRuleSet, LogicBlock, BlockTypes, SourceBlock } from './types'
 import { parseJesgo, verbose } from './utilities'
 
-export const processorVersion = '1.1.2'
+export const processorVersion = '1.1.3'
 
 interface instructionResult {
   success: boolean
@@ -15,17 +15,18 @@ interface codeBuffer {
 }
 
 // 後方互換を保持してスクリプトコマンドを短縮
-// type BlockType = 'Operators'|'Variables'|'Query'|'Translation'|'Sort'|'Period'|'Sets'|'Store'
-type v1BlockType = 'oper' | 'var' | 'query' | 'tr' | 'sort' | 'period' | 'set' | 'put'
-export type newBlockType = v1BlockType | BlockType
+// type BlockTypes = 'Operators'|'Variables'|'Query'|'Translation'|'Sort'|'Period'|'Sets'|'Store'|'Update'
+type v1BlockTypes = 'oper' | 'var' | 'query' | 'tr' | 'sort' | 'period' | 'set' | 'put' // v1にはUpdateはない
+export type newBlockTypes = v1BlockTypes | BlockTypes
 
+const documentVariableNames = [ '$hash', '$his_id', '$name', '$date_of_birth', '$error' ]
 type commandValueTypes = 'value' | 'length' | 'count' | 'number'
 type commandOperatorExpressions = 'eq' | '=' | 'gt' | '>' | 'ge' | '>=' | 'lt' | '<' | 'le' | '<=' | 'in' | 'incl' | 're' | 'regexp'
 type commandSetsOperators = 'add' | 'union' | 'intersect' | 'difference' | 'xor'
 type commandSortDirections = 'asc' | 'ascend' | 'desc' | 'descend'
 type commandPeriodOperators = 'years' | 'years,roundup' | 'months' | 'months,roundup' | 'weeks' | 'weeks,roundup' | 'days' | 'age' | 'age,roundup'
 type commandStoreFieldSeparators = 'array' | 'first' | 'whitespace' | 'colon' | 'comma' | 'semicolon'
-
+type commandUpdateOperators = 'set' | 'add'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type instructionFunction = (processor: Processor) => instructionResult
 
@@ -52,7 +53,11 @@ const storeProxyHandler: ProxyHandler<VariableStore> = {
 
   get: (target: VariableStore, property: string) => {
     if (!(property in target)) {
-      throw new TypeError(`変数"${property}"は未定義です.`)
+      if (property === 'undefined' || property === '') {
+        throw new TypeError(`変数名の指定がありません.`)
+      } else {
+        throw new TypeError(`変数"${property}"は未定義です.`)
+      }
     }
     return (target[property] || [])
   },
@@ -60,7 +65,11 @@ const storeProxyHandler: ProxyHandler<VariableStore> = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   set: (target: VariableStore, property: string, value: any[]) => {
     if (!(property in target)) {
-      throw new TypeError(`変数"${property}"は未定義です.`)
+      if (property === 'undefined' || property === '') {
+        throw new TypeError(`変数名の指定がありません.`)
+      } else {
+        throw new TypeError(`変数"${property}"は未定義です.`)
+      }
     }
     const descriptor = Object.getOwnPropertyDescriptor(target, property)
     if (!(descriptor?.writable || false)) {
@@ -83,10 +92,6 @@ const storeProxyHandler: ProxyHandler<VariableStore> = {
   defineProperty: (target: VariableStore, property: string, descriptor?: PropertyDescriptor) => {
     if (property in target) {
       throw new TypeError(`変数"${property}"は既に定義されています.`)
-    }
-
-    if (property === '$error') {
-      throw new TypeError('変数名"$error"は予約語のため使用できません.')
     }
 
     const propertyHeader = property.charAt(0)
@@ -123,7 +128,11 @@ const storeProxyHandler: ProxyHandler<VariableStore> = {
 
   deleteProperty: (target: VariableStore, property: string) => {
     if (!(property in target)) {
-      throw new TypeError(`変数"${property}"は未定義です.`)
+      if (property === 'undefined' || property === '') {
+        throw new TypeError(`変数名の指定がありません.`)
+      } else {
+        throw new TypeError(`変数"${property}"は未定義です.`)
+      }
     }
     delete target[property]
     return true
@@ -165,7 +174,7 @@ export class Processor {
     // コードバッファ ルールごとに各ステップをstring[]に格納
     // コードは function( processorであるこのオブジェクト自身 ) で、返り値は instructionResult
     this.transpiledRuleset = []
-  
+
     // レジスタ変数とシステム変数の定義と初期化
     this.initVariables()
 
@@ -208,16 +217,16 @@ export class Processor {
 
   /**
    * レジスタ変数とドキュメント変数 $~ を初期化
-   * @param hash 
-   * @param his_id 
-   * @param name 
-   * @param date_of_birth 
+   * @param hash
+   * @param his_id
+   * @param name
+   * @param date_of_birth
    */
   private initVariables (hash = '', his_id = '', name = '', date_of_birth = '') {
     // $で始まる変数を初期化する
     for (const variableName of Object.keys(this.variables)) {
       if (variableName.charAt(0) === '$') {
-        if ([ '$hash', '$his_id', '$name', '$date_of_birth' ].includes(variableName)) {
+        if (documentVariableNames.includes(variableName)) {
           // ドキュメント変数は一旦削除する
           delete this.variables[variableName]
         } else {
@@ -247,6 +256,10 @@ export class Processor {
         $date_of_birth: {
           value: [date_of_birth || ''],
           writable: false
+        },
+        $error: {
+          value: [],
+          writable: true
         }
       })
     } catch {}
@@ -259,7 +272,7 @@ export class Processor {
   public async compile (ruleset: LogicRuleSet[]) {
     verbose('** COMPILER **', false, this.disableLogging)
     this.compiling = true
-  
+
     // コードバッファを初期化
     this.transpiledRuleset = []
 
@@ -268,7 +281,8 @@ export class Processor {
     this.initVariables()
 
     // ルールセットを逐次処理
-    for (let index = 0; index < ruleset.length; index++) {
+    let index = 0
+    for (index = 0; index < ruleset.length; index++) {
       const currentRule = ruleset[index]
       const currentRuleTitle = currentRule.title
 
@@ -312,7 +326,7 @@ export class Processor {
 
           try {
             // パラメータの抽出 引数は参照では無く値をコピー
-            const command = procedure.type as newBlockType
+            const command = procedure.type as newBlockTypes
             const params: string[] = []
 
             for (const item of procedure.arguments) {
@@ -330,6 +344,7 @@ export class Processor {
             const successBehavior: string = procedure.trueBehavior.toString() || '+1'
             const failureBehavior: string = (procedure?.falseBehavior || 'Abort').toString()
 
+            // 以下のコード生成部分ではvalue(|A|B)strを生成する前にcheckstrに変数を代入して存在確認をする
             let checkstr: string[], valuestr: string, valueAstr: string, valueBstr: string, codeStr: string[] = []
 
             switch (command) {
@@ -474,9 +489,8 @@ export class Processor {
                 }
 
                 if (params[1].charAt(0) === '$' || params[1].charAt(0) === '@') {
-                  if (params[1] !== '$error') {
-                    this.variables[params[1]] = []
-                  }
+                  // writeableチェック
+                  this.variables[params[1]] = []
                 }
 
                 if (params[2] && !['array', 'first', 'whitespace', 'colon', 'comma', 'semicolon'].includes(params[2])) {
@@ -510,6 +524,20 @@ export class Processor {
         verbose(`# Skipped empty ruleset '${currentRuleTitle}'`, false, this.disableLogging)
       }
     }
+
+    // 最後にエラーバッファをエラー出力に割り当てるシステム固有ルールセットを追加する
+    if (index > 0) {
+      this.transpiledRuleset.push(
+        {
+          title: '__EXPORT_ERRORS__',
+          code: [
+            '{ processor.storeErrors(); return { success: true, behavior: \'+1\' } }'
+          ],
+          source: []
+        }
+      )
+    }
+
     this.compiling = false
   }
 
@@ -964,7 +992,7 @@ export class Processor {
         throw e as Error
       }
       console.error(e.message)
-      formatErrorFlag = true      
+      formatErrorFlag = true
     }
 
     for (const targetValue of valueB) {
@@ -1085,7 +1113,7 @@ export class Processor {
           num *= 26
           num += col.toUpperCase().charCodeAt(pos) - 64
         }
-        return num - 1  
+        return num - 1
       } else {
         if (num > 0) {
           return num - 1
@@ -1129,7 +1157,7 @@ export class Processor {
     // 値をflattenし、オブジェクトはJSON文字列化する
     const colValues = values.flat(99).map(item => item.toString() !== '[object Object]' ? item.toString() : JSON.stringify(item))
     switch (mode) {
-      case 'array': 
+      case 'array':
         break
       case 'whitespace':
         colValues.splice(0, 0, colValues.join(' '))
@@ -1155,8 +1183,9 @@ export class Processor {
     // 値を対象に保存する
     if (target.charAt(0) === '$') {
       if (target === '$error') {
-        // エラーオブジェクト
-        this.errorMessages.push(...colValues)
+        // エラーバッファには追加する
+        // this.errorMessages.push(...colValues)
+        this.variables['$error'].push(...colValues)
       } else {
         // 変数
         this.variables[target] = [...colValues]
@@ -1168,6 +1197,15 @@ export class Processor {
       }
     }
     return true
+  }
+
+  /**
+   * エラーメッセージをエラーバッファから出力バッファに移す
+  */
+  private storeErrors = ():void => {
+    if (this.variables['$error'].length > 0) {
+      this.errorMessages.push(...this.variables['$error'])
+    }
   }
 }
 

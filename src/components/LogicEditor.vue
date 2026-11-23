@@ -36,7 +36,7 @@
 <script setup lang="ts">
 // import { ref } from 'vue'
 import { Plus, ArrowDown } from '@element-plus/icons-vue'
-import { LogicBlock, BlockType, failableBlockTypes, BlockColorByType } from './types'
+import { LogicBlock, BlockTypes, LogicBlockWithFailureConfition, BlockColorByType } from './types'
 import LogicTemplate from './LogicTemplate.vue'
 import { nextTick, computed, ComputedRef } from 'vue'
 import { CascaderOption } from 'element-plus'
@@ -115,7 +115,24 @@ const variables:ComputedRef<CascaderOption[]> = computed(() => {
               label: item,
               value: item
             }
-          })
+          }),
+          {
+            label: 'エラー出力',
+            value: '$error'
+          }
+        ]
+      }
+    )
+  } else {
+    options.push(
+      {
+        label: 'ドキュメント変数',
+        value: 'variables',
+        children: [
+          {
+            label: 'エラー出力',
+            value: '$error'
+          }
         ]
       }
     )
@@ -130,12 +147,12 @@ const variables:ComputedRef<CascaderOption[]> = computed(() => {
   return options
 })
 
-function addBlock (blockType: BlockType) {
+function addBlock (BlockTypes: BlockTypes) {
   const newBlock: LogicBlock = {
-    type: blockType,
-    arguments: blockType !== 'Operators' ? [] : ['', 'value', '', 'eq'],
+    type: BlockTypes,
+    arguments: BlockTypes !== 'Operators' ? [] : ['', 'value', '', 'eq'],
     trueBehavior: 1,
-    ...failableBlockTypes.includes(blockType) ? { falseBehavior: 'Abort' } : {}
+    ...LogicBlockWithFailureConfition.includes(BlockTypes) ? { falseBehavior: 'Abort' } : {}
   }
   emits('update:blocks', [...props.blocks, newBlock])
 
@@ -149,8 +166,8 @@ function addBlock (blockType: BlockType) {
   }, 80)
 }
 
-function addModifiers (blockType: BlockType) {
-  addBlock(blockType)
+function addModifiers (BlockTypes: BlockTypes) {
+  addBlock(BlockTypes)
 }
 
 function deleteBlock (index: number) {
