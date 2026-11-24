@@ -36,7 +36,8 @@ const percentage = computed(() => {
   if (props.index < 0 || props.length <= 0) {
     return 0
   } else {
-    return Math.round((props.index + 1) / props.length * 1000) / 10
+    const percentage = Math.round((props.index + 1) / props.length * 1000) / 10
+    return Number.isFinite(percentage) ? Math.min(100, Math.max(0, percentage)) : 0
   }
 })
 

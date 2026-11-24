@@ -1,5 +1,6 @@
 import { pulledDocument, processorOutput, JsonObject, LogicRuleSet, LogicBlock, BlockTypes, SourceBlock } from './types'
 import { parseJesgo, verbose } from './utilities'
+import { createWorkerProcessorSource } from './workerProcessor'
 
 export const processorVersion = '1.1.3'
 
@@ -11,6 +12,7 @@ interface instructionResult {
 interface codeBuffer {
   title: string
   code: string[]
+  workerCode?: string[]
   source: SourceBlock[]
 }
 
@@ -155,6 +157,7 @@ export class Processor {
   private compiling: boolean = false
   private transpiledRuleset: codeBuffer[]
   private disableLogging: boolean
+  private globalVariables: string[]
 
   /**
    * コンストラクタ
@@ -170,6 +173,7 @@ export class Processor {
     this.csvRow = []
 
     this.disableLogging = disableLogging === true
+    this.globalVariables = [...(globalVariables || [])]
 
     // コードバッファ ルールごとに各ステップをstring[]に格納
     // コードは function( processorであるこのオブジェクト自身 ) で、返り値は instructionResult
@@ -539,6 +543,16 @@ export class Processor {
     }
 
     this.compiling = false
+  }
+
+  /**
+   * Worker実行用の自己完結したソースを生成する
+   */
+  public createWorkerSource (): string {
+    if (this.transpiledRuleset.length === 0) {
+      throw new Error('有効なルールセットがコンパイルされていません.')
+    }
+    return createWorkerProcessorSource(this.transpiledRuleset, this.globalVariables)
   }
 
   /**
@@ -1208,55 +1222,6 @@ export class Processor {
     }
   }
 }
-
-/**
- * 引数を全て文字列配列化して返す
- * @param argValue
- * @returns
- */
-function setValueAsStringArray (argValue: unknown | unknown[]): string[] {
-  const value: string[] = []
-  let source: unknown | unknown[] = argValue
-
-  const regex = /("[^"\\]*(?:\\.[^"\\]*)*"|\/(?:[^/\\]+|\\.)*\/[gimy]{0,4}|[^,\s]+)/g
-  const removeQuotes = /^"((?:\\"|[^"])*)"$/
-
-  if (source === undefined) {
-    return []
-  }
-
-  if (!Array.isArray(source)) {
-    source = [source]
-  }
-  for (let index = 0; index < (source as unknown[]).length; index++) {
-    if ((source as unknown[])[index] === null) {
-      // null値は問答無用でスキップする
-      continue
-    }
-    if (typeof (source as unknown[])[index] === 'object') {
-      // オブジェクトはJSON文字列に変換
-      value.push(JSON.stringify((source as unknown[])[index]))
-    } else {
-      // その他文字列は切り出して配列化する
-      const sourceString = ((source as unknown[])[index] as string | number).toString()
-      const tokenisedString = (sourceString.match(regex) || []).map(item => item.replace(removeQuotes, '$1'))
-      value.push(...tokenisedString)
-    }
-  }
-  return value
-}
-
-/**
- * 文字列配列を文字列もしくは何らかのオブジェクト配列に変換
- * @param {string} values 文字列配列
- * @returns {unknown[]}
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const parseVariableValueArray = (values: string[]): JsonObject[] => values.map(value => {
-  // JSON形式で保存されていないものは例外を起こすので、文字列として返す
-  // クオートした文字列としてJSONを記載することでオブジェクトを生成出来る
-  try { return JSON.parse(value) } catch { return value }
-})
 
 /**
  * 文字列を切り出し文字で切り出して配列に変換

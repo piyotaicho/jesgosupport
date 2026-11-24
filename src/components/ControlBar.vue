@@ -5,6 +5,7 @@ import { ref, computed, nextTick } from 'vue'
 import { useStore } from './store'
 import { ElMessageBox } from 'element-plus'
 import { Processor } from './newProcessor'
+import { WorkerProcessor, WorkerProcessorCallbacks, WorkerProgress } from './workerProcessor'
 import { userDownload, loadFile } from './utilities'
 import RulesetConfig from './RulesetConfig.vue'
 import ProgressBar from './ProgressBar.vue'
@@ -15,6 +16,7 @@ const openMenu = ref(false)
 const processing = ref(false)
 const caseIndex = ref(-1)
 const totalCases = ref(0)
+let activeWorker: WorkerProcessor | undefined
 
 const rulesetTitle = computed({
   get: () => store.getters.rulesetTitle,
@@ -153,46 +155,41 @@ function performProcessing (command?:string): void {
         if (store.getters.documentLength > 0) {
           // 状態表示用reactiveの設定
           totalCases.value = store.getters.documentLength
-
-          // ドキュメントの逐次処理
-          for (let index = 0; index < store.getters.documentLength; index++) {
-            if (processing.value) {
-              // プログレスバーの更新
+          if (command === 'verbose-run') {
+            for (let index = 0; index < store.getters.documentLength; index++) {
+              if (!processing.value) break
               caseIndex.value = index
-      
-              // ドキュメントの処理
-              const jsonDocument:pulledDocument = store.getters.queriedDocument[index]
-
-              // 空ドキュメントのスキップ機能を確認
-              if (store.getters.rulesetConfig?.skipUnmatchedRecord) {
-                if ((jsonDocument?.documentList || []).length === 0) {
-                  continue
-                }
-              }
-
-              try {
-                // ドキュメントを処理
-                const returnValues = await processor.run(jsonDocument)
-                if (returnValues !== undefined) {
-                  store.commit('addCsvDocument', [...returnValues.csv])
-                  store.commit('addErrorDocument', {
-                    hash: jsonDocument?.hash || '',
-                    errors: [...(returnValues.errors || [])]
-                  })
-                }
-              } catch (e) {
-                console.error(e)
-                if ((e as Error)?.message) {
-                  const messages = ((e as Error).message as string).split('\n')
-                  ElMessageBox.alert(messages.slice(1).join('\n'), messages[0])
-                }
-                throw new Error()
-              }
+              await processDocument(index, processor)
+            }
+            return
+          }
+          const callbacks: WorkerProcessorCallbacks = {
+            onProgress: (progress: WorkerProgress) => {
+              caseIndex.value = Math.max(0, progress.completed - 1)
+            },
+            onResult: (index, document, returnValues) => {
+              store.commit('addCsvDocument', [...returnValues.csv])
+              store.commit('addErrorDocument', {
+                hash: document?.hash || '',
+                errors: [...(returnValues.errors || [])]
+              })
+              caseIndex.value = index
+            },
+            onError: (index, error) => {
+              console.error(error)
+              ElMessageBox.alert(error.message)
             }
           }
+          activeWorker = new WorkerProcessor(processor.createWorkerSource(), callbacks)
+          await activeWorker.run(
+            [...store.getters.queriedDocument],
+            store.getters.rulesetConfig?.skipUnmatchedRecord === true
+          )
         }
       }
     } finally {
+      activeWorker?.terminate()
+      activeWorker = undefined
       caseIndex.value = -1
       processing.value = false
     }
@@ -206,6 +203,7 @@ function performProcessing (command?:string): void {
 }
 
 function cancel (): void {
+  activeWorker?.stop()
   processing.value = false
 }
 
