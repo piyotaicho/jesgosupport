@@ -8,7 +8,7 @@ import { LogicRuleSet, configObject, fileRuleSetV1, processorOutput } from '../.
 import { queryDocument, userDownload } from '../../src/components/utilities'
 import { JSONPath } from 'jsonpath-plus'
 
-export const runtimeVersion = '1.1.3'
+export const runtimeVersion = '1.2.0'
 export const runtimeCredit = `Version ${runtimeVersion}(${processorVersion}) Copyright &copy; 2023-2026 by P4mohnet`
 
 /**
