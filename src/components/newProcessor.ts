@@ -2,7 +2,7 @@ import { pulledDocument, processorOutput, JsonObject, LogicRuleSet, LogicBlock, 
 import { parseJesgo, verbose } from './utilities'
 import { createWorkerProcessorSource } from './workerProcessor'
 
-export const processorVersion = '1.1.3'
+export const processorVersion = '1.2.0'
 
 interface instructionResult {
   success: boolean
