@@ -24,7 +24,7 @@ export async function init () {
 }
 
 export async function main (docData: getterPluginArgument, apifunc: (docData: getterPluginArgument) => string): Promise<mainOutput> {
-  console.log(`jesgo-exporter.ts@${version} (C) 2023-2025 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
+  console.log(`jesgo-exporter.ts@${version} (C) 2023-2026 by P4mohnet\nhttps://github.com/piyotaicho/jesgosupport`)
 
   if (docData.caseList) {
     const apiresult = await apifunc(docData)

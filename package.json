@@ -1,13 +1,13 @@
 {
   "name": "jesgosupport",
-  "version": "1.1.4",
+  "version": "1.2.0",
   "private": true,
   "description": "JESGO向けJSONからCSVへの変換ルール設計ユーティリティとJESGOプラグイン",
   "author": {
     "name": "Yasuhiro Yamamoto",
     "email": "mohyama@mohnet.com"
   },
-  "license": "MIT (C) 2023-2025 by P4mohnet",
+  "license": "MIT (C) 2023-2026 by P4mohnet",
   "type": "module",
   "scripts": {
     "serve": "vite",
