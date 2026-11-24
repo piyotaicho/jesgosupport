@@ -283,7 +283,7 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
             hash: caseData.hash,
             his_id: caseData.his_id,
             name: caseData.name,
-            documentId: documentIds[0],
+            documentId: documentIds[0] as number,
             errors: [...(result.errors || [])]
           })
         }
@@ -296,7 +296,7 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
             hash: caseData.hash,
             his_id: caseData.his_id,
             name: caseData.name,
-            documentId: documentIds[0],
+            documentId: documentIds[0] as number,
             errors: [...(result.errors || [])]
           })
         }
