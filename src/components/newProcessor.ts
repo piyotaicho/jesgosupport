@@ -12,7 +12,6 @@ interface instructionResult {
 interface codeBuffer {
   title: string
   code: string[]
-  workerCode?: string[]
   source: SourceBlock[]
 }
 
