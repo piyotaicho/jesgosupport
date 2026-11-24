@@ -3,7 +3,8 @@ import { getterPluginArgument, pulledDocument, updateDocument, setterPluginArgum
 import { showModalDialog, createElementFromHtml } from './modal-dialog'
 import { unparse as papaUnparse } from 'papaparse'
 import { Processor, processorVersion } from '../../src/components/newProcessor'
-import { LogicRuleSet, configObject, fileRuleSetV1 } from '../../src/components/types'
+import { WorkerProcessor, WorkerProgress } from '../../src/components/workerProcessor'
+import { LogicRuleSet, configObject, fileRuleSetV1, processorOutput } from '../../src/components/types'
 import { queryDocument, userDownload } from '../../src/components/utilities'
 import { JSONPath } from 'jsonpath-plus'
 
@@ -213,6 +214,7 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
 
       // コンソールにエラーを出力しておく
       console.error(e)
+      return
     }
 
     // 症例数ステータスの更新
@@ -221,15 +223,12 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
       statusline2.innerText = `${rulesetTitle} - データの処理中です`
     }
 
-    // ドキュメントの逐次処理
+    // ドキュメントの取得とマスタークエリ処理
     const progressbar = document.getElementById('plugin-progressbar') as HTMLDivElement
+    const queriedDocuments: pulledDocument[] = []
+    const sourceCaseData: pulledDocument[] = []
 
     for (let index = 0; index < targets.length; index++) {
-      // プログレスバーの更新
-      if (progressbar) {
-        progressbar.style.width = `${(Number(index) + 1) / targets.length * 100}%`
-      }
-
       // ダイアログのDOMが消失した = modalがcloseされた と判断して処理を中止する
       if (!document.getElementById('plugin-processing')) {
         console.warn('Plugin-aborted by closing the dialog.')
@@ -243,11 +242,6 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
         continue
       }
 
-      // 言語処理プロセッサの処理へ
-      type processorOutputFormat = {
-        csv: string[]
-        errors: string[]
-      }
       try {
         // ドキュメントのクエリ処理
         const queriedDocument = queryDocument([caseData[0]], rulesetConfig?.masterQuery, rulesetConfig?.masterBasePointer)[0]
@@ -255,48 +249,8 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
           // 空白ドキュメントのスキップ指示があったら次のドキュメントへ
           continue
         }
-
-        const result = await processor.run(queriedDocument) as processorOutputFormat
-
-        if (result) {
-          // 結果
-          if (result?.csv && result.csv.length > 0) {
-            csvBuffer.push([...result.csv])
-          }
-
-          // エラーは空白であっても出力する(要望あり)
-          // 指定スキーマからdocumentIdを抽出
-          if (!rulesetConfig?.errorTargetSchemaId) {
-            // errorTargerSchemaIdが未指定の場合一番最初に出現したドキュメントにエラーを埋め込む
-            const documentIds = JSONPath({ path: '$..[?(@property === "jesgo:document_id")]', json: caseData[0]?.documentList || [] })
-
-            if (documentIds.length > 0) {
-              errorBuffer.push({
-                hash: caseData[0].hash,
-                his_id: caseData[0]?.his_id,
-                name: caseData[0]?.name,
-                documentId: documentIds[0],
-                errors: [...(result.errors || [])]
-              })
-            }
-          } else {
-            // 指定したエラースキーマ(継承元を含む)にエラーを埋め込む
-            // スキーマidを正規化(継承スキーマに対応するため前方一致で/を最後につけて区切り文字とする)
-            const matchPattern = '/^' + rulesetConfig.errorTargetSchemaId.split('/').join('\\/') + '\\/?/'
-            const jsonpath = `$..[?(@["jesgo:schema_id"] && @["jesgo:schema_id"].match(${matchPattern}) )].jesgo:document_id`
-            const documentIds = JSONPath({ path: jsonpath, json: caseData[0]?.documentList || [] })
-
-            if (documentIds.length > 0) {
-              errorBuffer.push({
-                hash: caseData[0].hash,
-                his_id: caseData[0]?.his_id,
-                name: caseData[0]?.name,
-                documentId: documentIds[0],
-                errors: [...(result.errors || [])]
-              })
-            }
-          }
-        }
+        sourceCaseData.push(caseData[0])
+        queriedDocuments.push(queriedDocument)
       } catch (e) {
         const message = (e as Error)?.message || '処理エラーが発生しました'
         if (!window.confirm(`${message}\n無視して次の症例に対して処理を継続しますか？`)) {
@@ -311,6 +265,82 @@ export async function handler (data: setterPluginArgument[], scriptGetter: () =>
           console.error(e)
         }
       }
+    }
+
+    const registerResult = (index: number, result: processorOutput) => {
+      if (!result) return
+      if (result.csv && result.csv.length > 0) {
+        csvBuffer.push([...result.csv])
+      }
+
+      const caseData = sourceCaseData[index]
+      if (!caseData) return
+
+      if (!rulesetConfig?.errorTargetSchemaId) {
+        const documentIds = JSONPath({ path: '$..[?(@property === "jesgo:document_id")]', json: caseData.documentList || [] }) as number[]
+        if (documentIds.length > 0) {
+          errorBuffer.push({
+            hash: caseData.hash,
+            his_id: caseData.his_id,
+            name: caseData.name,
+            documentId: documentIds[0],
+            errors: [...(result.errors || [])]
+          })
+        }
+      } else {
+        const matchPattern = '/^' + rulesetConfig.errorTargetSchemaId.split('/').join('\\/') + '\\/?/'
+        const jsonpath = `$..[?(@["jesgo:schema_id"] && @["jesgo:schema_id"].match(${matchPattern}) )].jesgo:document_id`
+        const documentIds = JSONPath({ path: jsonpath, json: caseData.documentList || [] }) as number[]
+        if (documentIds.length > 0) {
+          errorBuffer.push({
+            hash: caseData.hash,
+            his_id: caseData.his_id,
+            name: caseData.name,
+            documentId: documentIds[0],
+            errors: [...(result.errors || [])]
+          })
+        }
+      }
+    }
+
+    let workerProcessor: WorkerProcessor | undefined
+    if (queriedDocuments.length === 0) {
+      // 空データは処理せず完了表示へ進む
+    } else try {
+      workerProcessor = new WorkerProcessor(processor.createWorkerSource(), {
+        onProgress: (progress: WorkerProgress) => {
+          if (progressbar) {
+            progressbar.style.width = `${progress.completed / progress.total * 100}%`
+          }
+          if (!document.getElementById('plugin-processing')) {
+            workerProcessor?.stop()
+          }
+        },
+        onResult: (index, _document, result) => {
+          registerResult(index, result)
+        },
+        onError: (index, error) => {
+          console.error(error)
+        }
+      })
+      await workerProcessor.run(queriedDocuments)
+    } catch (e) {
+      console.error(e)
+      workerProcessor?.terminate()
+      for (let index = 0; index < queriedDocuments.length; index++) {
+        if (!document.getElementById('plugin-processing')) break
+        if (progressbar) {
+          progressbar.style.width = `${(index + 1) / queriedDocuments.length * 100}%`
+        }
+        try {
+          const result = await processor.run(queriedDocuments[index]) as processorOutput
+          registerResult(index, result)
+        } catch (processError) {
+          console.error(processError)
+        }
+      }
+    } finally {
+      workerProcessor?.terminate()
     }
 
     // ステータスの更新とダウンロードの有効化

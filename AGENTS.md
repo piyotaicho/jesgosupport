@@ -23,6 +23,15 @@
 - 結果の受け取りはできればwebWorkerの進捗が進む間も確認したいので、メインスレッド側のfunctionをコールバックで呼ぶなどして実現しても構わない
 - 最終環境では別ファイルとしての webWorker ソースを持つことができない、Blob urlが前提となる。サーバーがExpress.jsで、現状上記のimportが問題なく動作しているので動作は期待できる。
 
+# プラグインとしての動作について
+
+この newProcessor 部分は、jesgo-plugin/src以下の多くで利用されます。( jesgo-plugin/src/jesgo-support-runtime* )
+viteではimportで動作するプラグインをうまく生成できないため、ここだけwebpackを利用しています。
+
+実際の呼び出しは、DBからスクリプトを取得してBlob URLでimportしていますが、テストではdist/hoge.jsをロードしています。(refer: src/test/runtime-test.html )
+
+複数のJSファイルにすることはできません。
+
 # 重要な指定
 
 作業に関するスクリプトの評価や、検討事項、変更の要旨を AGENTS.md の # WORK 以降に追加してください。
@@ -134,3 +143,20 @@
 - `rule.source`の抽出、`commandQuery`、`Sort`のインデックス抽出はすべてこのラッパー経由にする。
 - Worker側の`Processor.run()`、ステップ実行、`commandQuery`、`commandSort`はPromiseを待機するため、JSONPath応答前に次ステップへ進まない。
 - メインスレッド側でJSONPathライブラリを一元管理し、WorkerはJSONデータ処理と変数・CSV処理に限定する。
+
+## jesgo-support-runtime共通ハンドラへのプラグイン対応
+
+- 対象は[src/components]ではなく[jsgo-plugin/src/runtime-common.ts](jesgo-plugin/src/runtime-common.ts)の共通`handler()`から、クエリ済み症例をWorkerへ渡す構成とする。
+- `WorkerProcessor`を利用し、症例取得後に`Processor.createWorkerSource()`で生成したBlob Workerへ一括実行する。
+- Workerの進捗はプラグイン進捗バーへ反映し、症例ごとの結果は既存のCSV・エラー登録処理へ戻す。
+- ダイアログを閉じた場合は協調停止を要求し、処理不能またはWorker未対応時は既存の`Processor.run()`逐次処理へフォールバックする。
+- コンパイルエラー時は処理フェーズへ進まず、既存の中止表示とエラーログを維持する。
+- JSONPath往復は`workerProcessor.ts`のメインスレッドハンドラ経由で行い、プラグイン側では抽出済みライブラリを直接Workerへ埋め込まない。
+
+## TypeScript 6ビルド修正
+
+- packageの`typescript`はTypeScript 6へ固定し、ts-loader 9.6.2との互換性を優先する。
+- `runtime-common.ts`のローカル出力型は公開型`processorOutput`へ統一し、`errors?: string[]`を正しく扱う。
+- JSONPathの戻り値は型ライブラリ上`unknown`となるため、エラー登録で使用するdocumentIdは`number[]`へ明示キャストする。
+- 修正後、`npm run plugin:build`は全プラグインbundleとともに成功する。
+
